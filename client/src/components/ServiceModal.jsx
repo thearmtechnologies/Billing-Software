@@ -133,47 +133,148 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     }));
   };
 
+  /* ── Apple-Style Tokens ── */
+  const inputStyle = {
+    width: "100%",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    border: "1px solid var(--border, #E5E5E7)",
+    background: "var(--surface, #FFFFFF)",
+    fontSize: "14px",
+    fontFamily: "inherit",
+    color: "var(--text-primary, #1D1D1F)",
+    transition: "all 200ms ease",
+    outline: "none",
+    marginTop: "6px",
+  };
+
+  const labelStyle = {
+    display: "block",
+    fontSize: "13px",
+    fontWeight: 600,
+    color: "var(--text-secondary, #6E6E73)",
+    letterSpacing: "0.02em",
+    textTransform: "uppercase",
+  };
+
+  const btnPrimary = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 20px",
+    borderRadius: "12px",
+    background: "var(--accent, #0071E3)",
+    color: "#fff",
+    fontSize: "14px",
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+    transition: "all 200ms ease",
+    boxShadow: "0 1px 3px rgba(0, 113, 227, 0.3)",
+    letterSpacing: "-0.006em",
+  };
+
+  const btnSecondary = {
+    ...btnPrimary,
+    background: "var(--surface-secondary, #FBFBFD)",
+    color: "var(--text-primary, #1D1D1F)",
+    border: "1px solid var(--border, #E5E5E7)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+  };
+
+  const focusProps = {
+    onFocus: (e) => {
+      e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+    },
+    onBlur: (e) => {
+      e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+      e.currentTarget.style.boxShadow = "none";
+    }
+  };
+
+  const errorFocusProps = (hasError) => ({
+    onFocus: (e) => {
+      if (!hasError) {
+        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+      } else {
+        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
+      }
+    },
+    onBlur: (e) => {
+      e.currentTarget.style.borderColor = hasError ? "#DC2626" : "var(--border, #E5E5E7)";
+      e.currentTarget.style.boxShadow = "none";
+    }
+  });
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center pt-8 pb-8">
       {/* Backdrop */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-opacity"
         onClick={onCancel}
-        style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+        style={{
+          background: "rgba(0,0,0,0.4)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+        }}
       />
       
-      {/* Modal */}
+      {/* Modal Container */}
       <div
-        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full"
-        style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        className="relative bg-white transform transition-all w-full max-w-2xl"
+        style={{
+          borderRadius: "20px",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh",
+          overflow: "hidden",
+        }}
       >
-        <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-light, #F0F0F2)" }}>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              color: "var(--text-primary, #1D1D1F)",
+              letterSpacing: "-0.02em",
+            }}>
               {service ? "Edit Service" : "Add New Service"}
             </h3>
             <button
               onClick={onCancel}
-              className="text-gray-500 hover:text-gray-700"
-              style={{ padding: "8px" }}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-tertiary, #86868B)",
+                padding: "4px",
+                borderRadius: "50%",
+                transition: "all 150ms ease",
+                display: "flex",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
+                e.currentTarget.style.color = "var(--text-primary, #1D1D1F)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "var(--text-tertiary, #86868B)";
+              }}
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <div style={{ overflow: "auto", flex: 1 }}>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-6"
-            style={{ padding: "20px" }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div style={{ overflow: "auto", flex: 1, padding: "24px" }}>
+          <form id="service-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <label
-                  className="block font-medium"
-                  style={{ marginBottom: "8px" }}
-                >
+                <label style={labelStyle}>
                   Service Name <span style={{ color: "red" }}>*</span>
                 </label>
                 <input
@@ -181,35 +282,27 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full border rounded-md ${
-                    errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
-                  style={{ padding: "8px" }}
-                  placeholder="Enter service name"
+                  style={{
+                    ...inputStyle,
+                    borderColor: errors.name ? "#DC2626" : "var(--border, #E5E5E7)",
+                  }}
+                  {...errorFocusProps(errors.name)}
                 />
                 {errors.name && (
-                  <p
-                    className="text-red-500 text-sm"
-                    style={{ marginTop: "4px" }}
-                  >
-                    {errors.name}
-                  </p>
+                  <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.name}</p>
                 )}
               </div>
 
               <div>
-                <label
-                  className="block font-medium"
-                  style={{ marginBottom: "8px" }}
-                >
+                <label style={labelStyle}>
                   Unit of Measurement <span style={{ color: "red" }}>*</span>
                 </label>
                 <select
                   name="unitType"
                   value={formData.unitType}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md"
-                  style={{ padding: "8px" }}
+                  style={inputStyle}
+                  {...focusProps}
                 >
                   {unitTypes.map((unit) => (
                     <option key={unit} value={unit}>
@@ -221,10 +314,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
             </div>
 
             <div>
-              <label
-                className="block font-medium"
-                style={{ marginBottom: "8px" }}
-              >
+              <label style={labelStyle}>
                 Description <span style={{ color: "red" }}>*</span>
               </label>
               <textarea
@@ -232,36 +322,30 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                className={`w-full border rounded-md ${
-                  errors.description ? "border-red-500" : "border-gray-300"
-                }`}
-                style={{ padding: "8px" }}
-                placeholder="Describe the service"
+                style={{
+                  ...inputStyle,
+                  resize: "vertical",
+                  minHeight: "80px",
+                  borderColor: errors.description ? "#DC2626" : "var(--border, #E5E5E7)",
+                }}
+                {...errorFocusProps(errors.description)}
               />
               {errors.description && (
-                <p
-                  className="text-red-500 text-sm"
-                  style={{ marginTop: "4px" }}
-                >
-                  {errors.description}
-                </p>
+                <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.description}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <label
-                  className="block font-medium"
-                  style={{ marginBottom: "8px" }}
-                >
+                <label style={labelStyle}>
                   Pricing Type <span style={{ color: "red" }}>*</span>
                 </label>
                 <select
                   name="pricingType"
                   value={formData.pricingType}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md"
-                  style={{ padding: "8px" }}
+                  style={inputStyle}
+                  {...focusProps}
                 >
                   {pricingTypes.map((type) => (
                     <option key={type} value={type}>
@@ -272,31 +356,21 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
               </div>
 
               <div>
-                <label
-                  className="block font-medium"
-                  style={{ marginBottom: "8px" }}
-                >
-                  HSN Code
-                </label>
+                <label style={labelStyle}>HSN Code</label>
                 <input
                   type="text"
                   name="hsnCode"
                   value={formData.hsnCode}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md"
-                  style={{ padding: "8px" }}
-                  placeholder="Enter HSN code"
+                  style={inputStyle}
+                  {...focusProps}
                 />
               </div>
             </div>
 
-            {(formData.pricingType === "fixed" ||
-              formData.pricingType === "flat") && (
-              <div>
-                <label
-                  className="block font-medium"
-                  style={{ marginBottom: "8px" }}
-                >
+            {(formData.pricingType === "fixed" || formData.pricingType === "flat") && (
+              <div style={{ width: "50%" }}>
+                <label style={labelStyle}>
                   Base Rate <span style={{ color: "red" }}>*</span>
                 </label>
                 <input
@@ -306,153 +380,153 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                   onChange={handleChange}
                   step="0.01"
                   min="0"
-                  className={`w-full border rounded-md ${
-                    errors.baseRate ? "border-red-500" : "border-gray-300"
-                  }`}
-                  style={{ padding: "8px" }}
+                  style={{
+                    ...inputStyle,
+                    borderColor: errors.baseRate ? "#DC2626" : "var(--border, #E5E5E7)",
+                  }}
+                  {...errorFocusProps(errors.baseRate)}
                   placeholder="0.00"
                 />
                 {errors.baseRate && (
-                  <p
-                    className="text-red-500 text-sm"
-                    style={{ marginTop: "4px" }}
-                  >
-                    {errors.baseRate}
-                  </p>
+                  <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.baseRate}</p>
                 )}
               </div>
             )}
 
             {formData.pricingType === "tiered" && (
               <div>
-                <div
-                  className="flex items-center justify-between"
-                  style={{ marginBottom: "16px" }}
-                >
-                  <label className="block font-medium text-gray-700">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <label style={labelStyle}>
                     Pricing Tiers <span style={{ color: "red" }}>*</span>
                   </label>
                   <button
                     type="button"
                     onClick={addTier}
-                    className="inline-flex items-center bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition-colors"
-                    style={{ padding: "6px 12px" }}
+                    style={{
+                      ...btnPrimary,
+                      padding: "6px 14px",
+                      fontSize: "13px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "var(--accent, #0071E3)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                    }}
                   >
-                    <Plus className="h-3 w-3" style={{ marginRight: "4px" }} />
+                    <Plus className="h-4 w-4" style={{ marginRight: "4px" }} />
                     Add Tier
                   </button>
                 </div>
 
                 {formData.pricingTiers.length > 0 && (
-                  <div
-                    className="flex flex-col gap-3"
-                    style={{
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                      paddingRight: "8px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {formData.pricingTiers.map((tier, index) => (
                       <div
                         key={index}
-                        className="bg-gray-50 rounded-lg border border-gray-200" style={{padding: '16px'}}
+                        style={{
+                          background: "var(--bg-page, #F7F7F8)",
+                          borderRadius: "16px",
+                          border: "1px solid var(--border, #E5E5E7)",
+                          padding: "16px",
+                          display: "flex",
+                          gap: "12px",
+                          alignItems: "flex-end",
+                          flexWrap: "wrap",
+                        }}
                       >
-                        <div className="flex items-end gap-3" style={{marginBottom: '12px'}}>
-                          <div className="flex-1">
-                            <label
-                              className="block text-xs font-medium text-gray-600"
-                              style={{ marginBottom: "6px" }}
-                            >
-                              Min Value
-                            </label>
-                            <input
-                              type="number"
-                              placeholder="0"
-                              value={tier.minValue}
-                              onChange={(e) =>
-                                updateTier(index, "minValue", e.target.value)
-                              }
-                              className="w-full border border-gray-300 rounded-md text-sm"
-                              style={{ padding: "6px 8px" }}
-                              step="0.01"
-                              min="0"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <label
-                              className="block text-xs font-medium text-gray-600"
-                              style={{ marginBottom: "6px" }}
-                            >
-                              Max Value
-                            </label>
-                            <input
-                              type="number"
-                              placeholder="∞ (leave empty for unlimited)"
-                              value={tier.maxValue ?? ""}
-                              onChange={(e) =>
-                                updateTier(index, "maxValue", e.target.value)
-                              }
-                              className="w-full border border-gray-300 rounded-md text-sm"
-                              style={{ padding: "6px 8px" }}
-                              step="0.01"
-                              min="0"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <label
-                              className="block text-xs font-medium text-gray-600"
-                              style={{ marginBottom: "6px" }}
-                            >
-                              Rate (₹)
-                            </label>
-                            <input
-                              type="number"
-                              placeholder="0.00"
-                              value={tier.rate}
-                              onChange={(e) =>
-                                updateTier(index, "rate", e.target.value)
-                              }
-                              className="w-full border border-gray-300 rounded-md text-sm"
-                              style={{ padding: "6px 8px" }}
-                              step="0.01"
-                              min="0"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <label
-                              className="block text-xs font-medium text-gray-600"
-                              style={{ marginBottom: "6px" }}
-                            >
-                              Rate Type
-                            </label>
-                            <select
-                              value={tier.rateType || "slabRate"}
-                              onChange={(e) =>
-                                updateTier(index, "rateType", e.target.value)
-                              }
-                              className="w-full border border-gray-300 rounded-md text-sm"
-                              style={{ padding: "6px 8px" }}
-                            >
-                              <option value="slabRate">Slab Rate</option>
-                              <option value="unitRate">Unit Rate</option>
-                            </select>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeTier(index)}
-                            className="bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors"
-                            style={{ padding: "6px 10px", marginBottom: "6px" }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                        <div style={{ flex: 1, minWidth: "100px" }}>
+                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Min Value</label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={tier.minValue}
+                            onChange={(e) => updateTier(index, "minValue", e.target.value)}
+                            style={{ ...inputStyle, padding: "10px 14px" }}
+                            step="0.01"
+                            min="0"
+                            {...focusProps}
+                          />
                         </div>
-                        {errors[`tier_${index}`] && (
-                          <p
-                            className="text-red-500 text-xs"
-                            style={{ marginTop: "4px" }}
+                        <div style={{ flex: 1, minWidth: "120px" }}>
+                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Max Value</label>
+                          <input
+                            type="number"
+                            placeholder="∞ (Empty for limits)"
+                            value={tier.maxValue ?? ""}
+                            onChange={(e) => updateTier(index, "maxValue", e.target.value)}
+                            style={{ ...inputStyle, padding: "10px 14px" }}
+                            step="0.01"
+                            min="0"
+                            {...focusProps}
+                          />
+                        </div>
+                        <div style={{ flex: 1, minWidth: "100px" }}>
+                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate (₹)</label>
+                          <input
+                            type="number"
+                            placeholder="0.00"
+                            value={tier.rate}
+                            onChange={(e) => updateTier(index, "rate", e.target.value)}
+                            style={{ ...inputStyle, padding: "10px 14px" }}
+                            step="0.01"
+                            min="0"
+                            {...focusProps}
+                          />
+                        </div>
+                        <div style={{ flex: 1, minWidth: "120px" }}>
+                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate Type</label>
+                          <select
+                            value={tier.rateType || "slabRate"}
+                            onChange={(e) => updateTier(index, "rateType", e.target.value)}
+                            style={{ ...inputStyle, padding: "10px 14px" }}
+                            {...focusProps}
                           >
-                            {errors[`tier_${index}`]}
-                          </p>
+                            <option value="slabRate">Slab Rate</option>
+                            <option value="unitRate">Unit Rate</option>
+                          </select>
+                        </div>
+                        
+                        <button
+                          type="button"
+                          onClick={() => removeTier(index)}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid #FCA5A5",
+                            color: "#DC2626",
+                            padding: "10px",
+                            borderRadius: "12px",
+                            marginBottom: "6px",
+                            cursor: "pointer",
+                            transition: "all 150ms ease",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "41px",
+                            width: "41px",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#FEE2E2";
+                            e.currentTarget.style.transform = "scale(1.05)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.transform = "scale(1)";
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        
+                        {errors[`tier_${index}`] && (
+                          <div style={{ width: "100%" }}>
+                            <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>
+                              {errors[`tier_${index}`]}
+                            </p>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -460,55 +534,66 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 )}
 
                 {errors.pricingTiers && (
-                  <p
-                    className="text-red-500 text-sm"
-                    style={{ marginTop: "8px" }}
-                  >
-                    {errors.pricingTiers}
-                  </p>
+                  <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "12px" }}>{errors.pricingTiers}</p>
                 )}
 
                 {formData.pricingTiers.length === 0 && (
-                  <div className="text-center bg-gray-50 rounded-lg border border-gray-200" style={{padding: '32px 0'}}>
-                    <Package
-                      className="h-8 w-8 text-gray-400"
-                      style={{ margin: "0 auto 12px auto" }}
-                    />
-                    <p className="text-gray-500 text-sm">
-                      No tiers added yet. Click "Add Tier" to create pricing
-                      tiers.
+                  <div style={{
+                    textAlign: "center",
+                    background: "var(--bg-page, #F7F7F8)",
+                    borderRadius: "16px",
+                    border: "1px dashed var(--border, #E5E5E7)",
+                    padding: "40px 20px"
+                  }}>
+                    <Package className="h-10 w-10" style={{ color: "var(--text-tertiary, #86868B)", margin: "0 auto 16px auto" }} />
+                    <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "14px", fontWeight: 500 }}>
+                      No tiers added yet. Click &quot;Add Tier&quot; to create pricing tiers.
                     </p>
                   </div>
                 )}
               </div>
             )}
-
-            <div
-              className="flex justify-end gap-3"
-              style={{
-                marginTop: "24px",
-                paddingTop: "16px",
-                borderTop: "1px solid #e5e7eb",
-              }}
-            >
-              <button
-                type="button"
-                onClick={onCancel}
-                className="border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                style={{ padding: "8px 16px" }}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                style={{ padding: "8px 16px" }}
-              >
-                {service ? "Update Service" : "Add Service"}
-              </button>
-            </div>
           </form>
+        </div>
+
+        {/* Footer Area */}
+        <div
+          style={{
+            padding: "16px 24px",
+            background: "var(--bg-page, #F7F7F8)",
+            borderTop: "1px solid var(--border-light, #F0F0F2)",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onCancel}
+            style={btnSecondary}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            form="service-form"
+            style={btnPrimary}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--accent, #0071E3)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+            }}
+          >
+            {service ? "Update Service" : "Add Service"}
+          </button>
         </div>
       </div>
     </div>

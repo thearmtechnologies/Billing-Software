@@ -125,12 +125,14 @@ const InvoiceView = () => {
     if (!element) return;
 
     
-    // Clone the node into a fixed-width container (desktop-like)
+    // Clone the node into a responsive container
     const cloned = element.cloneNode(true);
     const wrapper = document.createElement("div");
-    wrapper.style.width = "1024px"; // Desktop width
+    wrapper.style.width = "100%";
+    wrapper.style.maxWidth = "210mm";
     wrapper.style.padding = "20px";
     wrapper.style.background = "#fff";
+    wrapper.style.boxSizing = "border-box";
     wrapper.appendChild(cloned);
     document.body.appendChild(wrapper);
 
@@ -184,12 +186,19 @@ const InvoiceView = () => {
         <title>Invoice Print</title>
         ${cssLinks}  <!-- ✅ Copies Tailwind + Custom CSS -->
         <style>
-          @page { size: A4; }
+          @page { size: auto; margin: 10mm; }
           body { margin: 0; padding: 0; }
           .print-container {
-            width: 1000px;
+            width: 100%;
+            max-width: 210mm;
             margin: 0 auto;
-            padding: 20px 20px;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          @media print {
+            .print-container {
+              padding: 0;
+            }
           }
         </style>
       </head>

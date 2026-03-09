@@ -9,52 +9,50 @@ import {
   MoreHorizontal,
   FileText,
   IndianRupee,
+  Bell,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import axios from "axios";
+import AppleDataTable from "../components/AppleDataTable";
+import emailjs from '@emailjs/browser';
 axios.defaults.withCredentials = true;
 
 const statusOptions = ["draft", "sent", "paid", "partial", "overdue", "cancelled"];
 
-// Status color configuration
+// Apple-inspired status badge configuration
 const statusColors = {
   draft: {
-    bg: "bg-gray-100",
-    text: "text-gray-700",
-    border: "border-gray-300",
-    hover: "hover:bg-gray-200"
+    bg: "#F5F5F7",
+    text: "#6E6E73",
+    dot: "#86868B",
   },
   sent: {
-    bg: "bg-blue-100",
-    text: "text-blue-800",
-    border: "border-blue-300",
-    hover: "hover:bg-blue-200"
+    bg: "#EFF6FF",
+    text: "#0071E3",
+    dot: "#0071E3",
   },
   paid: {
-    bg: "bg-green-100",
-    text: "text-green-800",
-    border: "border-green-300",
-    hover: "hover:bg-green-200"
+    bg: "#ECFDF5",
+    text: "#059669",
+    dot: "#059669",
   },
   partial: {
-    bg: "bg-orange-100",
-    text: "text-orange-800",
-    border: "border-orange-300",
-    hover: "hover:bg-orange-200"
+    bg: "#FFFBEB",
+    text: "#D97706",
+    dot: "#D97706",
   },
   overdue: {
-    bg: "bg-red-100",
-    text: "text-red-800",
-    border: "border-red-300",
-    hover: "hover:bg-red-200"
+    bg: "#FEF2F2",
+    text: "#DC2626",
+    dot: "#DC2626",
   },
   cancelled: {
-    bg: "bg-gray-300",
-    text: "text-gray-700",
-    border: "border-gray-400",
-    hover: "hover:bg-gray-400"
-  }
+    bg: "#F5F5F7",
+    text: "#86868B",
+    dot: "#86868B",
+  },
 };
 
 const Invoices = () => {
@@ -68,6 +66,52 @@ const Invoices = () => {
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [openActionId, setOpenActionId] = useState(null);
+
+  // Email Modal State
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailInvoice, setEmailInvoice] = useState(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  const handleOpenEmailModal = (invoice) => {
+    setEmailInvoice(invoice);
+    setShowEmailModal(true);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailInvoice || !emailInvoice.client?.email) {
+      toast.error("Client email not found. Please update client details.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      // TODO: Replace with your actual EmailJS credentials
+      const serviceId = "YOUR_SERVICE_ID";
+      const templateId = "YOUR_TEMPLATE_ID";
+      const publicKey = "YOUR_PUBLIC_KEY";
+
+      const templateParams = {
+        to_email: emailInvoice.client.email,
+        to_name: emailInvoice.client.companyName || "Customer",
+        invoice_number: emailInvoice.invoiceNumber,
+        amount: emailInvoice.totalAmount,
+        due_date:  emailInvoice.dueDate ? new Date(emailInvoice.dueDate).toLocaleDateString("en-GB") : ""
+      };
+
+      // Un-comment and configure this when ready:
+      // await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
+      console.log("EmailJS Params:", templateParams);
+      toast.success(`Email sent to ${emailInvoice.client.email}`);
+      setShowEmailModal(false);
+      setEmailInvoice(null);
+    } catch (error) {
+      console.error("Email send error:", error);
+      toast.error("Failed to send email");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   // Fetch invoices
   useEffect(() => {
@@ -181,80 +225,497 @@ const Invoices = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  if (loading) {
-    return (
-      <div
-        className="flex items-center justify-center"
-        style={{ height: "16rem" }}
-      >
-        <div
-          className="animate-spin rounded-full border-b-2 border-blue-600"
-          style={{ height: "3rem", width: "3rem" }}
-        ></div>
-      </div>
-    );
-  }
+  /* ── Shared Styles ── */
+  const inputStyle = {
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid var(--border, #E5E5E7)',
+    background: 'var(--surface, #FFFFFF)',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    color: 'var(--text-primary, #1D1D1F)',
+    transition: 'border-color 180ms ease, box-shadow 180ms ease',
+    outline: 'none',
+    width: '100%',
+  };
+
+  const selectStyle = {
+    ...inputStyle,
+    cursor: 'pointer',
+    appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 L6 7.5 L9 4.5' stroke='%2386868b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    paddingRight: '36px',
+  };
+
+  const actionDropdownStyle = {
+    position: 'absolute',
+    right: 0,
+    zIndex: 20,
+    marginTop: '4px',
+    width: '200px',
+    background: 'var(--surface, #FFFFFF)',
+    borderRadius: '12px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.04)',
+    border: '1px solid var(--border, #E5E5E7)',
+    overflow: 'hidden',
+    padding: '4px',
+  };
+
+  const actionItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '9px 12px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 450,
+    color: 'var(--text-primary, #1D1D1F)',
+    textDecoration: 'none',
+    transition: 'background 150ms ease',
+    cursor: 'pointer',
+    border: 'none',
+    background: 'transparent',
+    width: '100%',
+    textAlign: 'left',
+  };
+
+  const statusDropdownStyle = {
+    position: 'absolute',
+    zIndex: 20,
+    marginTop: '6px',
+    minWidth: '140px',
+    background: 'var(--surface, #FFFFFF)',
+    borderRadius: '12px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.04)',
+    border: '1px solid var(--border, #E5E5E7)',
+    overflow: 'hidden',
+    padding: '4px',
+  };
+
+  // ── Column config ──
+  const invoiceColumns = [
+    {
+      key: 'invoiceNumber',
+      label: 'Invoice #',
+      sortable: true,
+      width: '14%',
+      render: (row) => (
+        <span style={{ fontWeight: 600, color: 'var(--text-primary, #1D1D1F)', fontSize: '13px' }}>
+          #{row.invoiceNumber}
+        </span>
+      ),
+    },
+    {
+      key: 'client.companyName',
+      label: 'Customer',
+      sortable: true,
+      width: '22%',
+      render: (row) => (
+        <span style={{ color: 'var(--text-primary, #1D1D1F)', fontSize: '13px' }}>
+          {row.client?.companyName || "No Client"}
+        </span>
+      ),
+    },
+    {
+      key: 'totalAmount',
+      label: 'Amount',
+      sortable: true,
+      width: '14%',
+      align: 'right',
+      render: (row) => (
+        <span style={{
+          fontWeight: 500,
+          fontVariantNumeric: 'tabular-nums',
+          color: 'var(--text-primary, #1D1D1F)',
+          fontSize: '13px',
+        }}>
+          Rs. {row.totalAmount.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '14%',
+      render: (row) => {
+        const colors = statusColors[row.status] || statusColors.draft;
+        return (
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdownId(
+                  openDropdownId === row._id ? null : row._id
+                );
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+                borderRadius: '999px',
+                border: 'none',
+                background: colors.bg,
+                color: colors.text,
+                fontSize: '12px',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 180ms ease',
+                letterSpacing: '0.01em',
+                minWidth: '80px',
+                justifyContent: 'center',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.filter = 'brightness(0.96)';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.filter = 'none';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: colors.dot,
+                  flexShrink: 0,
+                }}
+              />
+              {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+            </button>
+
+            {openDropdownId === row._id && (
+              <div style={statusDropdownStyle}>
+                {statusOptions.map(
+                  (status) =>
+                    status !== row.status && (
+                      <button
+                        key={status}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(row._id, status);
+                          setOpenDropdownId(null);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'transparent',
+                          color: statusColors[status]?.text || '#6E6E73',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer',
+                          transition: 'background 150ms ease',
+                          textAlign: 'left',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = statusColors[status]?.bg || '#F5F5F7';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: statusColors[status]?.dot || '#86868B',
+                            flexShrink: 0,
+                          }}
+                        />
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </button>
+                    )
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'invoiceDate',
+      label: 'Date',
+      sortable: true,
+      width: '14%',
+      render: (row) => (
+        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px' }}>
+          {format(new Date(row.invoiceDate), "MMM dd, yyyy")}
+        </span>
+      ),
+    },
+    {
+      key: 'dueDate',
+      label: 'Due Date',
+      sortable: true,
+      width: '14%',
+      render: (row) => (
+        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px' }}>
+          {row.dueDate ? format(new Date(row.dueDate), "MMM dd, yyyy") : "-"}
+        </span>
+      ),
+    },
+    {
+      key: 'notify',
+      label: 'Notify',
+      width: '7%',
+      align: 'center',
+      render: (row) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let isOverdueOrDueToday = false;
+        if (row.dueDate) {
+          const due = new Date(row.dueDate);
+          due.setHours(0, 0, 0, 0);
+          isOverdueOrDueToday = due <= today;
+        }
+        const isPending = row.status !== "paid" && row.status !== "cancelled";
+
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenEmailModal(row);
+            }}
+            disabled={!isPending}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: isPending ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              opacity: isPending ? 1 : 0.4
+            }}
+            title={isOverdueOrDueToday && isPending ? "Invoice Overdue/Due - Send Reminder" : "Send Reminder"}
+          >
+            <Bell size={18} color={isOverdueOrDueToday && isPending ? "#DC2626" : "#86868B"} />
+          </button>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: '7%',
+      render: (row) => (
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenActionId(
+                openActionId === row._id ? null : row._id
+              );
+            }}
+            className="adt-action-btn"
+            aria-label="More actions"
+            title="Actions"
+          >
+            <MoreHorizontal size={16} />
+          </button>
+
+          {openActionId === row._id && (
+            <div style={actionDropdownStyle}>
+              {/* View */}
+              <Link
+                to={`/invoices/${row._id}`}
+                style={actionItemStyle}
+                onClick={() => setOpenActionId(null)}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Eye style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+                View Invoice
+              </Link>
+
+              {/* Manage Payment */}
+              <Link
+                to={`/invoices/${row._id}/payments`}
+                style={actionItemStyle}
+                onClick={() => setOpenActionId(null)}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <IndianRupee style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+                Manage Payments
+              </Link>
+
+              {/* Edit */}
+              <Link
+                to={`/invoices/edit/${row._id}`}
+                style={actionItemStyle}
+                onClick={() => setOpenActionId(null)}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Pencil style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+                Edit Invoice
+              </Link>
+
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'var(--border, #E5E5E7)', margin: '2px 8px' }} />
+
+              {/* Delete */}
+              <button
+                onClick={() => {
+                  handleDeleteInvoice(row._id);
+                  setOpenActionId(null);
+                }}
+                style={{
+                  ...actionItemStyle,
+                  color: '#DC2626',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Trash2 style={{ width: '15px', height: '15px' }} />
+                Delete Invoice
+              </button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ padding: "16px" }} className="flex flex-col gap-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
-        style={{ marginBottom: "20px" }}
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-          <p className="text-sm text-gray-500" style={{ marginTop: "4px" }}>
+          <h1
+            style={{
+              fontSize: '28px',
+              fontWeight: 700,
+              color: 'var(--text-primary, #1D1D1F)',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.2,
+            }}
+          >
+            Invoices
+          </h1>
+          <p
+            style={{
+              marginTop: '4px',
+              fontSize: '14px',
+              color: 'var(--text-secondary, #6E6E73)',
+              fontWeight: 400,
+            }}
+          >
             Manage your invoices right here
           </p>
         </div>
-        <div style={{ marginTop: "16px" }} className="sm:mt-0">
-          <Link
-            to="/invoices/create"
-            className="inline-flex items-center border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            style={{ padding: "8px 16px" }}
-          >
-            <Plus className="h-4 w-4" style={{ marginRight: "8px" }} />
-            Create Invoice
-          </Link>
-        </div>
+        <Link
+          to="/invoices/create"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            borderRadius: '12px',
+            background: 'var(--accent, #0071E3)',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 200ms ease',
+            boxShadow: '0 1px 3px rgba(0, 113, 227, 0.3)',
+            border: 'none',
+            letterSpacing: '-0.006em',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--accent-hover, #0077ED)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 113, 227, 0.35)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--accent, #0071E3)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 113, 227, 0.3)';
+          }}
+        >
+          <Plus style={{ width: '16px', height: '16px' }} />
+          Create Invoice
+        </Link>
       </div>
 
       {/* Filters */}
       <div
-        className="flex flex-col sm:flex-row gap-4"
-        style={{ marginBottom: "20px" }}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
+        }}
       >
         {/* Search */}
-        <div className="relative flex-1">
+        <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '200px' }}>
           <div
-            className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
-            style={{ paddingLeft: "12px" }}
+            style={{
+              position: 'absolute',
+              left: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              color: 'var(--text-tertiary, #86868B)',
+            }}
           >
-            <Search className="h-5 w-5 text-gray-400" />
+            <Search style={{ width: '16px', height: '16px' }} />
           </div>
           <input
             type="text"
             placeholder="Search invoices..."
-            className="block w-full border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             style={{
-              paddingLeft: "40px",
-              paddingRight: "12px",
-              paddingTop: "8px",
-              paddingBottom: "8px",
+              ...inputStyle,
+              paddingLeft: '40px',
             }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent, #0071E3)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 113, 227, 0.12)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border, #E5E5E7)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           />
         </div>
 
         {/* Status Filter */}
-        <div className="sm:w-48">
+        <div style={{ flex: '0 0 auto', width: '160px' }}>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-            style={{ padding: "8px 12px" }}
+            style={selectStyle}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent, #0071E3)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 113, 227, 0.12)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border, #E5E5E7)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           >
             <option value="all">All Status</option>
             {statusOptions.map((status) => (
@@ -266,12 +727,19 @@ const Invoices = () => {
         </div>
 
         {/* Month Filter */}
-        <div className="sm:w-40">
+        <div style={{ flex: '0 0 auto', width: '150px' }}>
           <select
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
-            className="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-            style={{ padding: "8px 12px" }}
+            style={selectStyle}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent, #0071E3)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 113, 227, 0.12)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border, #E5E5E7)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           >
             <option value="all">All Months</option>
             {[
@@ -296,12 +764,19 @@ const Invoices = () => {
         </div>
 
         {/* Year Filter */}
-        <div className="sm:w-32">
+        <div style={{ flex: '0 0 auto', width: '120px' }}>
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-            style={{ padding: "8px 12px" }}
+            style={selectStyle}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent, #0071E3)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 113, 227, 0.12)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border, #E5E5E7)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           >
             <option value="all">All Years</option>
             {[2025, 2024, 2023, 2022].map((year) => (
@@ -313,254 +788,94 @@ const Invoices = () => {
         </div>
       </div>
 
-      {/* Table Wrapper */}
-      <div className="bg-white shadow rounded-md">
-        {/* Table Header */}
-        {filteredInvoices.length !== 0 && (
-          <div className="hidden sm:grid sm:grid-cols-5 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider">
-            <div style={{ padding: "12px" }}>Invoice ID</div>
-            <div style={{ padding: "12px" }}>Customer</div>
-            <div style={{ padding: "12px" }}>Amount</div>
-            <div style={{ padding: "12px" }}>Status</div>
-            <div style={{ padding: "12px" }}>Invoice Date</div>
-          </div>
-        )}
-
-        {/* Invoice Rows */}
-        <div className="divide-y divide-gray-200 bg-white shadow rounded-md">
-          {filteredInvoices.map((invoice) => (
-            <div
-              key={invoice._id}
-              className="grid grid-cols-1 sm:grid-cols-5 items-center hover:bg-gray-50 transition-colors"
+      {/* Data Table */}
+      <AppleDataTable
+        columns={invoiceColumns}
+        data={filteredInvoices}
+        loading={loading}
+        rowKey="_id"
+        defaultSortKey="invoiceDate"
+        defaultSortDir="desc"
+        emptyIcon={<FileText size={48} />}
+        emptyTitle="No invoices found"
+        emptySubtitle={
+          searchTerm || statusFilter !== "all" || monthFilter !== "all" || yearFilter !== "all"
+            ? "Try adjusting your search or filter criteria."
+            : "Get started by creating your first invoice."
+        }
+        emptyAction={
+          !searchTerm &&
+          statusFilter === "all" &&
+          monthFilter === "all" &&
+          yearFilter === "all" && (
+            <Link
+              to="/invoices/create"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                background: 'var(--accent, #0071E3)',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'all 200ms ease',
+                boxShadow: '0 1px 3px rgba(0, 113, 227, 0.3)',
+              }}
             >
-              {/* Invoice ID */}
-              <div
-                style={{ padding: "12px" }}
-                className="font-medium text-gray-900"
-              >
-                #{invoice.invoiceNumber}
-              </div>
+              <Plus style={{ width: '16px', height: '16px' }} />
+              Create Invoice
+            </Link>
+          )
+        }
+      />
 
-              {/* Customer */}
-              <div style={{ padding: "12px" }}>
-                {invoice.client?.companyName || "No Client"}
-              </div>
-
-              {/* Amount */}
-              <div style={{ padding: "12px" }} className="text-gray-900">
-                Rs. {invoice.totalAmount.toFixed(2)}
-              </div>
-
-              {/* Status Dropdown */}
-              <div style={{ padding: "12px" }} className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDropdownId(
-                      openDropdownId === invoice._id ? null : invoice._id
-                    );
-                  }}
-                  className={`text-sm relative inline-block min-w-[100px] rounded-md cursor-pointer focus:outline-none border transition-all ${
-                    statusColors[invoice.status]?.bg || "bg-gray-100"
-                  } ${statusColors[invoice.status]?.text || "text-gray-700"} ${
-                    statusColors[invoice.status]?.border || "border-gray-300"
-                  } ${statusColors[invoice.status]?.hover || "hover:bg-gray-200"}`}
-                  style={{
-                    paddingTop: "4px",
-                    paddingBottom: "4px",
-                    paddingLeft: "8px",
-                    paddingRight: "8px",
-                    minWidth: "100px",
-                  }}
-                >
-                  {invoice.status.toUpperCase()}
-                </button>
-
-                {openDropdownId === invoice._id && (
-                  <div
-                    className="absolute flex flex-col z-20 rounded-sm bg-white border border-black-200 shadow-lg"
-                    style={{ marginTop: "4px", minWidth: "120px" }}
-                  >
-                    {statusOptions.map(
-                      (status) => 
-                        status !== invoice.status && (
-                          <button
-                            key={status}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(invoice._id, status);
-                              setOpenDropdownId(null);
-                            }}
-                            className={`cursor-pointer w-full text-left text-sm transition-all ${
-                              statusColors[status]?.text || "text-gray-700"
-                            } hover:${statusColors[status]?.bg || "bg-gray-100"} ${
-                              statusColors[status]?.bg || "bg-gray-50"
-                            }`}
-                            style={{ padding: "8px 12px" }}
-                          >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </button>
-                        )
-                    )}
-                  </div>
-                )}
-              </div>
-              <div
-                style={{
-                  padding: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "8px",
-                }}
-              >
-                <span className="text-gray-500">
-                  {format(new Date(invoice.invoiceDate), "MMM dd, yyyy")}
-                </span>
-
-                {/* Actions Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenActionId(
-                        openActionId === invoice._id ? null : invoice._id
-                      );
-                    }}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                    style={{
-                      paddingTop: "4px",
-                      paddingBottom: "4px",
-                      paddingLeft: "6px",
-                      paddingRight: "6px",
-                    }}
-                  >
-                    <MoreHorizontal className="h-5 w-5 cursor-pointer" />
-                  </button>
-
-                  {openActionId === invoice._id && (
-                    <div
-                      className="absolute right-0 z-20 w-48 bg-white rounded-md shadow-lg border border-gray-200"
-                      style={{ marginTop: "4px" }}
-                    >
-                      {/* View */}
-                      <Link
-                        to={`/invoices/${invoice._id}`}
-                        className="flex items-center text-gray-700 hover:bg-gray-100 transition-colors"
-                        style={{
-                          paddingTop: "8px",
-                          paddingBottom: "8px",
-                          paddingLeft: "12px",
-                          paddingRight: "12px",
-                        }}
-                        onClick={() => setOpenActionId(null)}
-                      >
-                        <Eye
-                          className="h-4 w-4"
-                          style={{ marginRight: "8px" }}
-                        />
-                        View Invoice
-                      </Link>
-                      
-                      {/* Manage Payment */}
-                      <Link
-                        to={`/invoices/${invoice._id}/payments`}
-                        className="flex items-center text-gray-700 hover:bg-gray-100 transition-colors"
-                        style={{
-                          paddingTop: "8px",
-                          paddingBottom: "8px",
-                          paddingLeft: "12px",
-                          paddingRight: "12px",
-                        }}
-                        onClick={() => setOpenActionId(null)}
-                      >
-                        <IndianRupee
-                          className="h-4 w-4"
-                          style={{ marginRight: "8px" }}
-                        />
-                        Manage Payments
-                      </Link>
-
-                      {/* Edit */}
-                      <Link
-                        to={`/invoices/edit/${invoice._id}`}
-                        className="flex items-center text-gray-700 hover:bg-gray-100 transition-colors"
-                        style={{
-                          paddingTop: "8px",
-                          paddingBottom: "8px",
-                          paddingLeft: "12px",
-                          paddingRight: "12px",
-                        }}
-                        onClick={() => setOpenActionId(null)}
-                      >
-                        <Pencil
-                          className="h-4 w-4"
-                          style={{ marginRight: "8px" }}
-                        />
-                        Edit Invoice
-                      </Link>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => {
-                          handleDeleteInvoice(invoice._id);
-                          setOpenActionId(null);
-                        }}
-                        className="flex items-center w-full text-left text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors"
-                        style={{
-                          paddingTop: "8px",
-                          paddingBottom: "8px",
-                          paddingLeft: "12px",
-                          paddingRight: "12px",
-                        }}
-                      >
-                        <Trash2
-                          className="h-4 w-4"
-                          style={{ marginRight: "8px" }}
-                        />
-                        Delete Invoice
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Email Confirmation Modal */}
+      {showEmailModal && emailInvoice && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '24px',
+            width: '90%', maxWidth: '420px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#1D1D1F' }}>Send Reminder Email</h3>
+              <button onClick={() => setShowEmailModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <X size={20} color="#6E6E73" />
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Empty State */}
-      {filteredInvoices.length === 0 && (
-        <div
-          className="flex flex-col items-center text-center"
-          style={{ paddingTop: "48px", paddingBottom: "48px" }}
-        >
-          <div className="flex-shrink-0">
-            <FileText className="h-12 w-12 text-gray-400" />
+            <p style={{ fontSize: '14px', color: '#6E6E73', marginBottom: '16px', lineHeight: 1.5 }}>
+              You are about to send a pending bill reminder to <strong>{emailInvoice.client?.companyName}</strong> ({emailInvoice.client?.email || 'No email found'}).
+            </p>
+            <div style={{ background: '#F5F5F7', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '13px', color: '#1D1D1F', border: '1px solid #E5E5E7' }}>
+              <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: '#6E6E73' }}>Email Preview:</p>
+              <p style={{ margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>
+                "Dear {emailInvoice.client?.companyName},<br/><br/>Your bill for invoice #{emailInvoice.invoiceNumber} amounting to Rs. {emailInvoice.totalAmount} is pending. Please clear it by {emailInvoice.dueDate ? new Date(emailInvoice.dueDate).toLocaleDateString('en-GB') : '-'}.<br/><br/>Thank you."
+              </p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid #E5E5E7', background: '#fff', cursor: 'pointer', fontWeight: 600, color: '#1D1D1F' }}
+                disabled={isSendingEmail}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendEmail}
+                style={{ padding: '10px 16px', borderRadius: '10px', border: 'none', background: '#0071E3', color: '#fff', cursor: 'pointer', fontWeight: 600, opacity: isSendingEmail ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}
+                disabled={isSendingEmail || !emailInvoice.client?.email}
+              >
+                {isSendingEmail ? "Sending..." : "Send Email"}
+              </button>
+            </div>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">
-            No invoices found
-          </h3>
-          <p className="text-lg text-gray-500" style={{ marginTop: "4px" }}>
-            {searchTerm || statusFilter || monthFilter || yearFilter !== "all"
-              ? "Try adjusting your search or filter criteria."
-              : "Get started by creating your first invoice."}
-          </p>
-          {!searchTerm &&
-            statusFilter === "all" &&
-            monthFilter === "all" &&
-            yearFilter === "all" && (
-              <div style={{ marginTop: "24px" }}>
-                <Link
-                  to="/invoices/create"
-                  className="inline-flex items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                  style={{ padding: "8px 16px" }}
-                >
-                  <Plus className="h-4 w-4" style={{ marginRight: "8px" }} />
-                  Create Invoice
-                </Link>
-              </div>
-            )}
         </div>
       )}
     </div>

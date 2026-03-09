@@ -130,24 +130,24 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     style={{
                       fontWeight: "bold",
                       marginBottom: "5px",
-                      fontSize: "14px",
+                      fontSize: "16px",
                     }}
                   >
                     Bill To:
                   </div>
-                  <div style={{ fontWeight: "bold", fontSize: "13px" }}>
+                  <div style={{ fontWeight: "bold", fontSize: "15px" }}>
                     {invoiceData.client.companyName}
                   </div>
-                  <div>{invoiceData.client.address.street}</div>
-                  <div>
+                  <div style={{ fontSize: "14px" }}>{invoiceData.client.address.street}</div>
+                  <div style={{ fontSize: "14px" }}>
                     {invoiceData.client.address.city},{" "}
                     {invoiceData.client.address.state} -{" "}
                     {invoiceData.client.address.zipCode}
                   </div>
                   {invoiceData.client?.gstNumber && (
-                    <div>GSTIN/UIN: {invoiceData.client?.gstNumber}</div>
+                    <div style={{ fontSize: "14px" }}>GSTIN/UIN: {invoiceData.client?.gstNumber}</div>
                   )}
-                  <div>
+                  <div style={{ fontSize: "14px" }}>
                     State Name: {invoiceData.client.address.state}, Code:{" "}
                     {invoiceData.client.address.zipCode.substring(0, 2)}
                   </div>
@@ -162,7 +162,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
           <table
             style={{
               width: "100%",
-              fontSize: "12px",
+              fontSize: "14px",
               borderCollapse: "collapse",
             }}
           >
@@ -251,7 +251,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderRight: "1px solid #000",
                   borderBottom: "1px solid #000",
                   padding: "8px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   textAlign: "center",
                   width: "5%",
@@ -265,7 +265,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderRight: "1px solid #000",
                   borderBottom: "1px solid #000",
                   padding: "8px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   textAlign: "center",
                   width: "40%",
@@ -280,7 +280,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     borderRight: "1px solid #000",
                     borderBottom: "1px solid #000",
                     padding: "8px",
-                    fontSize: "12px",
+                    fontSize: "14px",
                     fontWeight: "bold",
                     textAlign: "center",
                     width: "10%",
@@ -295,7 +295,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderRight: "1px solid #000",
                   borderBottom: "1px solid #000",
                   padding: "8px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   textAlign: "center",
                   width: "10%",
@@ -309,7 +309,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderRight: "1px solid #000",
                   borderBottom: "1px solid #000",
                   padding: "8px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   textAlign: "center",
                   width: "15%",
@@ -323,7 +323,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderRight: "1px solid #000",
                   borderBottom: "1px solid #000",
                   padding: "8px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   textAlign: "center",
                   width: "10%",
@@ -345,7 +345,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     padding: "6px",
                     textAlign: "center",
                     verticalAlign: "top",
-                    fontSize: "12px",
+                    fontSize: "14px",
                   }}
                 >
                   {index + 1}
@@ -356,12 +356,12 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     borderBottom: "1px solid #000",
                     padding: "6px",
                     verticalAlign: "top",
-                    fontSize: "12px",
+                    fontSize: "14px",
                   }}
                 >
-                  <div style={{ fontWeight: "bold", fontSize: "12px" }}>{item.description}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "14px" }}>{item.description}</div>
                   {item.notes && (
-                    <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                    <div style={{ fontSize: "12px", marginTop: "2px" }}>
                       {item.notes}
                     </div>
                   )}
@@ -374,7 +374,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                       padding: "6px",
                       textAlign: "center",
                       verticalAlign: "top",
-                      fontSize: "12px",
+                      fontSize: "14px",
                     }}
                   >
                     {item.hsnCode || ""}
@@ -387,7 +387,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     padding: "6px",
                     textAlign: "center",
                     verticalAlign: "top",
-                    fontSize: "12px",
+                    fontSize: "14px",
                   }}
                 >
                   {item.quantity} {item.unitType}
@@ -399,7 +399,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     padding: "6px",
                     textAlign: "right",
                     verticalAlign: "top",
-                    fontSize: "12px",
+                    fontSize: "14px",
                   }}
                 >
                   {item.pricingType === "tiered" ? (
@@ -423,7 +423,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     padding: "6px",
                     textAlign: "right",
                     verticalAlign: "top",
-                    fontSize: "12px",
+                    fontSize: "14px",
                   }}
                 >
                   ₹{item.subtotal.toFixed(2)}
@@ -479,7 +479,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   padding: "6px",
                   textAlign: "right",
                   fontWeight: "bold",
-                  fontSize: "12px",
+                  fontSize: "14px",
                 }}
               >
                 {invoiceData.taxes && invoiceData.taxes.length > 0 && (
@@ -498,7 +498,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderBottom: "1px solid #000",
                   padding: "6px",
                   textAlign: "center",
-                  fontSize: "12px",
+                  fontSize: "14px",
                 }}
                 colSpan={2}
               >
@@ -511,7 +511,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   padding: "6px",
                   textAlign: "right",
                   fontWeight: "bold",
-                  fontSize: "12px",
+                  fontSize: "14px",
                 }}
               >
                 {invoiceData.taxes && invoiceData.taxes.length > 0 && (
@@ -535,7 +535,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   padding: "6px",
                   textAlign: "right",
                   fontWeight: "bold",
-                  fontSize: "13px",
+                  fontSize: "15px",
                 }}
               >
                 Total
@@ -546,7 +546,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   borderBottom: "1px solid #000",
                   padding: "6px",
                   textAlign: "center",
-                  fontSize: "13px",
+                  fontSize: "15px",
                 }}
                 colSpan={2}
               >
@@ -559,7 +559,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                   padding: "6px",
                   textAlign: "right",
                   fontWeight: "bold",
-                  fontSize: "13px",
+                  fontSize: "15px",
                 }}
               >
                 ₹ {invoiceData.totalAmount.toFixed(2)}
@@ -570,7 +570,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
       </div>
 
       {/* Amount in Words */}
-      <div style={{ marginBottom: "15px", fontSize: "12px" }}>
+      <div style={{ marginBottom: "15px", fontSize: "14px" }}>
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
           Amount Chargeable (in words)
         </div>
@@ -586,7 +586,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
             style={{
               width: "100%",
               borderCollapse: "collapse",
-              fontSize: "11px",
+              fontSize: "13px",
               minWidth: "500px",
             }}
           >
@@ -595,7 +595,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 <th
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "center",
                     width: "15%",
                   }}
@@ -605,7 +605,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 <th
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "center",
                     width: "25%",
                   }}
@@ -617,7 +617,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     <th
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "center",
                         width: "8%",
                       }}
@@ -627,7 +627,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     <th
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "center",
                         width: "12%",
                       }}
@@ -636,10 +636,10 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     </th>
                   </React.Fragment>
                 ))}
-                <th
+                  <th
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "center",
                     width: "15%",
                   }}
@@ -660,7 +660,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     <td
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "center",
                       }}
                     >
@@ -669,7 +669,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     <td
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "right",
                       }}
                     >
@@ -682,7 +682,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                           <td
                             style={{
                               border: "1px solid #000",
-                              padding: "4px",
+                              padding: "6px",
                               textAlign: "center",
                             }}
                           >
@@ -691,7 +691,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                           <td
                             style={{
                               border: "1px solid #000",
-                              padding: "4px",
+                              padding: "6px",
                               textAlign: "right",
                             }}
                           >
@@ -703,7 +703,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                     <td
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "right",
                       }}
                     >
@@ -718,7 +718,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 <td
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "center",
                   }}
                 >
@@ -727,7 +727,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 <td
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "right",
                   }}
                 >
@@ -736,12 +736,12 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 {invoiceData.taxes.map((tax, taxIndex) => (
                   <React.Fragment key={taxIndex}>
                     <td
-                      style={{ border: "1px solid #000", padding: "4px" }}
+                      style={{ border: "1px solid #000", padding: "6px" }}
                     ></td>
                     <td
                       style={{
                         border: "1px solid #000",
-                        padding: "4px",
+                        padding: "6px",
                         textAlign: "right",
                       }}
                     >
@@ -752,7 +752,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
                 <td
                   style={{
                     border: "1px solid #000",
-                    padding: "4px",
+                    padding: "6px",
                     textAlign: "right",
                   }}
                 >
@@ -788,7 +788,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
         {currentUser.bankDetails && (
           <div
             style={{
-              fontSize: "12px",
+              fontSize: "14px",
               border: "1px solid #000",
               padding: "12px",
             }}
@@ -797,7 +797,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords }, ref) => {
               style={{
                 fontWeight: "bold",
                 marginBottom: "8px",
-                fontSize: "13px",
+                fontSize: "15px",
               }}
             >
               Company's Bank Details

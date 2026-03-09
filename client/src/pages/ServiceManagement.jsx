@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Package } from "lucide-react";
 import axios from "axios";
 import ServiceModal from "../components/ServiceModal";
+import AppleDataTable from "../components/AppleDataTable";
 import toast from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -109,20 +110,99 @@ const ServiceManagement = () => {
     return units[unit] || unit;
   };
 
-  if (loading) {
-    return (
-      <div
-        className="flex items-center justify-center"
-        style={{ height: "400px" }}
-      >
-        <div className="text-lg text-gray-600">Loading services...</div>
-      </div>
-    );
-  }
+  // ── Column config ──
+  const serviceColumns = [
+    {
+      key: 'name',
+      label: 'Service Name',
+      sortable: true,
+      width: '20%',
+      render: (row) => (
+        <span style={{ fontWeight: 500, color: 'var(--adt-text-primary)' }}>
+          {row.name}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      width: '28%',
+      render: (row) => (
+        <span
+          style={{
+            color: 'var(--adt-text-secondary)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            display: 'block',
+          }}
+          title={row.description}
+        >
+          {row.description || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'pricing',
+      label: 'Pricing',
+      width: '18%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-primary)', fontWeight: 500 }}>
+          {getPricingDisplay(row)}
+        </span>
+      ),
+    },
+    {
+      key: 'unitType',
+      label: 'Unit',
+      sortable: true,
+      width: '12%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-secondary)' }}>
+          {getUnitDisplay(row.unitType)}
+        </span>
+      ),
+    },
+    {
+      key: 'hsnCode',
+      label: 'HSN Code',
+      width: '12%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-secondary)' }}>
+          {row.hsnCode || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      width: '10%',
+      render: (row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <button
+            className="adt-action-btn adt-action-btn--primary"
+            onClick={() => setEditingService(row)}
+            aria-label={`Edit ${row.name}`}
+            title="Edit"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            className="adt-action-btn adt-action-btn--danger"
+            onClick={() => handleDeleteService(row._id)}
+            aria-label={`Delete ${row.name}`}
+            title="Delete"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}>
-      {/* Header - Matching Clients style */}
+      {/* Header — Matching Clients style */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Services</h1>
@@ -147,7 +227,7 @@ const ServiceManagement = () => {
         </div>
       </div>
 
-      {/* Search - Matching Clients style */}
+      {/* Search — Matching Clients style */}
       <div className="relative" style={{ marginTop: "1.5rem" }}>
         <div
           className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
@@ -170,136 +250,24 @@ const ServiceManagement = () => {
         />
       </div>
 
-      {/* Services Grid */}
-      {filteredServices.length > 0 ? (
-        <div
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          style={{ marginTop: "1.5rem" }}
-        >
-          {filteredServices.map((service) => (
-            <div
-              key={service._id}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="sm:p-6" style={{ padding: "1.25rem" }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">
-                      {service.name}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditingService(service)}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteService(service._id)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  style={{ marginTop: "1rem" }}
-                  className="flex flex-col gap-2"
-                >
-                  <p className="text-sm text-gray-600">{service.description}</p>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700">Pricing:</span>
-                    <span className="text-gray-900">
-                      {getPricingDisplay(service)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700">Unit:</span>
-                    <span className="text-gray-900">
-                      {getUnitDisplay(service.unitType)}
-                    </span>
-                  </div>
-
-                  {service.pricingType === "tiered" &&
-                    service.pricingTiers?.length > 0 && (
-                      <div
-                        className="bg-gray-50 rounded-lg"
-                        style={{ padding: "12px", marginTop: "8px" }}
-                      >
-                        <h4
-                          className="text-xs font-medium text-gray-700"
-                          style={{ marginBottom: "8px" }}
-                        >
-                          Pricing Tiers:
-                        </h4>
-                        <div className="flex flex-col gap-1">
-                          {service.pricingTiers
-                            .slice(0, 2)
-                            .map((tier, index) => (
-                              <div
-                                key={index}
-                                className="text-xs text-gray-600"
-                              >
-                                {tier.minValue}-{tier.maxValue || "∞"}{" "}
-                                {getUnitDisplay(service.unitType)}: ₹{tier.rate}
-                                {tier.rateType === "unitRate" ? "/unit" : ""}
-                              </div>
-                            ))}
-                          {service.pricingTiers.length > 2 && (
-                            <div className="text-xs text-gray-500">
-                              +{service.pricingTiers.length - 2} more tiers
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  {service.hsnCode && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">
-                        HSN Code:
-                      </span>
-                      <span className="text-gray-900">{service.hsnCode}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div
-          className="text-center"
-          style={{ paddingTop: "3rem", paddingBottom: "3rem" }}
-        >
-          <div
-            className="text-gray-400"
-            style={{
-              width: "3rem",
-              height: "3rem",
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <Package className="h-12 w-12" />
-          </div>
-          <h3
-            className="text-sm font-medium text-gray-900"
-            style={{ marginTop: "0.5rem" }}
-          >
-            No services found
-          </h3>
-          <p className="text-sm text-gray-500" style={{ marginTop: "0.25rem" }}>
-            {searchTerm
+      {/* Data Table */}
+      <div style={{ marginTop: "1.5rem" }}>
+        <AppleDataTable
+          columns={serviceColumns}
+          data={filteredServices}
+          loading={loading}
+          rowKey="_id"
+          defaultSortKey="name"
+          defaultSortDir="asc"
+          emptyIcon={<Package size={48} />}
+          emptyTitle="No services found"
+          emptySubtitle={
+            searchTerm
               ? "Try adjusting your search terms."
-              : "Get started by creating a new service."}
-          </p>
-          {!searchTerm && (
-            <div style={{ marginTop: "1.5rem" }}>
+              : "Get started by creating a new service."
+          }
+          emptyAction={
+            !searchTerm && (
               <button
                 onClick={() => setShowForm(true)}
                 className="inline-flex items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -313,10 +281,10 @@ const ServiceManagement = () => {
                 <Plus className="h-4 w-4" style={{ marginRight: "0.5rem" }} />
                 Add Service
               </button>
-            </div>
-          )}
-        </div>
-      )}
+            )
+          }
+        />
+      </div>
 
       {/* Add/Edit Service Modal */}
       {(showForm || editingService) && (

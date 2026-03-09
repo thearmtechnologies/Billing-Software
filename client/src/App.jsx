@@ -19,7 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--bg-page, #F7F7F8)' }}>
       <UserProvider>
         <Toaster 
           position="top-center" 
