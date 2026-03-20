@@ -447,7 +447,7 @@
     border: 1px solid var(--adt-border);
     border-radius: var(--adt-radius-lg);
     box-shadow: var(--adt-shadow-sm);
-    overflow: hidden;
+    overflow: visible;
     transition: box-shadow var(--adt-transition-base), transform var(--adt-transition-base);
   }
 
@@ -498,11 +498,15 @@
     font-weight: var(--adt-font-weight-semibold);
     border-bottom: 1px solid var(--adt-border);
     min-height: 44px;
+    border-top-left-radius: calc(var(--adt-radius-lg) - 1px);
+    border-top-right-radius: calc(var(--adt-radius-lg) - 1px);
   }
 
   /* Last cell — no bottom border */
   .adt-tr .adt-td:last-child {
     border-bottom: none;
+    border-bottom-left-radius: calc(var(--adt-radius-lg) - 1px);
+    border-bottom-right-radius: calc(var(--adt-radius-lg) - 1px);
   }
 
   /* Right-aligned cells reset on mobile */
@@ -518,6 +522,8 @@
     border-top: 1px solid var(--adt-border-light);
     border-bottom: none;
     padding: 10px 16px;
+    border-bottom-left-radius: calc(var(--adt-radius-lg) - 1px);
+    border-bottom-right-radius: calc(var(--adt-radius-lg) - 1px);
   }
 
   .adt-td--actions::before {

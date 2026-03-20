@@ -34,7 +34,7 @@ const s = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderColor: "#000",
-    alignItems: "center",
+    // alignItems: "center",
   },
   companyName: {
     fontSize: 24,
@@ -45,7 +45,7 @@ const s = StyleSheet.create({
   },
   companyDetails: {
     fontSize: 10,
-    textAlign: "center",
+    // textAlign: "center",
   },
 
   /* ── Main Content Container ───────────────────────── */
@@ -55,7 +55,7 @@ const s = StyleSheet.create({
   invoiceTitle: {
     fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    textAlign: "center",
+    // textAlign: "center",
     marginBottom: 10,
   },
 
@@ -196,7 +196,7 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
-const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
+const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64, logoBase64 }) => {
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
@@ -224,16 +224,26 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           
           {/* Header */}
           <View style={s.headerWrap} fixed>
-            <Text style={s.companyName}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
-            <View style={s.companyDetails}>
-              <Text>
-                Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
-                {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
-              </Text>
-              <Text>
-                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
-                {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-              </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {logoBase64 ? (
+                <Image
+                  src={logoBase64}
+                  style={{ width: 56, height: 40, maxWidth: 56, maxHeight: 40, marginRight: 8 }}
+                />
+              ) : null}
+              <View>
+                <Text style={s.companyName}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
+                <View style={s.companyDetails}>
+                  <Text>
+                    Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
+                    {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                  </Text>
+                  <Text>
+                    Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
+                    {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
 
@@ -424,7 +434,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {signatureBase64 && (
                   <Image 
                     src={signatureBase64} 
-                    style={{ width: 100, height: 35, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                    style={{ width: 100, height: 35, maxWidth: 100, maxHeight: 35, alignSelf: "flex-end", marginBottom: 10 }} 
                   />
                 )}
                 <Text style={s.sigLabel}>Authorized Signatory</Text>

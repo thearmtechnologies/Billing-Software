@@ -17,6 +17,7 @@ import Template1PDF from "../templates/Template1PDF";
 import Template2PDF from "../templates/Template2PDF";
 import Template3PDF from "../templates/Template3PDF";
 import Template4PDF from "../templates/Template4PDF";
+import Template6PDF from "../templates/Template6PDF";
 
 const InvoiceView = () => {
   const { id } = useParams();
@@ -52,7 +53,7 @@ const InvoiceView = () => {
   // Pre-fetch company logo as base64 to avoid CORS issues with @react-pdf/renderer
   useEffect(() => {
     const fetchLogoAsBase64 = async () => {
-      const logoUrl = currentUser?.logo;
+      const logoUrl = currentUser?.logoUrl;
       if (!logoUrl) return;
       try {
         const response = await fetch(logoUrl);
@@ -66,7 +67,7 @@ const InvoiceView = () => {
       }
     };
     fetchLogoAsBase64();
-  }, [currentUser?.logo]);
+  }, [currentUser?.logoUrl]);
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -103,6 +104,8 @@ const InvoiceView = () => {
             return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
           case "template5":
             return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          case "template6":
+            return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           case "template1":
           default:
             return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
@@ -136,6 +139,7 @@ const InvoiceView = () => {
             case "template3": return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
             case "template4": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
             case "template5": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template6": return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
             default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           }
         };
@@ -296,7 +300,7 @@ const InvoiceView = () => {
             </PDFViewer>
           </div>
         );
-        case "template5":
+      case "template5":
         return (
           <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
             <PDFViewer width="100%" height="100%" className="border-0">
@@ -305,6 +309,20 @@ const InvoiceView = () => {
                 numberToWords={numberToWords}
                 currentUser={currentUser}
                 signatureBase64={signatureBase64}
+              />
+            </PDFViewer>
+          </div>
+        );
+      case "template6":
+        return (
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template6PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
               />
             </PDFViewer>
           </div>

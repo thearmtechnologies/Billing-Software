@@ -124,7 +124,7 @@ const Invoices = () => {
 
         // Fetch logo as base64 (avoids CORS issue with @react-pdf/renderer)
         let logoBase64 = null;
-        const logoUrl = currentUser?.logo;
+        const logoUrl = currentUser?.logoUrl;
         if (logoUrl) {
           try {
             const logoResp = await fetch(logoUrl);
