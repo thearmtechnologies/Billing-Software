@@ -108,6 +108,22 @@ const userSchema = new mongoose.Schema(
         default: "savings",
       },
     },
+    bankAccounts: [
+      {
+        accountHolderName: { type: String, trim: true, required: true },
+        bankName: { type: String, trim: true, required: true },
+        branchName: { type: String, trim: true },
+        accountNumber: { type: String, trim: true, required: true },
+        ifscCode: { type: String, trim: true, uppercase: true, required: true },
+        upiId: { type: String, trim: true },
+        accountType: {
+          type: String,
+          enum: ["savings", "current", "salary", "other"],
+          default: "savings",
+        },
+        isPrimary: { type: Boolean, default: false },
+      }
+    ],
     isActive: {
       type: Boolean,
       default: true,
@@ -121,6 +137,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    invoicePreferences: {
+      prefix: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      suffix: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
+    logoUrl: { type: String, default: '' },
+    signatureUrl: { type: String, default: '' },
   },
   {
     timestamps: true,

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Phone, Mail, Users } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Users, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ClientModal from '../components/ClientModal';
+import AppleDataTable from '../components/AppleDataTable';
 import axios from 'axios';
 axios.defaults.withCredentials = true;
 
@@ -14,6 +16,7 @@ const Clients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchClients();
@@ -74,13 +77,82 @@ const Clients = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  // ── Column config ──
+  const clientColumns = [
+    {
+      key: 'companyName',
+      label: 'Company Name',
+      sortable: true,
+      width: '25%',
+      render: (row) => (
+        <span style={{ fontWeight: 500, color: 'var(--adt-text-primary)' }}>
+          {row.companyName}
+        </span>
+      ),
+    },
+    {
+      key: 'phone',
+      label: 'Phone',
+      width: '18%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-secondary)' }}>{row.phone || '—'}</span>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true,
+      width: '25%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-secondary)' }}>{row.email || '—'}</span>
+      ),
+    },
+    {
+      key: 'address.city',
+      label: 'City',
+      sortable: true,
+      width: '17%',
+      render: (row) => (
+        <span style={{ color: 'var(--adt-text-secondary)' }}>
+          {row.address?.city || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      width: '15%',
+      render: (row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <button
+            className="adt-action-btn adt-action-btn--primary"
+            onClick={() => handleEditClient(row)}
+            aria-label={`Edit ${row.companyName}`}
+            title="Edit"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            className="adt-action-btn"
+            style={{ color: 'var(--adt-text-secondary)', background: 'transparent' }}
+            onClick={() => navigate(`/clients/${row._id}/ledger`)}
+            aria-label={`View Ledger for ${row.companyName}`}
+            title="View Ledger"
+          >
+            <BookOpen size={15} />
+          </button>
+          <button
+            className="adt-action-btn adt-action-btn--danger"
+            onClick={() => handleDeleteClient(row._id)}
+            aria-label={`Delete ${row.companyName}`}
+            title="Delete"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
@@ -92,11 +164,11 @@ const Clients = () => {
             Manage your client database
           </p>
         </div>
-        <div style={{ marginTop: '1rem' }} className="sm:mt-0">
+        <div style={{ marginTop: '1rem' }} className="sm:mt-0 w-full sm:w-auto">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+            className="inline-flex items-center justify-center w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
           >
             <Plus className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
             Add Client
@@ -119,73 +191,20 @@ const Clients = () => {
         />
       </div>
 
-      {/* Clients Grid */}
-      {filteredClients.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ marginTop: '1.5rem' }}>
-          {filteredClients.map((client) => (
-            <div key={client._id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
-              <div className="sm:p-6" style={{ padding: '1.25rem' }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">{client.companyName}</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditClient(client)}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClient(client._id)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '1rem' }} className="flex flex-col gap-2">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Phone className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
-                    {client.phone}
-                  </div>
-                  {client.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
-                      {client.email}
-                    </div>
-                  )}
-                </div>
-
-                {client.address && (
-                  <div className="text-sm text-gray-500" style={{ marginTop: '0.75rem' }}>
-                    {client.address.street && <p>{client.address.street}</p>}
-                    {(client.address.city || client.address.state) && (
-                      <p>
-                        {client.address.city}
-                        {client.address.city && client.address.state && ', '}
-                        {client.address.state}
-                        {client.address.zipCode && ` ${client.address.zipCode}`}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
-          <div className="text-gray-400" style={{ width: '3rem', height: '3rem', marginLeft: 'auto', marginRight: 'auto' }}>
-            <Users className="h-12 w-12" />
-          </div>
-          <h3 className="text-sm font-medium text-gray-900" style={{ marginTop: '0.5rem' }}>No clients found</h3>
-          <p className="text-sm text-gray-500" style={{ marginTop: '0.25rem' }}>
-            {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new client.'}
-          </p>
-          {!searchTerm && (
-            <div style={{ marginTop: '1.5rem' }}>
+      {/* Data Table */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <AppleDataTable
+          columns={clientColumns}
+          data={filteredClients}
+          loading={loading}
+          rowKey="_id"
+          defaultSortKey="companyName"
+          defaultSortDir="asc"
+          emptyIcon={<Users size={48} />}
+          emptyTitle="No clients found"
+          emptySubtitle={searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new client.'}
+          emptyAction={
+            !searchTerm && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -194,10 +213,10 @@ const Clients = () => {
                 <Plus className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
                 Add Client
               </button>
-            </div>
-          )}
-        </div>
-      )}
+            )
+          }
+        />
+      </div>
 
       {/* Client Modal */}
       <ClientModal

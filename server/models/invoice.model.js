@@ -112,6 +112,16 @@ const invoiceSchema = new mongoose.Schema(
 
     items: [invoiceItemSchema],
 
+    bankDetails: {
+      accountHolderName: String,
+      bankName: String,
+      branchName: String,
+      accountNumber: String,
+      ifscCode: String,
+      upiId: String,
+      accountType: String,
+    },
+
     // Totals
     subtotal: { type: Number, required: true, min: 0 },
 
@@ -131,6 +141,9 @@ const invoiceSchema = new mongoose.Schema(
     amountDue: { type: Number, default: 0, min: 0 },
 
     paymentHistory: [paymentHistorySchema],
+
+    includeLogo: { type: Boolean, default: true },
+    includeSignature: { type: Boolean, default: true },
 
     totalTax: { type: Number, default: 0, min: 0 },
     totalAmount: { type: Number, required: true, min: 0 },

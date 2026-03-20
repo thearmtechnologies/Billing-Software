@@ -12,7 +12,7 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
 
   return (
     <div
-      className="w-full font-sans"
+      className="w-full font-sans print:mt-[35mm]"
       style={{ 
         padding: "20px",
         backgroundColor: "#FFFFFF", 
@@ -181,14 +181,14 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
                   {item.pricingType === "tiered"
                     ? item.pricingTiers.map((tier, i) => (
                         <div key={i} style={{ marginBottom: "3px" }}>
-                          {tier.minValue} – {tier.maxValue !== null ? tier.maxValue : "Above"} {item.unitType}: ₹{tier.rate}{" "}
+                          {tier.minValue} – {tier.maxValue !== null ? tier.maxValue : "Above"} {item.unitType}: Rs. {tier.rate}{" "}
                           {tier.rateType === "unitRate" ? `/ ${item.unitType}` : "(slab)"}
                         </div>
                       ))
-                    : `₹${item.baseRate}`}
+                    : `Rs. ${item.baseRate}`}
                 </td>
                 <td style={{ padding: "10px 8px", textAlign: "center", verticalAlign: "top", fontSize: "13px", fontWeight: "600", border: "1px solid #dee2e6" }}>
-                  ₹{item.subtotal}
+                  Rs. {item.subtotal}
                 </td>
               </tr>
             ))}
@@ -203,7 +203,7 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
           {invoiceData.subtotal > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #dee2e6" }}>
               <span style={{ fontSize: "14px" }}>Sub Total</span>
-              <span style={{ fontSize: "14px", fontWeight: "600" }}>₹{invoiceData.subtotal.toFixed(2)}</span>
+              <span style={{ fontSize: "14px", fontWeight: "600" }}>Rs. {invoiceData.subtotal.toFixed(2)}</span>
             </div>
           )}
 
@@ -213,12 +213,12 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #dee2e6" }}>
                 <span style={{ fontSize: "14px" }}>Discount</span>
                 <span style={{ fontSize: "14px", fontWeight: "600" }}>
-                  -₹{invoiceData.discount}{invoiceData.discountType === "percentage" ? "%" : ""}
+                  -Rs. {invoiceData.discount}{invoiceData.discountType === "percentage" ? "%" : ""}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #dee2e6" }}>
                 <span style={{ fontSize: "14px" }}>Taxable Amount</span>
-                <span style={{ fontSize: "14px", fontWeight: "600" }}>₹{taxableAmount.toFixed(2)}</span>
+                <span style={{ fontSize: "14px", fontWeight: "600" }}>Rs. {taxableAmount.toFixed(2)}</span>
               </div>
             </>
           )}
@@ -227,14 +227,14 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
           {invoiceData.taxes && invoiceData.taxes.length > 0 && invoiceData.taxes.map((tax, index) => (
             <div key={index} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #dee2e6" }}>
               <span style={{ fontSize: "14px" }}>{tax.name} @{tax.rate}%</span>
-              <span style={{ fontSize: "14px", fontWeight: "600" }}>₹{tax.amount.toFixed(2)}</span>
+              <span style={{ fontSize: "14px", fontWeight: "600" }}>Rs. {tax.amount.toFixed(2)}</span>
             </div>
           ))}
 
           {/* Total */}
           <div style={{ display: "flex", justifyContent: "space-between", padding: "12px", backgroundColor: "#007bff", color: "white", borderRadius: "6px" }}>
             <span style={{ fontSize: "16px", fontWeight: "bold" }}>TOTAL</span>
-            <span style={{ fontSize: "16px", fontWeight: "bold" }}>₹{invoiceData.totalAmount.toFixed(2)}</span>
+            <span style={{ fontSize: "16px", fontWeight: "bold" }}>Rs. {invoiceData.totalAmount.toFixed(2)}</span>
           </div>
         </div>
       </div>

@@ -21,7 +21,6 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-
   useEffect(() => {
     if (client) {
       setFormData({ ...client, address: client.address || emptyForm.address });
@@ -55,8 +54,8 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
   };
 
   const handleNext = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
 
     if (validateStep()) {
       setStep(2);
@@ -76,246 +75,413 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
     setLoading(true);
     await handleSaveClient(formData);
     setLoading(false);
-    onclose()
+    onClose();
   };
 
   if (!isOpen) return null;
+
+  /* ── Apple-Style Tokens ── */
+  const inputStyle = {
+    width: "100%",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    border: "1px solid var(--border, #E5E5E7)",
+    background: "var(--surface, #FFFFFF)",
+    fontSize: "14px",
+    fontFamily: "inherit",
+    color: "var(--text-primary, #1D1D1F)",
+    transition: "all 200ms ease",
+    outline: "none",
+    marginTop: "6px",
+  };
+
+  const labelStyle = {
+    display: "block",
+    fontSize: "13px",
+    fontWeight: 600,
+    color: "var(--text-secondary, #6E6E73)",
+    letterSpacing: "0.02em",
+    textTransform: "uppercase",
+  };
+
+  const btnPrimary = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 20px",
+    borderRadius: "12px",
+    background: "var(--accent, #0071E3)",
+    color: "#fff",
+    fontSize: "14px",
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+    transition: "all 200ms ease",
+    boxShadow: "0 1px 3px rgba(0, 113, 227, 0.3)",
+    letterSpacing: "-0.006em",
+  };
+
+  const btnSecondary = {
+    ...btnPrimary,
+    background: "var(--surface-secondary, #FBFBFD)",
+    color: "var(--text-primary, #1D1D1F)",
+    border: "1px solid var(--border, #E5E5E7)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="fixed inset-0 transition-opacity"
-        style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+        style={{
+          background: "rgba(0,0,0,0.4)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+        }}
         onClick={onClose}
       />
 
       {/* Modal */}
       <div
-        className="relative bg-white rounded-lg shadow-xl transform transition-all"
-        style={{ width: "500px", height: "600px", padding: "0" }}
+        className="relative bg-white transform transition-all"
+        style={{
+          width: "500px",
+          height: "600px",
+          borderRadius: "20px",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
       >
         <form
           onSubmit={(e) => {
-            if ((step) === 2) {
+            if (step === 2) {
               handleSubmit(e);
             } else {
               e.preventDefault();
             }
           }}
-          className="h-full flex flex-col"
+          style={{ display: "flex", flexDirection: "column", height: "100%" }}
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between border-b"
-            style={{ padding: "1rem" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "20px 24px",
+              borderBottom: "1px solid var(--border-light, #F0F0F2)",
+            }}
           >
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3
+              style={{
+                fontSize: "20px",
+                fontWeight: 600,
+                color: "var(--text-primary, #1D1D1F)",
+                letterSpacing: "-0.02em",
+              }}
+            >
               {client ? "Edit Client" : "Add New Client"}
             </h3>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-tertiary, #86868B)",
+                padding: "4px",
+                borderRadius: "50%",
+                transition: "all 150ms ease",
+                display: "flex",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
+                e.currentTarget.style.color = "var(--text-primary, #1D1D1F)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "var(--text-tertiary, #86868B)";
+              }}
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Progress Bar */}
-          <div
-            className="flex items-center justify-between"
-            style={{ margin: "1rem 0", padding: "0, 16px" }}
-          >
-            <div
-              className={`flex-1 h-2 rounded-full ${
-                step >= 1 ? "bg-blue-600" : "bg-gray-300"
-              }`}
-            ></div>
-            <div
-              className={`flex-1 h-2 rounded-full ${
-                step >= 2 ? "bg-blue-600" : "bg-gray-300"
-              }`}
-              style={{ marginLeft: "4px" }}
-            ></div>
+          <div style={{ padding: "20px 24px 0 24px" }}>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <div
+                style={{
+                  flex: 1,
+                  height: "4px",
+                  borderRadius: "2px",
+                  background: step >= 1 ? "var(--accent, #0071E3)" : "var(--border-light, #F0F0F2)",
+                  transition: "background 300ms ease",
+                }}
+              />
+              <div
+                style={{
+                  flex: 1,
+                  height: "4px",
+                  borderRadius: "2px",
+                  background: step >= 2 ? "var(--accent, #0071E3)" : "var(--border-light, #F0F0F2)",
+                  transition: "background 300ms ease",
+                }}
+              />
+            </div>
           </div>
 
-          {/* Steps */}
+          {/* Steps Area */}
           <div
-            className="flex-1 overflow-y-auto"
-            style={{ padding: "0 16px 1rem 16px" }}
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
           >
             {step === 1 && (
-              <div className="flex flex-col gap-4">
+              <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Company Name *
+                  <label style={labelStyle}>
+                    Company Name <span style={{ color: "red" }}>*</span>
                   </label>
                   <input
                     type="text"
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleInputChange}
-                    className={`block w-full border rounded-md shadow-sm ${
-                      errors.companyName ? "border-red-500" : "border-gray-300"
-                    }`}
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
+                    style={{
+                      ...inputStyle,
+                      borderColor: errors.companyName ? "#DC2626" : "var(--border, #E5E5E7)",
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.companyName) {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      } else {
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
+                      }
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = errors.companyName ? "#DC2626" : "var(--border, #E5E5E7)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
                   />
                   {errors.companyName && (
-                    <p
-                      className="text-red-500 text-sm"
-                      style={{ marginTop: "0.25rem" }}
-                    >
+                    <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>
                       {errors.companyName}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
+                  <label style={labelStyle}>Email</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
+                    style={inputStyle}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Phone
-                  </label>
+                  <label style={labelStyle}>Phone</label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
+                    style={inputStyle}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
                   />
                 </div>
-              </div>
+              </>
             )}
+
             {step === 2 && (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Street
-                  </label>
-                  <input
-                    type="text"
-                    name="address.street"
-                    value={formData.address.street}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>Street Address</label>
+                    <input
+                      type="text"
+                      name="address.street"
+                      value={formData.address.street}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>City</label>
+                    <input
+                      type="text"
+                      name="address.city"
+                      value={formData.address.city}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>State</label>
+                    <input
+                      type="text"
+                      name="address.state"
+                      value={formData.address.state}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>ZIP Code</label>
+                    <input
+                      type="text"
+                      name="address.zipCode"
+                      value={formData.address.zipCode}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Country</label>
+                    <input
+                      type="text"
+                      name="address.country"
+                      value={formData.address.country}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+                    <label style={labelStyle}>GST Number</label>
+                    <input
+                      type="text"
+                      name="gstNumber"
+                      value={formData.gstNumber}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>Notes</label>
+                    <textarea
+                      name="notes"
+                      rows={2}
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      style={{ ...inputStyle, resize: "vertical", minHeight: "80px" }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="address.city"
-                    value={formData.address.city}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    name="address.state"
-                    value={formData.address.state}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    name="address.zipCode"
-                    value={formData.address.zipCode}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    name="address.country"
-                    value={formData.address.country}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    GST Number
-                  </label>
-                  <input
-                    type="text"
-                    name="gstNumber"
-                    value={formData.gstNumber}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Notes
-                  </label>
-                  <textarea
-                    name="notes"
-                    rows={3}
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    className="block w-full border-gray-300 rounded-md shadow-sm"
-                    style={{ marginTop: "0.25rem", padding: "0.5rem" }}
-                  />
-                </div>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer Area */}
           <div
-            className="bg-gray-50 flex justify-between"
-            style={{ padding: "1rem" }}
+            style={{
+              padding: "16px 24px",
+              background: "var(--bg-page, #F7F7F8)",
+              borderTop: "1px solid var(--border-light, #F0F0F2)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm bg-white text-gray-700 hover:bg-gray-50"
-              style={{ padding: "0.5rem 1rem" }}
+              style={btnSecondary}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
             >
               Cancel
             </button>
 
-            <div className="flex gap-3">
+            <div style={{ display: "flex", gap: "12px" }}>
               {step === 2 && (
                 <button
                   type="button"
                   onClick={handlePrevious}
-                  className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm bg-white text-gray-700 hover:bg-gray-50"
-                  style={{ padding: "0.5rem 1rem" }}
+                  style={btnSecondary}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
                 >
                   Previous
                 </button>
@@ -325,19 +491,41 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex justify-center rounded-md border border-transparent shadow-sm bg-blue-600 text-white hover:bg-blue-700"
-                  style={{ padding: "0.5rem 1rem" }}
+                  style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = "var(--accent, #0071E3)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                    }
+                  }}
                 >
-                  {loading ? "Saving..." : client ? "Update" : "Create"}
+                  {loading ? "Saving..." : client ? "Update Client" : "Create Client"}
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="inline-flex justify-center rounded-md border border-transparent shadow-sm bg-blue-600 text-white hover:bg-blue-700"
-                  style={{ padding: "0.5rem 1rem" }}
+                  style={btnPrimary}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "var(--accent, #0071E3)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                  }}
                 >
-                  Next
+                  Next Step
                 </button>
               )}
             </div>

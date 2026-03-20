@@ -1,15 +1,23 @@
-import React, { useEffect, useState, useRef } from "react";
-import { data, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState, useRef, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Template1 from "../templates/Template1";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import Template2 from "../templates/Template2";
-import TemplateSidebar from "./TemplateSidebar";
 import Template3 from "../templates/Template3";
 import Template4 from "../templates/Template4";
+import TemplateSidebar from "./TemplateSidebar";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { numberToWords } from "../utils/numberToWords";
+import { UserContext } from "../context/userContext";
+import { pdf, PDFViewer } from "@react-pdf/renderer";
+import "../styles/invoice-print.css";
+import Template5PDF from "../templates/Template5PDF";
+import Template1PDF from "../templates/Template1PDF";
+import Template2PDF from "../templates/Template2PDF";
+import Template3PDF from "../templates/Template3PDF";
+import Template4PDF from "../templates/Template4PDF";
+import Template6PDF from "../templates/Template6PDF";
 
 const InvoiceView = () => {
   const { id } = useParams();
@@ -19,88 +27,47 @@ const InvoiceView = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigate = useNavigate();
-
+  const { currentUser } = useContext(UserContext);
   const printRef = useRef(null);
+  const [signatureBase64, setSignatureBase64] = useState(null);
+  const [logoBase64, setLogoBase64] = useState(null);
 
-  function numberToWords(num) {
-    if (typeof num !== "number") return "";
+  // Pre-fetch signature image as base64 to avoid CORS issues with @react-pdf/renderer
+  useEffect(() => {
+    const fetchSignatureAsBase64 = async () => {
+      const sigUrl = currentUser?.signatureUrl;
+      if (!sigUrl) return;
+      try {
+        const response = await fetch(sigUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setSignatureBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Failed to fetch signature image:", err);
+      }
+    };
+    fetchSignatureAsBase64();
+  }, [currentUser?.signatureUrl]);
 
-    const a = [
-      "",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five",
-      "Six",
-      "Seven",
-      "Eight",
-      "Nine",
-      "Ten",
-      "Eleven",
-      "Twelve",
-      "Thirteen",
-      "Fourteen",
-      "Fifteen",
-      "Sixteen",
-      "Seventeen",
-      "Eighteen",
-      "Nineteen",
-    ];
-    const b = [
-      "",
-      "",
-      "Twenty",
-      "Thirty",
-      "Forty",
-      "Fifty",
-      "Sixty",
-      "Seventy",
-      "Eighty",
-      "Ninety",
-    ];
-
-    function inWords(n) {
-      if (n < 20) return a[n];
-      if (n < 100)
-        return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
-      if (n < 1000)
-        return (
-          a[Math.floor(n / 100)] +
-          " Hundred" +
-          (n % 100 ? " " + inWords(n % 100) : "")
-        );
-      if (n < 100000)
-        return (
-          inWords(Math.floor(n / 1000)) +
-          " Thousand" +
-          (n % 1000 ? " " + inWords(n % 1000) : "")
-        );
-      if (n < 10000000)
-        return (
-          inWords(Math.floor(n / 100000)) +
-          " Lakh" +
-          (n % 100000 ? " " + inWords(n % 100000) : "")
-        );
-      return (
-        inWords(Math.floor(n / 10000000)) +
-        " Crore" +
-        (n % 10000000 ? " " + inWords(n % 10000000) : "")
-      );
-    }
-
-    const [rupees, paise] = num.toFixed(2).split(".");
-    let words = "";
-
-    if (parseInt(rupees) > 0) {
-      words += inWords(parseInt(rupees)) + " Rupees";
-    }
-    if (parseInt(paise) > 0) {
-      words += " and " + inWords(parseInt(paise)) + " Paise";
-    }
-
-    return words + " Only";
-  }
+  // Pre-fetch company logo as base64 to avoid CORS issues with @react-pdf/renderer
+  useEffect(() => {
+    const fetchLogoAsBase64 = async () => {
+      const logoUrl = currentUser?.logoUrl;
+      if (!logoUrl) return;
+      try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Failed to fetch logo image:", err);
+        setLogoBase64(null);
+      }
+    };
+    fetchLogoAsBase64();
+  }, [currentUser?.logoUrl]);
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -120,53 +87,85 @@ const InvoiceView = () => {
     fetchInvoice();
   }, [id]);
 
+  // ── Vector PDF generation via @react-pdf/renderer ──
   const handleDownloadPdf = async () => {
-    const element = printRef.current;
-    if (!element) return;
+    if (!invoiceData || !currentUser) return;
 
-    
-    // Clone the node into a fixed-width container (desktop-like)
-    const cloned = element.cloneNode(true);
-    const wrapper = document.createElement("div");
-    wrapper.style.width = "1024px"; // Desktop width
-    wrapper.style.padding = "20px";
-    wrapper.style.background = "#fff";
-    wrapper.appendChild(cloned);
-    document.body.appendChild(wrapper);
+    try {
+      toast.loading("Generating PDF...", { id: "pdf-gen" });
 
-    const canvas = await html2canvas(wrapper, { scale: 2 });
-    document.body.removeChild(wrapper);
+      const getPdfTemplate = () => {
+        switch (selectedTemplate) {
+          case "template2":
+            return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          case "template3":
+            return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          case "template4":
+            return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          case "template5":
+            return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          case "template6":
+            return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+          case "template1":
+          default:
+            return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+        }
+      };
 
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
+      const blob = await pdf(getPdfTemplate()).toBlob();
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoiceData.client?.companyName || "client"}_${invoiceData.invoiceNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
 
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      toast.success("PDF downloaded!", { id: "pdf-gen" });
+    } catch (error) {
+      console.error("Vector PDF generation failed:", error);
+      toast.error("PDF generation failed. Please try again.", { id: "pdf-gen" });
     }
-
-    pdf.save(
-      `${invoiceData.client?.companyName || "client"}_${
-        invoiceData.invoiceNumber
-      }.pdf`
-    );
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    const isPDFTemplate = ["template1", "template2", "template3", "template4", "template5"].includes(selectedTemplate);
+    if (isPDFTemplate) {
+      try {
+        toast.loading("Preparing print...", { id: "print-pdf" });
+        const getPdfTemplate = () => {
+          switch (selectedTemplate) {
+            case "template2": return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template3": return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template4": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template5": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template6": return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+            default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+          }
+        };
+
+        const blob = await pdf(getPdfTemplate()).toBlob();
+        const url = URL.createObjectURL(blob);
+
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = url;
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+          setTimeout(() => {
+            iframe.focus();
+            iframe.contentWindow.print();
+            toast.success("Printing ready", { id: "print-pdf" });
+          }, 100);
+        };
+      } catch (error) {
+        console.error("Print PDF failed:", error);
+        toast.error("Failed to print PDF.", { id: "print-pdf" });
+      }
+      return;
+    }
+
     const element = printRef.current;
     if (!element) return;
 
@@ -184,12 +183,29 @@ const InvoiceView = () => {
         <title>Invoice Print</title>
         ${cssLinks}  <!-- ✅ Copies Tailwind + Custom CSS -->
         <style>
-          @page { size: A4; }
+          @page { size: auto; margin: 10mm; }
           body { margin: 0; padding: 0; }
           .print-container {
-            width: 1000px;
+            width: 100%;
+            max-width: 210mm;
             margin: 0 auto;
-            padding: 20px 20px;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          /* Print overrides */
+          @media print {
+            .print-container { padding: 0; }
+            .invoice-root { font-size: 12pt !important; }
+            tr, td, th {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            .print-keep-together {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
           }
         </style>
       </head>
@@ -233,57 +249,110 @@ const InvoiceView = () => {
     switch (selectedTemplate) {
       case "template1":
         return (
-          <Template1
-            invoiceData={invoiceData}
-            ref={printRef}
-            numberToWords={numberToWords}
-          />
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template1PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
+              />
+            </PDFViewer>
+          </div>
         );
       case "template2":
         return (
-          <Template2
-            invoiceData={invoiceData}
-            ref={printRef}
-            numberToWords={numberToWords}
-          />
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template2PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+              />
+            </PDFViewer>
+          </div>
         );
       case "template3":
         return (
-          <Template3
-            invoiceData={invoiceData}
-            ref={printRef}
-            numberToWords={numberToWords}
-          />
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template3PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+              />
+            </PDFViewer>
+          </div>
         );
       case "template4":
         return (
-          <Template4
-            invoiceData={invoiceData}
-            ref={printRef}
-            numberToWords={numberToWords}
-          />
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template4PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+              />
+            </PDFViewer>
+          </div>
+        );
+      case "template5":
+        return (
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template5PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+              />
+            </PDFViewer>
+          </div>
+        );
+      case "template6":
+        return (
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template6PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
+              />
+            </PDFViewer>
+          </div>
         );
       default:
         return (
-          <Template1
-            invoiceData={invoiceData}
-            ref={printRef}
-            numberToWords={numberToWords}
-          />
+          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+            <PDFViewer width="100%" height="100%" className="border-0">
+              <Template1PDF
+                invoiceData={invoiceData}
+                numberToWords={numberToWords}
+                currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
+              />
+            </PDFViewer>
+          </div>
         );
     }
   };
 
   return (
     <div className="flex ">
-      {console.log(data)}
       {/* Main Invoice Area */}
       <div className="flex-1" style={{ padding: "1rem" }}>
         {/* Action Buttons */}
         <div className="flex justify-between" style={{ marginBottom: "1rem" }}>
           {/* Back Button */}
           <button
-            onClick={() => navigate("/invoices")}
+            onClick={() => navigate("/invoices")} 
             className="bg-gray-200 text-gray-700 rounded hover:bg-gray-300 flex items-center cursor-pointer"
             style={{ padding: "0.5rem 1rem" }}
           >

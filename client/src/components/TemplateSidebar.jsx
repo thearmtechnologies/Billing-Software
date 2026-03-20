@@ -6,7 +6,9 @@ const templates = [
   { id: "template1", name: "Template 1" },
   { id: "template2", name: "Template 2" },
   { id: "template3", name: "Template 3" },
-  { id: "template4", name: "Template 4" }
+  { id: "template4", name: "Template 4" },
+  { id: "template5", name: "Template 5" },
+  { id: "template6", name: "Template 6" },
 ];
 
 const TemplateSidebar = ({

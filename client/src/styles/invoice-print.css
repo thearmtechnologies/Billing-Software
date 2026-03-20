@@ -1,0 +1,63 @@
+/* ============================================================
+   Invoice Print Stylesheet
+   Applied globally so it gets copied into the print window
+   by InvoiceView.jsx's cssLinks logic.
+   ============================================================ */
+
+@media print {
+  /* Page setup — let the printer decide paper size, use 10mm margins */
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+
+  /* Root typography lock for print */
+  .invoice-root {
+    font-size: 12pt !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Table pagination: never split a row across pages */
+  tr,
+  td,
+  th {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Repeat table headers on every printed page */
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Protect critical blocks from splitting */
+  .print-keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Force a page break before an element */
+  .print-break-before {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* Print container resets */
+  .print-container {
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide non-print elements */
+  .no-print {
+    display: none !important;
+  }
+}

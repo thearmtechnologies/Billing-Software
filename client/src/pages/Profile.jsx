@@ -19,6 +19,8 @@ import {
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
+import BrandingCard from "../components/BrandingCard";
+import SignatureCard from "../components/SignatureCard";
 
 axios.defaults.withCredentials = true;
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -42,6 +44,10 @@ const Profile = () => {
       zipCode: "",
       country: "India",
     },
+    invoicePreferences: {
+      prefix: "",
+      suffix: "",
+    },
   });
 
   const [loading, setLoading] = useState(false);
@@ -53,6 +59,8 @@ const Profile = () => {
   });
   const [bankDetails, setBankDetails] = useState(null);
   const [bankLoading, setBankLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [signatureUrl, setSignatureUrl] = useState('');
 
   const token = localStorage.getItem("token");
 
@@ -76,7 +84,13 @@ const Profile = () => {
             zipCode: data.address?.zipCode || "",
             country: data.address?.country || "India",
           },
+          invoicePreferences: {
+            prefix: data.invoicePreferences?.prefix || "",
+            suffix: data.invoicePreferences?.suffix || "",
+          },
         });
+        setLogoUrl(data.logoUrl || '');
+        setSignatureUrl(data.signatureUrl || '');
       } catch (err) {
         toast.error("Failed to fetch profile");
         console.error(err);
@@ -86,8 +100,8 @@ const Profile = () => {
     const fetchBankDetails = async () => {
       try {
         setBankLoading(true);
-        const { data } = await axios.get(`${BASE_URL}/users/bank-details`);
-        setBankDetails(data.bankDetails);
+        const { data } = await axios.get(`${BASE_URL}/users/bank-accounts`);
+        setBankDetails(data.bankAccounts);
       } catch (err) {
         if (err.response?.status !== 404) {
           console.error("Failed to fetch bank details:", err);
@@ -123,6 +137,15 @@ const Profile = () => {
     }));
   };
 
+  // Handle invoice preferences changes
+  const handleInvoicePreferencesChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      invoicePreferences: { ...prev.invoicePreferences, [name]: value },
+    }));
+  };
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordFields((prev) => ({ ...prev, [name]: value }));
@@ -133,19 +156,8 @@ const Profile = () => {
   };
 
   const isBankDetailsComplete = () => {
-    if (!bankDetails) return false;
-    
-    const requiredFields = [
-      'accountHolderName',
-      'accountNumber', 
-      'bankName',
-      'ifscCode',
-      'accountType'
-    ];
-
-    return requiredFields.every(field => 
-      bankDetails[field] && bankDetails[field].trim() !== ''
-    );
+    if (!bankDetails || bankDetails.length === 0) return false;
+    return true;
   };
 
   // Save changes
@@ -201,6 +213,12 @@ const Profile = () => {
           <Save className="w-5 h-5" style={{ marginRight: "8px" }} />
           {loading ? "Saving..." : "Save Settings"}
         </button>
+      </div>
+
+      {/* Branding & Signature */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BrandingCard currentLogoUrl={logoUrl} onLogoChange={(url) => setLogoUrl(url)} />
+        <SignatureCard currentSignatureUrl={signatureUrl} onSignatureChange={(url) => setSignatureUrl(url)} />
       </div>
 
       {/* Business Info */}
@@ -413,6 +431,59 @@ const Profile = () => {
             </p>
           </div>
 
+        </div>
+      </div>
+
+      {/* Invoice Preferences Section */}
+      <div
+        className="bg-white rounded-lg shadow-sm border border-gray-200"
+        style={{ padding: "24px" }}
+      >
+        <h3
+          className="text-lg font-semibold text-gray-900"
+          style={{ marginBottom: "16px" }}
+        >
+          Invoice Preferences
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Prefix */}
+          <div>
+            <label
+              className="block text-sm font-medium text-gray-700"
+              style={{ marginBottom: "8px" }}
+            >
+              Invoice Number Prefix
+            </label>
+            <input
+              type="text"
+              name="prefix"
+              value={formData.invoicePreferences.prefix}
+              onChange={handleInvoicePreferencesChange}
+              className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{ padding: "10px" }}
+              placeholder="e.g. INV-"
+            />
+          </div>
+
+          {/* Suffix */}
+          <div>
+            <label
+              className="block text-sm font-medium text-gray-700"
+              style={{ marginBottom: "8px" }}
+            >
+              Invoice Number Suffix
+            </label>
+            <input
+              type="text"
+              name="suffix"
+              value={formData.invoicePreferences.suffix}
+              onChange={handleInvoicePreferencesChange}
+              className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{ padding: "10px" }}
+              placeholder="e.g. -2025"
+            />
+          </div>
         </div>
       </div>
 

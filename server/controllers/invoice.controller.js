@@ -59,6 +59,7 @@ export const createInvoice = async (req, res) => {
       discount = 0,
       discountType = "fixed",
       taxes = [],
+      bankDetails,
     } = req.body;
 
     // Prevent duplicate invoice number
@@ -132,6 +133,7 @@ export const createInvoice = async (req, res) => {
       paidDate,
       notes,
       businessType,
+      bankDetails,
     });
 
     await invoice.save();
