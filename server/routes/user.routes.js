@@ -1,6 +1,7 @@
 import express from 'express'
-import { addBankDetails, addClient, deleteBankDetails, deleteClient, editClient, editUserProfile, getBankDetails, getClientById, getClientLedger, getProfile, getUserClients, loginUser, registerUser, updateBankDetails, getBankAccounts, addBankAccount, updateBankAccount, deleteBankAccount, setPrimaryBankAccount } from '../controllers/user.controller.js'
-import { isAuthenticated } from '../middleware/auth.middleware.js'
+import { addBankDetails, addClient, deleteBankDetails, deleteClient, editClient, editUserProfile, getBankDetails, getClientById, getClientLedger, getProfile, getUserClients, loginUser, registerUser, updateBankDetails, getBankAccounts, addBankAccount, updateBankAccount, deleteBankAccount, setPrimaryBankAccount, uploadLogo, removeLogo, uploadSignature, removeSignature } from '../controllers/user.controller.js'
+import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { uploadLogo as uploadLogoMiddleware, uploadSignature as uploadSignatureMiddleware } from '../middleware/upload.middleware.js';
 
 const router = express.Router()
 
@@ -37,5 +38,9 @@ router.post('/bank-accounts', isAuthenticated, addBankAccount);
 router.put('/bank-accounts/:id', isAuthenticated, updateBankAccount);
 router.delete('/bank-accounts/:id', isAuthenticated, deleteBankAccount);
 router.patch('/bank-accounts/:id/primary', isAuthenticated, setPrimaryBankAccount);
+router.post('/upload-logo', isAuthenticated, uploadLogoMiddleware, uploadLogo);
+router.delete('/remove-logo', isAuthenticated, removeLogo);
+router.post('/upload-signature', isAuthenticated, uploadSignatureMiddleware, uploadSignature);
+router.delete('/remove-signature', isAuthenticated, removeSignature);
 
 export default router

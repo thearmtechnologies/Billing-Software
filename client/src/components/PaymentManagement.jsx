@@ -86,7 +86,7 @@ const PaymentManagement = () => {
     // Frontend validation
     if (!validateAddPaymentAmount(paymentData.amount)) {
       const remainingBalance = invoice.totalAmount - invoice.amountPaid;
-      toast.error(`Payment would exceed total amount. Maximum allowed: ₹${remainingBalance.toFixed(2)}`);
+      toast.error(`Payment would exceed total amount. Maximum allowed: Rs. ${remainingBalance.toFixed(2)}`);
       return;
     }
 
@@ -125,7 +125,7 @@ const PaymentManagement = () => {
     if (!validateEditPaymentAmount(paymentData.amount)) {
       const amountWithoutCurrentPayment = invoice.amountPaid - editingPayment.amountPaid;
       const remainingBalance = invoice.totalAmount - amountWithoutCurrentPayment;
-      toast.error(`Payment would exceed total amount. Maximum allowed: ₹${remainingBalance.toFixed(2)}`);
+      toast.error(`Payment would exceed total amount. Maximum allowed: Rs. ${remainingBalance.toFixed(2)}`);
       return;
     }
 
@@ -268,7 +268,7 @@ const PaymentManagement = () => {
           }}>
             <p className="text-sm text-gray-600">Total Amount</p>
             <p className="text-lg font-semibold text-gray-900">
-              ₹{invoice.totalAmount?.toFixed(2)}
+              Rs. {invoice.totalAmount?.toFixed(2)}
             </p>
           </div>
           <div style={{ 
@@ -279,7 +279,7 @@ const PaymentManagement = () => {
           }}>
             <p className="text-sm text-gray-600">Amount Paid</p>
             <p className="text-lg font-semibold text-green-600">
-              ₹{invoice.amountPaid?.toFixed(2)}
+              Rs. {invoice.amountPaid?.toFixed(2)}
             </p>
           </div>
           <div style={{ 
@@ -290,7 +290,7 @@ const PaymentManagement = () => {
           }}>
             <p className="text-sm text-gray-600">Amount Due</p>
             <p className="text-lg font-semibold text-orange-600">
-              ₹{invoice.amountDue?.toFixed(2)}
+              Rs. {invoice.amountDue?.toFixed(2)}
             </p>
           </div>
           <div style={{ 
@@ -359,7 +359,7 @@ const PaymentManagement = () => {
                 <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
                   Amount *
                   <span className="ml-2 text-sm text-gray-500">
-                    (Max: ₹{remainingBalance.toFixed(2)})
+                    (Max: Rs. {remainingBalance.toFixed(2)})
                   </span>
                 </label>
                 <input
@@ -383,7 +383,7 @@ const PaymentManagement = () => {
                 />
                 {paymentData.amount && !isAmountValid && (
                   <p className="text-red-600 text-sm mt-1">
-                    Amount exceeds remaining balance of ₹{remainingBalance.toFixed(2)}
+                    Amount exceeds remaining balance of Rs. {remainingBalance.toFixed(2)}
                   </p>
                 )}
               </div>
@@ -525,7 +525,7 @@ const PaymentManagement = () => {
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        ₹{payment.amountPaid?.toFixed(2)}
+                        Rs. {payment.amountPaid?.toFixed(2)}
                       </p>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
                         <Calendar style={{ width: "16px", height: "16px", color: "#6b7280" }} />
@@ -551,7 +551,7 @@ const PaymentManagement = () => {
 
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <p className="text-sm text-gray-600">
-                      Balance Due: ₹{payment.balanceDueAfter?.toFixed(2)}
+                      Balance Due: Rs. {payment.balanceDueAfter?.toFixed(2)}
                     </p>
                     <button
                       onClick={() => startEditPayment(payment)}

@@ -302,7 +302,8 @@ const AppleDataTable = ({
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className={`adt-td ${col.align === 'right' ? 'adt-td--right' : ''}`}
+                        className={`adt-td ${col.align === 'right' ? 'adt-td--right' : ''} ${col.key === 'actions' ? 'adt-td--actions' : ''}`}
+                        data-label={col.label || ''}
                         style={{ width: col.width || 'auto', textAlign: col.align || 'left' }}
                       >
                         {col.render ? col.render(row, rowIndex) : row[col.key]}

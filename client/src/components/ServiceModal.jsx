@@ -466,7 +466,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                           />
                         </div>
                         <div style={{ flex: 1, minWidth: "100px" }}>
-                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate (₹)</label>
+                          <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate (Rs. )</label>
                           <input
                             type="number"
                             placeholder="0.00"

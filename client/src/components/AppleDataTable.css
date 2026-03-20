@@ -409,31 +409,206 @@
   outline-offset: 1px;
 }
 
-/* ── Responsive ── */
+/* ── Responsive — Mobile Card Layout ── */
 @media (max-width: 768px) {
+
+  /* ── Container ── */
+  .adt-container {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .adt-table-wrap {
+    overflow: visible;
+  }
+
+  .adt-table {
+    table-layout: auto;
+  }
+
+  /* ── Hide table header on mobile ── */
+  .adt-thead {
+    display: none;
+  }
+
+  /* ── Table body as stacked cards ── */
+  .adt-tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .adt-tr {
+    display: flex;
+    flex-direction: column;
+    background: var(--adt-bg-primary);
+    border: 1px solid var(--adt-border);
+    border-radius: var(--adt-radius-lg);
+    box-shadow: var(--adt-shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--adt-transition-base), transform var(--adt-transition-base);
+  }
+
+  .adt-tr:hover {
+    background: var(--adt-bg-primary);
+    box-shadow: var(--adt-shadow-md);
+  }
+
+  .adt-tr:active {
+    background: var(--adt-bg-primary);
+    transform: scale(0.99);
+  }
+
+  /* ── Each cell becomes a flex row (label + value) ── */
+  .adt-td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100% !important;
+    height: auto;
+    min-height: 40px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--adt-border-light);
+    white-space: normal;
+    word-break: break-word;
+    text-align: right;
+    font-size: var(--adt-font-size-base);
+    box-sizing: border-box;
+  }
+
+  /* Label on the left via ::before */
+  .adt-td::before {
+    content: attr(data-label);
+    font-size: var(--adt-font-size-xs);
+    font-weight: var(--adt-font-weight-semibold);
+    color: var(--adt-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    flex-shrink: 0;
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+
+  /* First cell gets a stronger top emphasis */
+  .adt-tr .adt-td:first-child {
+    background: var(--adt-bg-secondary);
+    font-weight: var(--adt-font-weight-semibold);
+    border-bottom: 1px solid var(--adt-border);
+    min-height: 44px;
+  }
+
+  /* Last cell — no bottom border */
+  .adt-tr .adt-td:last-child {
+    border-bottom: none;
+  }
+
+  /* Right-aligned cells reset on mobile */
+  .adt-td--right {
+    text-align: right;
+  }
+
+  /* ── Action cells — render as centered button row ── */
+  .adt-td--actions {
+    justify-content: center;
+    gap: 8px;
+    background: var(--adt-bg-secondary);
+    border-top: 1px solid var(--adt-border-light);
+    border-bottom: none;
+    padding: 10px 16px;
+  }
+
+  .adt-td--actions::before {
+    display: none;
+  }
+
+  /* Bigger touch targets for action buttons on mobile */
+  .adt-action-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .adt-action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── Pagination bar on mobile ── */
   .adt-pagination {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-    padding: 10px 14px;
-  }
-
-  .adt-pagination-controls {
-    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--adt-border);
+    border-radius: var(--adt-radius-lg);
+    background: var(--adt-bg-primary);
+    box-shadow: var(--adt-shadow-sm);
+    margin-top: 12px;
   }
 
   .adt-pagination-info {
     text-align: center;
+    font-size: var(--adt-font-size-sm);
+  }
+
+  .adt-pagination-controls {
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .adt-page-btn {
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .adt-page-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .adt-page-input {
+    width: 48px;
+    height: 36px;
+    font-size: var(--adt-font-size-base);
   }
 
   .adt-perpage-wrap {
     justify-content: center;
   }
 
-  .adt-th,
-  .adt-td {
-    padding-left: 12px;
-    padding-right: 12px;
+  .adt-perpage-select {
+    height: 36px;
+    font-size: var(--adt-font-size-base);
+  }
+
+  /* ── Skeleton on mobile ── */
+  .adt-skeleton-row {
+    display: flex;
+    flex-direction: column;
+    background: var(--adt-bg-primary);
+    border: 1px solid var(--adt-border);
+    border-radius: var(--adt-radius-lg);
+    overflow: hidden;
+  }
+
+  .adt-skeleton-row .adt-td {
+    border-bottom: 1px solid var(--adt-border-light);
+  }
+
+  .adt-skeleton-row .adt-td:last-child {
+    border-bottom: none;
+  }
+
+  /* ── Empty state on mobile ── */
+  .adt-empty {
+    padding: 40px 20px;
+    border: 1px solid var(--adt-border);
+    border-radius: var(--adt-radius-lg);
+    background: var(--adt-bg-primary);
   }
 }
 

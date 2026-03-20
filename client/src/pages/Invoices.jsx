@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -17,6 +17,10 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import AppleDataTable from "../components/AppleDataTable";
 import emailjs from '@emailjs/browser';
+import { pdf } from "@react-pdf/renderer";
+import Template1PDF from "../templates/Template1PDF";
+import { numberToWords } from "../utils/numberToWords";
+import { UserContext } from "../context/userContext";
 axios.defaults.withCredentials = true;
 
 const statusOptions = ["draft", "sent", "paid", "partial", "overdue", "cancelled"];
@@ -56,6 +60,7 @@ const statusColors = {
 };
 
 const Invoices = () => {
+  const { currentUser } = useContext(UserContext);
   const [invoices, setInvoices] = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,16 +108,74 @@ const Invoices = () => {
 
     setIsSendingEmail(true);
     try {
-      const serviceId = 'service_hj6pavh';
-      const templateId = 'template_c4u1pia';
-      const publicKey = 'FMEevJXztJRf5JwHk';
+      const serviceId = 'service_pz0xzv8';
+      const templateId = 'template_p9ttwae';
+      const publicKey = 'x1_RUwD-1cdvAc52E';
+
+      // ── Generate PDF blob and convert to Base64 ──
+      let pdfBase64 = "";
+      try {
+        toast.loading("Generating invoice PDF...", { id: "pdf-attach" });
+
+        // Fetch full invoice data for the PDF (the list may not have all fields)
+        const { data: fullInvoice } = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/invoices/${emailInvoice._id}`
+        );
+
+        // Fetch logo as base64 (avoids CORS issue with @react-pdf/renderer)
+        let logoBase64 = null;
+        const logoUrl = currentUser?.logo;
+        if (logoUrl) {
+          try {
+            const logoResp = await fetch(logoUrl);
+            const logoBlob = await logoResp.blob();
+            logoBase64 = await new Promise((res) => {
+              const r = new FileReader();
+              r.onloadend = () => res(r.result);
+              r.readAsDataURL(logoBlob);
+            });
+          } catch (_) { /* silently skip logo if fetch fails */ }
+        }
+
+        const pdfDoc = (
+          <Template1PDF
+            invoiceData={fullInvoice}
+            numberToWords={numberToWords}
+            currentUser={currentUser}
+            logoBase64={logoBase64}
+          />
+        );
+        const blob = await pdf(pdfDoc).toBlob();
+
+        // Convert blob to Base64 string
+        const reader = new FileReader();
+        pdfBase64 = await new Promise((resolve, reject) => {
+          reader.onloadend = () => {
+            // The result is "data:application/pdf;base64,<data>"
+            // EmailJS needs just the raw base64 part
+            const base64 = reader.result.split(",")[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        toast.dismiss("pdf-attach");
+      } catch (pdfError) {
+        console.error("PDF generation for email failed:", pdfError);
+        toast.dismiss("pdf-attach");
+        // Continue without attachment — still send the email text
+        toast("Could not attach PDF, sending email without it.", { icon: "⚠️" });
+      }
 
       const templateParams = {
         to_email: emailInvoice.client.email,
         to_name: emailInvoice.client.companyName || "Customer",
         invoice_number: emailInvoice.invoiceNumber,
         amount: emailInvoice.totalAmount,
-        due_date:  emailInvoice.dueDate ? new Date(emailInvoice.dueDate).toLocaleDateString("en-GB") : ""
+        due_date: emailInvoice.dueDate ? new Date(emailInvoice.dueDate).toLocaleDateString("en-GB") : "",
+        business_name: currentUser?.businessName || "",
+        ...(pdfBase64 ? { invoice_pdf: pdfBase64 } : {}),
       };
 
       // Send Email if selected
@@ -629,6 +692,7 @@ const Invoices = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div
+        className="invoices-header"
         style={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -662,9 +726,11 @@ const Invoices = () => {
         </div>
         <Link
           to="/invoices/create"
+          className="invoices-create-btn"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '8px',
             padding: '10px 20px',
             borderRadius: '12px',
@@ -738,7 +804,7 @@ const Invoices = () => {
         </div>
 
         {/* Status Filter */}
-        <div style={{ flex: '0 0 auto', width: '160px' }}>
+        <div className="invoices-filter-item" style={{ flex: '0 0 auto', width: '160px' }}>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -762,7 +828,7 @@ const Invoices = () => {
         </div>
 
         {/* Month Filter */}
-        <div style={{ flex: '0 0 auto', width: '150px' }}>
+        <div className="invoices-filter-item" style={{ flex: '0 0 auto', width: '150px' }}>
           <select
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
@@ -799,7 +865,7 @@ const Invoices = () => {
         </div>
 
         {/* Year Filter */}
-        <div style={{ flex: '0 0 auto', width: '120px' }}>
+        <div className="invoices-filter-item" style={{ flex: '0 0 auto', width: '120px' }}>
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}

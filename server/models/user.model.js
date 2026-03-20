@@ -149,6 +149,8 @@ const userSchema = new mongoose.Schema(
         default: "",
       },
     },
+    logoUrl: { type: String, default: '' },
+    signatureUrl: { type: String, default: '' },
   },
   {
     timestamps: true,

@@ -2,6 +2,7 @@ import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 import ClientModel from "../models/client.model.js";
 import UserModel from "../models/user.model.js";
 import InvoiceModel from "../models/invoice.model.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -674,7 +675,84 @@ export const getClientLedger = async (req, res) => {
   }
 };
 
-// --- Bank Accounts (Multiple) ---
+export const uploadLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    // Upload buffer to Cloudinary via stream
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'logos', resource_type: 'image' },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+    // Save URL to user profile
+    const user = await UserModel.findById(req.user._id);
+    user.logoUrl = uploadResult.secure_url;
+    await user.save();
+    return res.status(200).json({ url: uploadResult.secure_url });
+  } catch (err) {
+    console.error('Error in uploadLogo:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+export const removeLogo = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    // Optionally delete from Cloudinary if public_id known; skipping for simplicity
+    user.logoUrl = '';
+    await user.save();
+    return res.status(200).json({ message: 'Logo removed' });
+  } catch (err) {
+    console.error('Error in removeLogo:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+export const uploadSignature = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'signatures', resource_type: 'image' },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+    const user = await UserModel.findById(req.user._id);
+    user.signatureUrl = uploadResult.secure_url;
+    await user.save();
+    return res.status(200).json({ url: uploadResult.secure_url });
+  } catch (err) {
+    console.error('Error in uploadSignature:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+export const removeSignature = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.signatureUrl = '';
+    await user.save();
+    return res.status(200).json({ message: 'Signature removed' });
+  } catch (err) {
+    console.error('Error in removeSignature:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
 
 export const getBankAccounts = async (req, res) => {
   try {

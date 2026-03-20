@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   Font,
 } from "@react-pdf/renderer";
@@ -128,7 +129,7 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
-const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => {
+const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signatureBase64 }) => {
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
@@ -265,12 +266,12 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
                 {item.pricingType === "tiered"
                   ? item.pricingTiers?.map(
                       (t) =>
-                        `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType}: ₹${t.rate}`
+                        `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType}: Rs. ${t.rate}`
                     ).join("\n")
-                  : `₹${(item.baseRate || 0).toFixed(2)}`}
+                  : `Rs. ${(item.baseRate || 0).toFixed(2)}`}
               </Text>
               <Text style={[s.td, { width: col.amt, textAlign: "center" }]}>
-                ₹{item.subtotal.toFixed(2)}
+                Rs. {item.subtotal.toFixed(2)}
               </Text>
             </View>
           ))}
@@ -282,7 +283,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
             <View style={s.calcRow}>
               <Text style={[s.calcLabel, { width: "80%" }]}>Sub Total:</Text>
               <Text style={[s.calcValue, { width: "20%", textAlign: "right" }]}>
-                ₹{invoiceData.subtotal.toFixed(2)}
+                Rs. {invoiceData.subtotal.toFixed(2)}
               </Text>
             </View>
           )}
@@ -292,7 +293,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
               <View style={s.calcRow}>
                 <Text style={[s.calcLabel, { width: "80%" }]}>Discount:</Text>
                 <Text style={[s.calcValue, { width: "20%", textAlign: "right" }]}>
-                  - {invoiceData.discountType === "fixed" ? "₹" : ""}
+                  - {invoiceData.discountType === "fixed" ? "Rs. " : ""}
                   {invoiceData.discount}
                   {invoiceData.discountType === "percentage" ? "%" : ""}
                 </Text>
@@ -300,7 +301,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
               <View style={s.calcRow}>
                 <Text style={[s.calcLabel, { width: "80%" }]}>Taxable Amount:</Text>
                 <Text style={[s.calcValue, { width: "20%", textAlign: "right" }]}>
-                  ₹{taxableAmount.toFixed(2)}
+                  Rs. {taxableAmount.toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -312,7 +313,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
                 {tax.name} @{tax.rate}%:
               </Text>
               <Text style={[s.calcValue, { width: "20%", textAlign: "right" }]}>
-                ₹{(tax.amount || 0).toFixed(2)}
+                Rs. {(tax.amount || 0).toFixed(2)}
               </Text>
             </View>
           ))}
@@ -320,7 +321,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
           <View style={[s.calcRow, s.calcRowBorderTop]}>
             <Text style={[s.calcLabel, { width: "80%" }]}>TOTAL:</Text>
             <Text style={[s.calcValue, { width: "20%", textAlign: "right" }]}>
-              ₹{invoiceData.totalAmount.toFixed(2)}
+              Rs. {invoiceData.totalAmount.toFixed(2)}
             </Text>
           </View>
         </View>
@@ -391,7 +392,13 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType }) => 
           </View>
 
           <View style={s.sigBox}>
-            <Text style={s.sigLabel}>For {currentUser?.businessName || ""},</Text>
+            <Text style={[s.sigLabel, signatureBase64 ? { marginBottom: 10 } : {}]}>For {currentUser?.businessName || ""},</Text>
+            {signatureBase64 && (
+              <Image 
+                src={signatureBase64} 
+                style={{ width: 100, height: 40, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+              />
+            )}
             <Text style={s.sigLine}>Authorized Signatory</Text>
           </View>
         </View>

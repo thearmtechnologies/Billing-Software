@@ -754,7 +754,7 @@ const EditInvoice = () => {
                   
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                      ₹{(Itemtotals[index]?.subtotal || 0).toFixed(2)}
+                      Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                     </span>
                     <div style={{
                       width: "28px", height: "28px", borderRadius: "50%", background: "var(--surface, #FFFFFF)",
@@ -889,7 +889,7 @@ const EditInvoice = () => {
                       {/* Base Rate */}
                       {item.pricingType !== "tiered" ? (
                         <div style={{ flex: "1 1 110px", minWidth: "110px" }}>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Rate (₹) <span style={{ color: "#DC2626" }}>*</span></label>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Rate (Rs. ) <span style={{ color: "#DC2626" }}>*</span></label>
                           <input
                             type="number"
                             placeholder="0.00"
@@ -930,7 +930,7 @@ const EditInvoice = () => {
                           width: "100%",
                           justifyContent: "flex-end"
                         }}>
-                          ₹{(Itemtotals[index]?.subtotal || 0).toFixed(2)}
+                          Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -984,7 +984,7 @@ const EditInvoice = () => {
                                 <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max (∞)" style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
                               </div>
                               <div style={{ flex: 1, minWidth: "80px" }}>
-                                <input type="number" placeholder="Rate ₹" value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
+                                <input type="number" placeholder="Rate Rs. " value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
                               </div>
                               <div style={{ flex: 1, minWidth: "90px" }}>
                                 <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps}>
@@ -1048,7 +1048,7 @@ const EditInvoice = () => {
                   style={{ ...inputStyle, marginTop: 0, flex: 1 }}
                   {...focusProps}
                 >
-                  <option value="fixed">Fixed (₹)</option>
+                  <option value="fixed">Fixed (Rs. )</option>
                   <option value="percentage">%</option>
                 </select>
               </div>
@@ -1119,13 +1119,13 @@ const EditInvoice = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
                 <span>Subtotal</span>
-                <span>₹{(totals?.subtotal ?? 0).toFixed(2)}</span>
+                <span>Rs. {(totals?.subtotal ?? 0).toFixed(2)}</span>
               </div>
               
               {(totals?.discountAmount > 0) && (
                 <div style={{ display: "flex", justifyContent: "space-between", color: "#059669" }}>
                   <span>Discount</span>
-                  <span>- ₹{(totals?.discountAmount ?? 0).toFixed(2)}</span>
+                  <span>- Rs. {(totals?.discountAmount ?? 0).toFixed(2)}</span>
                 </div>
               )}
               
@@ -1133,7 +1133,7 @@ const EditInvoice = () => {
                 {totals?.taxes?.map((tax, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
                     <span>{tax.name || 'Tax'} ({tax.rate}%)</span>
-                    <span>+ ₹{(tax.amount ?? 0).toFixed(2)}</span>
+                    <span>+ Rs. {(tax.amount ?? 0).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -1141,7 +1141,7 @@ const EditInvoice = () => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border, #E5E5E7)", paddingTop: "20px", marginTop: "4px" }}>
                 <span style={{ fontSize: "18px", fontWeight: 600 }}>Total Amount</span>
                 <span style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                  ₹{(totals?.totalAmount ?? 0).toFixed(2)}
+                  Rs. {(totals?.totalAmount ?? 0).toFixed(2)}
                 </span>
               </div>
             </div>

@@ -229,15 +229,15 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
                     <div key={i} style={{ marginBottom: "2px" }}>
                       {tier.minValue} –{" "}
                       {tier.maxValue !== null ? tier.maxValue : "Above"}{" "}
-                      {item.unitType}: ₹{tier.rate}{" "}
+                      {item.unitType}: Rs. {tier.rate}{" "}
                       {tier.rateType === "unitRate"
                         ? `/ ${item.unitType}`
                         : "(slab)"}
                     </div>
                   ))
-                : `₹${item.baseRate}`}
+                : `Rs. ${item.baseRate}`}
             </div>
-            <div style={{ textAlign: "center" }}>₹{item.subtotal}</div>
+            <div style={{ textAlign: "center" }}>Rs. {item.subtotal}</div>
           </div>
         ))}
       </div>
@@ -256,7 +256,7 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
             }}
           >
             <div>Sub Total:</div>
-            <div>₹{invoiceData.subtotal.toFixed(2)}</div>
+            <div>Rs. {invoiceData.subtotal.toFixed(2)}</div>
           </div>
         )}
 
@@ -274,7 +274,7 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
             >
               <div>Discount:</div>
               <div>
-                - {invoiceData.discountType === "fixed" ? "₹" : ""}
+                - {invoiceData.discountType === "fixed" ? "Rs. " : ""}
                 {invoiceData.discount}
                 {invoiceData.discountType === "percentage" ? "%" : ""}
               </div>
@@ -290,7 +290,7 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
               }}
             >
               <div>Taxable Amount:</div>
-              <div>₹{taxableAmount.toFixed(2)}</div>
+              <div>Rs. {taxableAmount.toFixed(2)}</div>
             </div>
           </>
         )}
@@ -312,7 +312,7 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
               <div>
                 {tax.name} @{tax.rate}%:
               </div>
-              <div>₹{tax.amount.toFixed(2)}</div>
+              <div>Rs. {tax.amount.toFixed(2)}</div>
             </div>
           ))}
 
@@ -329,7 +329,7 @@ const Template2 = ({ invoiceData, ref, numberToWords }) => {
           }}
         >
           <div>TOTAL:</div>
-          <div>₹{invoiceData.totalAmount.toFixed(2)}</div>
+          <div>Rs. {invoiceData.totalAmount.toFixed(2)}</div>
         </div>
       </div>
 

@@ -389,12 +389,12 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
                         <div key={i} style={{ marginBottom: "1px" }}>
                           {tier.minValue} –{" "}
                           {tier.maxValue !== null ? tier.maxValue : "Above"}{" "}
-                          {item.unitType}: ₹{tier.rate.toFixed(2)}
+                          {item.unitType}: Rs. {tier.rate.toFixed(2)}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    `₹${(item.baseRate || 0).toFixed(2)}`
+                    `Rs. ${(item.baseRate || 0).toFixed(2)}`
                   )}
                 </td>
                 <td
@@ -407,7 +407,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
                     fontSize: "14px",
                   }}
                 >
-                  ₹{item.subtotal.toFixed(2)}
+                  Rs. {item.subtotal.toFixed(2)}
                 </td>
               </tr>
             ))}
@@ -498,7 +498,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
                 {invoiceData.taxes && invoiceData.taxes.length > 0 && (
                   <div>
                     {invoiceData.taxes.map((tax, idx) => (
-                      <div key={idx}>₹ {tax.amount.toFixed(2)}</div>
+                      <div key={idx}>Rs.  {tax.amount.toFixed(2)}</div>
                     ))}
                   </div>
                 )}
@@ -543,7 +543,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
                   fontSize: "15px",
                 }}
               >
-                ₹ {invoiceData.totalAmount.toFixed(2)}
+                Rs.  {invoiceData.totalAmount.toFixed(2)}
               </td>
             </tr>
           </tbody>

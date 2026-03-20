@@ -1,9 +1,9 @@
 import emailjs from '@emailjs/browser';
 
 const testEmail = async () => {
-  const serviceId = 'service_hj6pavh';
-  const templateId = 'template_c4u1pia';
-  const publicKey = 'FMEevJXztJRf5JwHk';
+  const serviceId = 'service_pz0xzv8';
+  const templateId = 'template_p9ttwae';
+  const publicKey = 'x1_RUwD-1cdvAc52E';
 
   const templateParams = {
     to_email: 'test@example.com',

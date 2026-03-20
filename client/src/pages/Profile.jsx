@@ -19,6 +19,8 @@ import {
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
+import BrandingCard from "../components/BrandingCard";
+import SignatureCard from "../components/SignatureCard";
 
 axios.defaults.withCredentials = true;
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -57,6 +59,8 @@ const Profile = () => {
   });
   const [bankDetails, setBankDetails] = useState(null);
   const [bankLoading, setBankLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [signatureUrl, setSignatureUrl] = useState('');
 
   const token = localStorage.getItem("token");
 
@@ -85,6 +89,8 @@ const Profile = () => {
             suffix: data.invoicePreferences?.suffix || "",
           },
         });
+        setLogoUrl(data.logoUrl || '');
+        setSignatureUrl(data.signatureUrl || '');
       } catch (err) {
         toast.error("Failed to fetch profile");
         console.error(err);
@@ -207,6 +213,12 @@ const Profile = () => {
           <Save className="w-5 h-5" style={{ marginRight: "8px" }} />
           {loading ? "Saving..." : "Save Settings"}
         </button>
+      </div>
+
+      {/* Branding & Signature */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BrandingCard currentLogoUrl={logoUrl} onLogoChange={(url) => setLogoUrl(url)} />
+        <SignatureCard currentSignatureUrl={signatureUrl} onSignatureChange={(url) => setSignatureUrl(url)} />
       </div>
 
       {/* Business Info */}

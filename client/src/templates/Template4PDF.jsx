@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer";
 
@@ -138,7 +139,7 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
-const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
+const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
@@ -246,14 +247,14 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
                   ? item.pricingTiers?.map(
                       (t, i) => (
                         <Text key={i} style={{ marginBottom: 2 }}>
-                          {t.minValue} – {t.maxValue !== null ? t.maxValue : "Above"} {item.unitType}: ₹{t.rate} {t.rateType === "unitRate" ? `/ ${item.unitType}` : "(slab)"}
+                          {t.minValue} – {t.maxValue !== null ? t.maxValue : "Above"} {item.unitType}: Rs. {t.rate} {t.rateType === "unitRate" ? `/ ${item.unitType}` : "(slab)"}
                         </Text>
                       )
                     )
-                  : <Text>₹{(item.baseRate || 0).toFixed(2)}</Text>}
+                  : <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>}
               </View>
               <Text style={[s.td, { width: col.amt, textAlign: "center", fontFamily: "Helvetica-Bold", borderLeftWidth: 0 }]}>
-                ₹{item.subtotal.toFixed(2)}
+                Rs. {item.subtotal.toFixed(2)}
               </Text>
             </View>
           ))}
@@ -265,7 +266,7 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
             {invoiceData.subtotal > 0 && (
               <View style={s.calcRow}>
                 <Text style={s.calcLabel}>Sub Total</Text>
-                <Text style={s.calcValue}>₹{invoiceData.subtotal.toFixed(2)}</Text>
+                <Text style={s.calcValue}>Rs. {invoiceData.subtotal.toFixed(2)}</Text>
               </View>
             )}
 
@@ -274,12 +275,12 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
                 <View style={s.calcRow}>
                   <Text style={s.calcLabel}>Discount</Text>
                   <Text style={s.calcValue}>
-                    -₹{invoiceData.discount}{invoiceData.discountType === "percentage" ? "%" : ""}
+                    -Rs. {invoiceData.discount}{invoiceData.discountType === "percentage" ? "%" : ""}
                   </Text>
                 </View>
                 <View style={s.calcRow}>
                   <Text style={s.calcLabel}>Taxable Amount</Text>
-                  <Text style={s.calcValue}>₹{taxableAmount.toFixed(2)}</Text>
+                  <Text style={s.calcValue}>Rs. {taxableAmount.toFixed(2)}</Text>
                 </View>
               </>
             )}
@@ -287,13 +288,13 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
             {invoiceData.taxes && invoiceData.taxes.length > 0 && invoiceData.taxes.map((tax, index) => (
               <View key={index} style={s.calcRow}>
                 <Text style={s.calcLabel}>{tax.name} @{tax.rate}%</Text>
-                <Text style={s.calcValue}>₹{(tax.amount || 0).toFixed(2)}</Text>
+                <Text style={s.calcValue}>Rs. {(tax.amount || 0).toFixed(2)}</Text>
               </View>
             ))}
 
             <View style={s.calcMainRow}>
               <Text style={s.calcMainText}>TOTAL</Text>
-              <Text style={s.calcMainText}>₹{invoiceData.totalAmount.toFixed(2)}</Text>
+              <Text style={s.calcMainText}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -353,7 +354,13 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords }) => {
             )}
           </View>
           <View style={s.sigBox}>
-            <Text style={s.sigFor}>For {currentUser?.businessName || ""}</Text>
+            <Text style={[s.sigFor, signatureBase64 ? { marginBottom: 10 } : {}]}>For {currentUser?.businessName || ""}</Text>
+            {signatureBase64 && (
+              <Image 
+                src={signatureBase64} 
+                style={{ width: 100, height: 40, objectFit: "contain", alignSelf: "center", marginBottom: 10 }} 
+              />
+            )}
             <Text style={s.sigLine}>Authorized Signatory</Text>
           </View>
         </View>

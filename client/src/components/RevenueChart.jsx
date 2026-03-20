@@ -112,7 +112,7 @@ const RevenueChart = ({ data, dateRange = 12, viewType = 'all' }) => {
               <div className="flex justify-between">
                 <span style={{ color: tokens.colors.success, fontWeight: 500 }}>Collected</span>
                 <span style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: tokens.colors.textPrimary }}>
-                  ₹{d.collected.toLocaleString('en-IN')}
+                  Rs. {d.collected.toLocaleString('en-IN')}
                 </span>
               </div>
             )}
@@ -120,14 +120,14 @@ const RevenueChart = ({ data, dateRange = 12, viewType = 'all' }) => {
               <div className="flex justify-between">
                 <span style={{ color: tokens.colors.warning, fontWeight: 500 }}>Pending</span>
                 <span style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: tokens.colors.textPrimary }}>
-                  ₹{d.pending.toLocaleString('en-IN')}
+                  Rs. {d.pending.toLocaleString('en-IN')}
                 </span>
               </div>
             )}
             {!inactiveSeries.total && (viewType === 'all' || viewType === 'bar') && (
               <div style={{ display: "flex", justifyContent: "space-between", borderTop: (viewType === 'all' ? `1px solid ${tokens.colors.borderLight}` : 'none'), paddingTop: (viewType === 'all' ? "8px" : "0"), marginTop: (viewType === 'all' ? "4px" : "0"), fontWeight: 600, color: "#8B5CF6" }}>
                 <span>Total Revenue</span>
-                <span style={{ fontVariantNumeric: "tabular-nums" }}>₹{d.total.toLocaleString('en-IN')}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>Rs. {d.total.toLocaleString('en-IN')}</span>
               </div>
             )}
           </div>
@@ -158,7 +158,7 @@ const RevenueChart = ({ data, dateRange = 12, viewType = 'all' }) => {
           <YAxis 
             yAxisId="left" 
             tick={{ fontSize: 12, fill: tokens.colors.textSecondary }} 
-            tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} 
+            tickFormatter={(v) => `Rs. ${(v / 1000).toFixed(0)}k`} 
             axisLine={false} 
             tickLine={false} 
             dx={-10} 
@@ -168,7 +168,7 @@ const RevenueChart = ({ data, dateRange = 12, viewType = 'all' }) => {
               yAxisId="right" 
               orientation="right" 
               tick={{ fontSize: 12, fill: tokens.colors.textSecondary }} 
-              tickFormatter={(v) => `₹${v > 1000 ? (v/1000).toFixed(1) + 'k' : v.toFixed(0)}`} 
+              tickFormatter={(v) => `Rs. ${v > 1000 ? (v/1000).toFixed(1) + 'k' : v.toFixed(0)}`} 
               axisLine={false} 
               tickLine={false} 
               dx={10} 

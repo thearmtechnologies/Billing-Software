@@ -21,7 +21,12 @@ const styles = StyleSheet.create({
   tableCell: { fontSize: 9, color: "#374151" }
 });
 
-const LedgerPDF = ({ clientInfo, ledgerData }) => (
+const LedgerPDF = ({ clientInfo, ledgerData }) => {
+  const totalBilled = ledgerData.reduce((acc, curr) => acc + curr.debit, 0);
+  const totalPaid = ledgerData.reduce((acc, curr) => acc + curr.credit, 0);
+  const currentBalance = ledgerData.length > 0 ? ledgerData[ledgerData.length - 1].balance : 0;
+
+  return (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
@@ -35,9 +40,9 @@ const LedgerPDF = ({ clientInfo, ledgerData }) => (
           <View style={{...styles.tableColHeader, width: '14%'}}><Text style={styles.tableCellHeader}>Type</Text></View>
           <View style={{...styles.tableColHeader, width: '28%'}}><Text style={styles.tableCellHeader}>Description</Text></View>
           <View style={{...styles.tableColHeader, width: '12%'}}><Text style={styles.tableCellHeader}>Reference</Text></View>
-          <View style={{...styles.tableColHeader, width: '11%'}}><Text style={styles.tableCellHeader}>Debit (₹)</Text></View>
-          <View style={{...styles.tableColHeader, width: '11%'}}><Text style={styles.tableCellHeader}>Credit (₹)</Text></View>
-          <View style={{...styles.tableColHeader, width: '12%'}}><Text style={styles.tableCellHeader}>Balance (₹)</Text></View>
+          <View style={{...styles.tableColHeader, width: '11%'}}><Text style={styles.tableCellHeader}>Debit (Rs. )</Text></View>
+          <View style={{...styles.tableColHeader, width: '11%'}}><Text style={styles.tableCellHeader}>Credit (Rs. )</Text></View>
+          <View style={{...styles.tableColHeader, width: '12%'}}><Text style={styles.tableCellHeader}>Balance (Rs. )</Text></View>
         </View>
         {ledgerData.map((row, i) => (
           <View style={styles.tableRow} key={i}>
@@ -51,9 +56,26 @@ const LedgerPDF = ({ clientInfo, ledgerData }) => (
           </View>
         ))}
       </View>
+
+      <View style={{ marginTop: 20, padding: 15, borderStyle: "solid", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 4, width: '40%', alignSelf: 'flex-end', backgroundColor: "#F9FAFB" }}>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: "bold", color: "#4B5563" }}>Total Billed</Text>
+          <Text style={{ fontSize: 11, fontWeight: "bold", color: "#111827" }}>Rs. {totalBilled.toFixed(2)}</Text>
+        </View>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: "bold", color: "#059669" }}>Total Received</Text>
+          <Text style={{ fontSize: 11, fontWeight: "bold", color: "#059669" }}>Rs. {totalPaid.toFixed(2)}</Text>
+        </View>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderColor: "#E5E7EB" }}>
+          <Text style={{ fontSize: 11, fontWeight: "bold", color: "#111827" }}>Balance Due</Text>
+          <Text style={{ fontSize: 12, fontWeight: "bold", color: "#E11D48" }}>Rs. {currentBalance.toFixed(2)}</Text>
+        </View>
+      </View>
+
     </Page>
   </Document>
-);
+  );
+};
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -92,10 +114,53 @@ const ClientLedger = () => {
       Type: row.type,
       Description: row.description,
       Reference: row.reference || '-',
-      'Debit (₹)': row.debit > 0 ? row.debit : null,
-      'Credit (₹)': row.credit > 0 ? row.credit : null,
-      'Balance (₹)': row.balance
+      'Debit (Rs. )': row.debit > 0 ? row.debit : null,
+      'Credit (Rs. )': row.credit > 0 ? row.credit : null,
+      'Balance (Rs. )': row.balance
     }));
+
+    const totalBilled = ledgerData.reduce((acc, curr) => acc + curr.debit, 0);
+    const totalPaid = ledgerData.reduce((acc, curr) => acc + curr.credit, 0);
+    const currentBalance = ledgerData.length > 0 ? ledgerData[ledgerData.length - 1].balance : 0;
+
+    data.push({});
+    data.push({
+      Date: '',
+      Type: '',
+      Description: 'SUMMARY',
+      Reference: '',
+      'Debit (Rs. )': '',
+      'Credit (Rs. )': '',
+      'Balance (Rs. )': ''
+    });
+    data.push({
+      Date: '',
+      Type: '',
+      Description: 'Total Billed',
+      Reference: '',
+      'Debit (Rs. )': '',
+      'Credit (Rs. )': '',
+      'Balance (Rs. )': totalBilled
+    });
+    data.push({
+      Date: '',
+      Type: '',
+      Description: 'Total Received',
+      Reference: '',
+      'Debit (Rs. )': '',
+      'Credit (Rs. )': '',
+      'Balance (Rs. )': totalPaid
+    });
+    data.push({
+      Date: '',
+      Type: '',
+      Description: 'Balance Due',
+      Reference: '',
+      'Debit (Rs. )': '',
+      'Credit (Rs. )': '',
+      'Balance (Rs. )': currentBalance
+    });
+
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Client Ledger");
@@ -165,21 +230,21 @@ const ClientLedger = () => {
     },
     {
       key: 'debit',
-      label: 'Debit (₹)',
+      label: 'Debit (Rs. )',
       width: '10%',
       align: 'right',
       render: (row) => row.debit > 0 ? <span className="text-gray-900 font-medium whitespace-nowrap">{row.debit.toFixed(2)}</span> : <span className="text-gray-400">-</span>,
     },
     {
       key: 'credit',
-      label: 'Credit (₹)',
+      label: 'Credit (Rs. )',
       width: '10%',
       align: 'right',
       render: (row) => row.credit > 0 ? <span className="text-gray-900 font-medium whitespace-nowrap">{row.credit.toFixed(2)}</span> : <span className="text-gray-400">-</span>,
     },
     {
       key: 'balance',
-      label: 'Balance (₹)',
+      label: 'Balance (Rs. )',
       width: '10%',
       align: 'right',
       render: (row) => <span className="font-bold text-gray-900 whitespace-nowrap">{row.balance.toFixed(2)}</span>,
@@ -244,7 +309,7 @@ const ClientLedger = () => {
           <div>
             <p className="text-sm font-medium text-gray-500" style={{ marginBottom: "4px" }}>Total Billed</p>
             <p className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight print:text-xl">
-              ₹{totalBilled.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Rs. {totalBilled.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -263,7 +328,7 @@ const ClientLedger = () => {
           <div>
             <p className="text-sm font-medium text-gray-500" style={{ marginBottom: "4px" }}>Total Received</p>
             <p className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight print:text-xl">
-              ₹{totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Rs. {totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -282,7 +347,7 @@ const ClientLedger = () => {
           <div>
             <p className="text-sm font-medium text-gray-500" style={{ marginBottom: "4px" }}>Balance Due</p>
             <p className={`text-2xl lg:text-3xl font-bold tracking-tight print:text-xl ${currentBalance > 0 ? 'text-rose-600' : 'text-gray-900'}`}>
-              ₹{currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Rs. {currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -307,45 +372,91 @@ const ClientLedger = () => {
 
       {/* Export Modal */}
       {isExportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Export Ledger As</h3>
-            <div className="space-y-3 mb-6">
-              <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${exportFormat === "pdf" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}>
-                <input 
-                  type="radio" 
-                  name="exportFormat" 
-                  value="pdf" 
-                  checked={exportFormat === "pdf"} 
-                  onChange={() => setExportFormat("pdf")} 
-                  className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500" 
-                />
-                <span className="ml-3 font-medium text-gray-900">PDF Document</span>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          style={{ padding: "16px" }}
+        >
+          <div 
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
+            style={{ padding: "24px", border: "1px solid #f3f4f6" }}
+          >
+            <h3 
+              className="text-2xl font-bold text-gray-900 tracking-tight"
+              style={{ marginBottom: "20px" }}
+            >
+              Export Ledger As
+            </h3>
+            
+            <div 
+              className="flex flex-col" 
+              style={{ marginBottom: "24px", gap: "12px" }}
+            >
+              <label 
+                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "pdf" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"}`}
+                style={{ padding: "16px" }}
+              >
+                <div className="relative flex items-center justify-center">
+                  <input 
+                    type="radio" 
+                    name="exportFormat" 
+                    value="pdf" 
+                    checked={exportFormat === "pdf"} 
+                    onChange={() => setExportFormat("pdf")} 
+                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" 
+                  />
+                </div>
+                <span 
+                  className={`font-semibold tracking-tight transition-colors ${exportFormat === "pdf" ? "text-blue-900" : "text-gray-700 group-hover:text-gray-900"}`}
+                  style={{ marginLeft: "12px" }}
+                >
+                  PDF Document
+                </span>
+                {exportFormat === "pdf" && (
+                  <div className="ml-auto w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                )}
               </label>
-              <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${exportFormat === "excel" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}>
-                <input 
-                  type="radio" 
-                  name="exportFormat" 
-                  value="excel" 
-                  checked={exportFormat === "excel"} 
-                  onChange={() => setExportFormat("excel")} 
-                  className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500" 
-                />
-                <span className="ml-3 font-medium text-gray-900">Excel (.xlsx)</span>
+
+              <label 
+                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "excel" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"}`}
+                style={{ padding: "16px" }}
+              >
+                <div className="relative flex items-center justify-center">
+                  <input 
+                    type="radio" 
+                    name="exportFormat" 
+                    value="excel" 
+                    checked={exportFormat === "excel"} 
+                    onChange={() => setExportFormat("excel")} 
+                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" 
+                  />
+                </div>
+                <span 
+                  className={`font-semibold tracking-tight transition-colors ${exportFormat === "excel" ? "text-blue-900" : "text-gray-700 group-hover:text-gray-900"}`}
+                  style={{ marginLeft: "12px" }}
+                >
+                  Excel (.xlsx)
+                </span>
+                {exportFormat === "excel" && (
+                  <div className="ml-auto w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                )}
               </label>
             </div>
-            <div className="flex justify-end gap-3">
+
+            <div className="flex justify-end" style={{ gap: "12px" }}>
               <button 
                 onClick={() => setIsExportModalOpen(false)} 
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all"
+                style={{ padding: "10px 20px" }}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleExecuteExport} 
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2"
+                className="text-sm font-semibold text-white bg-blue-600 border border-transparent rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+                style={{ padding: "10px 24px", gap: "8px" }}
               >
-                <Download className="w-4 h-4" /> Export
+                <Download className="w-5 h-5" />
+                Export
               </button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer";
 
@@ -120,7 +121,7 @@ const s = StyleSheet.create({
 });
 
 // ── Component ───────────────────────────────────────────────────
-const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
+const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
   // Aggregate totals for the items table bottom row
   const totalQty = invoiceData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const aggregateSubtotal = invoiceData.subtotal;
@@ -220,9 +221,9 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
             <Text style={[s.colHeader, s.wItem, { textAlign: "left" }]}>Item name</Text>
             <Text style={[s.colHeader, s.wHsn]}>HSN/SAC</Text>
             <Text style={[s.colHeader, s.wQty, s.textRight]}>Quantity</Text>
-            <Text style={[s.colHeader, s.wPrice, s.textRight]}>Price / Unit (₹)</Text>
-            <Text style={[s.colHeader, s.wGst, s.textRight]}>GST (₹)</Text>
-            <Text style={[s.colHeaderLast, s.wAmt, s.textRight]}>Amount (₹)</Text>
+            <Text style={[s.colHeader, s.wPrice, s.textRight]}>Price / Unit (Rs. )</Text>
+            <Text style={[s.colHeader, s.wGst, s.textRight]}>GST (Rs. )</Text>
+            <Text style={[s.colHeaderLast, s.wAmt, s.textRight]}>Amount (Rs. )</Text>
           </View>
           
           {invoiceData.items.map((item, index) => {
@@ -276,22 +277,22 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
               {taxSummaryRows.map((row, idx) => (
                 <View key={idx} style={s.tableRow}>
                   <Text style={[s.colCell, s.tHsn, s.textCenter]}>{row.hsn}</Text>
-                  <Text style={[s.colCell, s.tTaxable, s.textRight]}>₹{row.taxable.toFixed(2)}</Text>
+                  <Text style={[s.colCell, s.tTaxable, s.textRight]}>Rs. {row.taxable.toFixed(2)}</Text>
                   <Text style={[s.colCell, s.tCgstRate, s.textRight]}>{row.cgstRate}%</Text>
-                  <Text style={[s.colCell, s.tCgstAmt, s.textRight]}>₹{row.cgstAmt.toFixed(2)}</Text>
+                  <Text style={[s.colCell, s.tCgstAmt, s.textRight]}>Rs. {row.cgstAmt.toFixed(2)}</Text>
                   <Text style={[s.colCell, s.tSgstRate, s.textRight]}>{row.sgstRate}%</Text>
-                  <Text style={[s.colCell, s.tSgstAmt, s.textRight]}>₹{row.sgstAmt.toFixed(2)}</Text>
-                  <Text style={[s.colCellLast, s.tTotalTax, s.textRight]}>₹{row.totalTax.toFixed(2)}</Text>
+                  <Text style={[s.colCell, s.tSgstAmt, s.textRight]}>Rs. {row.sgstAmt.toFixed(2)}</Text>
+                  <Text style={[s.colCellLast, s.tTotalTax, s.textRight]}>Rs. {row.totalTax.toFixed(2)}</Text>
                 </View>
               ))}
               <View style={s.tableTotalRow}>
                 <Text style={[s.colCell, s.tHsn, s.bold, s.textRight]}>TOTAL</Text>
-                <Text style={[s.colCell, s.tTaxable, s.bold, s.textRight]}>₹{totalTaxable.toFixed(2)}</Text>
+                <Text style={[s.colCell, s.tTaxable, s.bold, s.textRight]}>Rs. {totalTaxable.toFixed(2)}</Text>
                 <Text style={[s.colCell, s.tCgstRate]}></Text>
-                <Text style={[s.colCell, s.tCgstAmt, s.bold, s.textRight]}>₹{totalCgst.toFixed(2)}</Text>
+                <Text style={[s.colCell, s.tCgstAmt, s.bold, s.textRight]}>Rs. {totalCgst.toFixed(2)}</Text>
                 <Text style={[s.colCell, s.tSgstRate]}></Text>
-                <Text style={[s.colCell, s.tSgstAmt, s.bold, s.textRight]}>₹{totalSgst.toFixed(2)}</Text>
-                <Text style={[s.colCellLast, s.tTotalTax, s.bold, s.textRight]}>₹{totalSummaryTax.toFixed(2)}</Text>
+                <Text style={[s.colCell, s.tSgstAmt, s.bold, s.textRight]}>Rs. {totalSgst.toFixed(2)}</Text>
+                <Text style={[s.colCellLast, s.tTotalTax, s.bold, s.textRight]}>Rs. {totalSummaryTax.toFixed(2)}</Text>
               </View>
             </View>
           </View>
@@ -323,7 +324,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
             </View>
             <View style={s.totalRow}>
               <Text style={[s.totalLabel, { fontSize: 11 }]}>Total</Text>
-              <Text style={s.totalValBold}>₹{invoiceData.totalAmount.toFixed(2)}</Text>
+              <Text style={s.totalValBold}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>
             </View>
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Received</Text>
@@ -331,7 +332,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
             </View>
             <View style={s.totalRowLast}>
               <Text style={s.totalLabel}>Balance</Text>
-              <Text style={s.totalValBold}>₹{(invoiceData.totalAmount - (invoiceData.receivedAmount || 0)).toFixed(2)}</Text>
+              <Text style={s.totalValBold}>Rs. {(invoiceData.totalAmount - (invoiceData.receivedAmount || 0)).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -346,9 +347,15 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords }) => {
           </View>
 
           <View style={s.sigBox}>
-            <Text style={[s.bold, { fontSize: 10, marginBottom: 35 }]}>
+            <Text style={[s.bold, { fontSize: 10, marginBottom: signatureBase64 ? 10 : 35 }]}>
               For {currentUser?.businessName || "Your Company Name"}
             </Text>
+            {signatureBase64 && (
+              <Image 
+                src={signatureBase64} 
+                style={{ width: 100, height: 35, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+              />
+            )}
             <View style={s.sigLine}>
               <Text style={s.sectionTitle}>Authorized Signatory</Text>
             </View>

@@ -28,6 +28,45 @@ const InvoiceView = () => {
   const navigate = useNavigate();
   const { currentUser } = useContext(UserContext);
   const printRef = useRef(null);
+  const [signatureBase64, setSignatureBase64] = useState(null);
+  const [logoBase64, setLogoBase64] = useState(null);
+
+  // Pre-fetch signature image as base64 to avoid CORS issues with @react-pdf/renderer
+  useEffect(() => {
+    const fetchSignatureAsBase64 = async () => {
+      const sigUrl = currentUser?.signatureUrl;
+      if (!sigUrl) return;
+      try {
+        const response = await fetch(sigUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setSignatureBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Failed to fetch signature image:", err);
+      }
+    };
+    fetchSignatureAsBase64();
+  }, [currentUser?.signatureUrl]);
+
+  // Pre-fetch company logo as base64 to avoid CORS issues with @react-pdf/renderer
+  useEffect(() => {
+    const fetchLogoAsBase64 = async () => {
+      const logoUrl = currentUser?.logo;
+      if (!logoUrl) return;
+      try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Failed to fetch logo image:", err);
+        setLogoBase64(null);
+      }
+    };
+    fetchLogoAsBase64();
+  }, [currentUser?.logo]);
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -57,16 +96,16 @@ const InvoiceView = () => {
       const getPdfTemplate = () => {
         switch (selectedTemplate) {
           case "template2":
-            return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
           case "template3":
-            return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
           case "template4":
-            return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
           case "template5":
-            return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
           case "template1":
           default:
-            return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
         }
       };
 
@@ -93,11 +132,11 @@ const InvoiceView = () => {
         toast.loading("Preparing print...", { id: "print-pdf" });
         const getPdfTemplate = () => {
           switch (selectedTemplate) {
-            case "template2": return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
-            case "template3": return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
-            case "template4": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
-            case "template5": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
-            default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} />;
+            case "template2": return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template3": return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template4": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "template5": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           }
         };
 
@@ -212,6 +251,8 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
               />
             </PDFViewer>
           </div>
@@ -224,6 +265,7 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
               />
             </PDFViewer>
           </div>
@@ -236,6 +278,7 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
               />
             </PDFViewer>
           </div>
@@ -248,6 +291,7 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
               />
             </PDFViewer>
           </div>
@@ -260,6 +304,7 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
               />
             </PDFViewer>
           </div>
@@ -272,6 +317,8 @@ const InvoiceView = () => {
                 invoiceData={invoiceData}
                 numberToWords={numberToWords}
                 currentUser={currentUser}
+                signatureBase64={signatureBase64}
+                logoBase64={logoBase64}
               />
             </PDFViewer>
           </div>

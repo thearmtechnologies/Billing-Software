@@ -107,3 +107,24 @@ body {
     print-color-adjust: exact;
   }
 }
+
+/* ── Invoices Page — Mobile Responsive ── */
+@media (max-width: 768px) {
+  .invoices-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .invoices-create-btn {
+    width: 100%;
+  }
+
+  .invoices-filter-item {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  .invoices-filter-item select {
+    width: 100%;
+  }
+}

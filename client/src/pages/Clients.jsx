@@ -164,11 +164,11 @@ const Clients = () => {
             Manage your client database
           </p>
         </div>
-        <div style={{ marginTop: '1rem' }} className="sm:mt-0">
+        <div style={{ marginTop: '1rem' }} className="sm:mt-0 w-full sm:w-auto">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+            className="inline-flex items-center justify-center w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
           >
             <Plus className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
             Add Client

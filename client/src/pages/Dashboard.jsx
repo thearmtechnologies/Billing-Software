@@ -226,7 +226,7 @@ const Dashboard = () => {
     },
     {
       title: "Total Revenue",
-      value: `₹${stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
+      value: `Rs. ${stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
       icon: DollarSign,
       accentText: tokens.colors.warning,
       accentBg: "#FFFBEB",
@@ -235,7 +235,7 @@ const Dashboard = () => {
     },
     {
       title: "Amount Due",
-      value: `₹${stats.totalAmountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
+      value: `Rs. ${stats.totalAmountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
       icon: TrendingUp,
       accentText: tokens.colors.danger,
       accentBg: "#FEF2F2",
@@ -514,7 +514,7 @@ const Dashboard = () => {
                             {invoice.client?.companyName || "Unknown Client"} 
                             {(invoice.status === 'partial' || invoice.status === 'sent' || invoice.status === 'overdue') && invoice.amountDue && (
                               <span style={{ marginLeft: "8px", color: invoice.status === 'overdue' ? tokens.colors.danger : tokens.colors.textSecondary }}>
-                                • Due: ₹{invoice.amountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                • Due: Rs. {invoice.amountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                               </span>
                             )}
                           </p>
@@ -522,7 +522,7 @@ const Dashboard = () => {
                       </div>
                       <div style={{ textAlign: "right", paddingLeft: tokens.spacing.md, flexShrink: 0 }}>
                         <p style={{ fontSize: "16px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                          ₹{invoice.totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          Rs. {invoice.totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                         </p>
                       </div>
                     </div>

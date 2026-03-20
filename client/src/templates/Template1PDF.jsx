@@ -30,8 +30,26 @@ const s = StyleSheet.create({
     marginBottom: 14,
     gap: 12,
   },
-  logo: { width: 60, height: 60, objectFit: "contain" },
-  headerCenter: { textAlign: "center" },
+  headerRowWithLogo: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "#000",
+    paddingBottom: 8,
+    marginBottom: 14,
+    gap: 14,
+  },
+  logoContainer: {
+    width: 72,
+    height: 72,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: { maxWidth: 72, maxHeight: 72 },
+  headerCenter: { textAlign: "center", flex: 1 },
+  headerCenterWithLogo: { textAlign: "left" },
   businessName: { fontSize: 28, fontFamily: "Helvetica-Bold", letterSpacing: 2 },
   headerDetails: { fontSize: 9, lineHeight: 1.4 },
 
@@ -191,7 +209,7 @@ const fmtAcct = (t) =>
   t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "";
 
 // ── Component ───────────────────────────────────────────────────
-const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => {
+const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signatureBase64, logoBase64 }) => {
   let displayBankDetails = invoiceData?.bankDetails;
   if (!displayBankDetails) {
     if (currentUser?.bankAccounts && currentUser.bankAccounts.length > 0) {
@@ -214,26 +232,51 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => 
     <Document>
       <Page size="A4" style={s.page}>
         {/* ═══ HEADER ═══ */}
-        <View style={s.headerRow}>
-          {currentUser?.logo && (
-            <Image src={currentUser.logo} style={s.logo} />
-          )}
-          <View style={s.headerCenter}>
-            <Text style={s.businessName}>
-              {currentUser?.businessName?.toUpperCase() || ""}
-            </Text>
-            <Text style={s.headerDetails}>
-              Office: {currentUser?.address?.street || ""}{" "}
-              {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} -{" "}
-              {currentUser?.address?.zipCode || ""}
-            </Text>
-            <Text style={s.headerDetails}>
-              Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
-              {currentUser?.taxId ? ` | GSTIN/UIN: ${currentUser.taxId}` : ""}
-              {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
-            </Text>
+        {/* When a logo is available: left-align row so logo sits left of company info.
+            When no logo: keep the centered layout unchanged. */}
+        {logoBase64 ? (
+          <View style={s.headerRowWithLogo}>
+            <View style={s.logoContainer}>
+              <Image
+                src={logoBase64}
+                style={s.logo}
+              />
+            </View>
+            <View style={s.headerCenterWithLogo}>
+              <Text style={s.businessName}>
+                {currentUser?.businessName?.toUpperCase() || ""}
+              </Text>
+              <Text style={s.headerDetails}>
+                Office: {currentUser?.address?.street || ""}{" "}
+                {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} -{" "}
+                {currentUser?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.headerDetails}>
+                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
+                {currentUser?.taxId ? ` | GSTIN/UIN: ${currentUser.taxId}` : ""}
+                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={s.headerRow}>
+            <View style={s.headerCenter}>
+              <Text style={s.businessName}>
+                {currentUser?.businessName?.toUpperCase() || ""}
+              </Text>
+              <Text style={s.headerDetails}>
+                Office: {currentUser?.address?.street || ""}{" "}
+                {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} -{" "}
+                {currentUser?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.headerDetails}>
+                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
+                {currentUser?.taxId ? ` | GSTIN/UIN: ${currentUser.taxId}` : ""}
+                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ═══ TITLE ═══ */}
         <View style={s.titleBlock}>
@@ -326,13 +369,13 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => 
                   ? item.pricingTiers
                       ?.map(
                         (t) =>
-                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: ₹${t.rate.toFixed(2)}`
+                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${t.rate.toFixed(2)}`
                       )
                       .join("\n")
-                  : `₹${(item.baseRate || 0).toFixed(2)}`}
+                  : `Rs. ${(item.baseRate || 0).toFixed(2)}`}
               </Text>
               <Text style={[s.tdLast, s.tdRight, { width: col.amt }]}>
-                ₹{item.subtotal.toFixed(2)}
+                Rs. {item.subtotal.toFixed(2)}
               </Text>
             </View>
           ))}
@@ -369,7 +412,7 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => 
               <View style={[s.tdLast, s.tdRight, { width: "18%", flexDirection: "column" }]}>
                 {invoiceData.taxes.map((tax, idx) => (
                   <Text key={idx} style={s.bold}>
-                    ₹ {tax.amount.toFixed(2)}
+                    Rs.  {tax.amount.toFixed(2)}
                   </Text>
                 ))}
               </View>
@@ -383,7 +426,7 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => 
             </Text>
             <Text style={[s.td, s.tdCenter, { width: "28%" }]}> </Text>
             <Text style={[s.tdLast, s.tdRight, s.totalLabel, { width: "18%" }]}>
-              ₹ {invoiceData.totalAmount.toFixed(2)}
+              Rs.  {invoiceData.totalAmount.toFixed(2)}
             </Text>
           </View>
         </View>
@@ -555,9 +598,15 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType }) => 
           )}
 
           <View style={s.sigBox}>
-            <Text style={s.sigLabel}>
+            <Text style={[s.sigLabel, signatureBase64 ? { marginBottom: 10 } : {}]}>
               for {currentUser?.businessName || ""}
             </Text>
+            {signatureBase64 && (
+              <Image 
+                src={signatureBase64} 
+                style={{ width: 100, height: 40, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+              />
+            )}
             <View style={s.sigLine}>
               <Text>Authorised Signatory</Text>
             </View>
