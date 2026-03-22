@@ -10,9 +10,6 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
 
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
-  // Calculate how many empty rows we need to maintain fixed height
-  const totalRows = 8; // Fixed number of rows like in reference
-  const emptyRows = Math.max(0, totalRows - invoiceData.items.length);
 
   // Format account type - capitalize first letter
   const formatAccountType = (type) => {
@@ -412,42 +409,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
               </tr>
             ))}
 
-            {/* Empty Rows - With proper borders */}
-            {Array.from({ length: emptyRows }).map((_, index) => (
-              <tr key={`empty-${index}`} style={{ height: "35px" }}>
-                <td style={{ 
-                  borderLeft: "1px solid #000",
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>
-                <td style={{ 
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>
-                {hasHSN && <td style={{ 
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>}
-                <td style={{ 
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>
-                <td style={{ 
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>
-                <td style={{ 
-                  borderRight: "1px solid #000",
-                  borderBottom: "1px solid #000",
-                  padding: "6px" 
-                }}>&nbsp;</td>
-              </tr>
-            ))}
+
 
             {/* Tax Rows */}
             <tr className="print-keep-together">

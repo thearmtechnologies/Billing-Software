@@ -36,7 +36,7 @@ const ServiceManagement = () => {
     try {
       axios.defaults.withCredentials = true;
       const res = await axios.post(`${BASE_URL}/services`, serviceData);
-      setServices((prev) => [...prev, res.data.service]);
+      setServices((prev) => [res.data.service, ...prev]);
       toast.success("Service added successfully");
       setShowForm(false);
     } catch (error) {
@@ -257,8 +257,8 @@ const ServiceManagement = () => {
           data={filteredServices}
           loading={loading}
           rowKey="_id"
-          defaultSortKey="name"
-          defaultSortDir="asc"
+          defaultSortKey="createdAt"
+          defaultSortDir="desc"
           emptyIcon={<Package size={48} />}
           emptyTitle="No services found"
           emptySubtitle={

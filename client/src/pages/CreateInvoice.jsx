@@ -635,7 +635,7 @@ const CreateInvoice = () => {
                 {...errorFocusProps(validationErrors.invoiceNumber)}
               >
                 {invoicePreferences.prefix && (
-                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500 }}>
+                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
                     {invoicePreferences.prefix}
                   </span>
                 )}
@@ -655,7 +655,7 @@ const CreateInvoice = () => {
                   }}
                 />
                 {invoicePreferences.suffix && (
-                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500 }}>
+                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
                     {invoicePreferences.suffix}
                   </span>
                 )}

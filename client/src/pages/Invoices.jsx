@@ -347,20 +347,6 @@ const Invoices = () => {
     paddingRight: '36px',
   };
 
-  const actionDropdownStyle = {
-    position: 'absolute',
-    right: 0,
-    zIndex: 20,
-    marginTop: '4px',
-    width: '200px',
-    background: 'var(--surface, #FFFFFF)',
-    borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.04)',
-    border: '1px solid var(--border, #E5E5E7)',
-    overflow: 'hidden',
-    padding: '4px',
-  };
-
   const actionItemStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -625,7 +611,7 @@ const Invoices = () => {
           </button>
 
           {openActionId === row._id && (
-            <div style={actionDropdownStyle}>
+            <div className="adt-action-dropdown">
               {/* View */}
               <Link
                 to={`/invoices/${row._id}`}

@@ -113,14 +113,7 @@ const s = StyleSheet.create({
     borderColor: "#000",
     minHeight: 22,
   },
-  emptyRow: {
-    flexDirection: "row",
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    height: 22,
-  },
+
   // Column header cells
   th: {
     padding: 6,
@@ -224,8 +217,7 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
   );
   const col = hasHSN ? COL : COL_NO_HSN;
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
-  const totalRows = 8;
-  const emptyRows = Math.max(0, totalRows - invoiceData.items.length);
+
   const copyLabel = copyType || "ORIGINAL FOR RECIPIENT";
 
   return (
@@ -380,17 +372,7 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             </View>
           ))}
 
-          {/* Empty rows */}
-          {Array.from({ length: emptyRows }).map((_, i) => (
-            <View key={`empty-${i}`} style={s.emptyRow}>
-              <Text style={[s.td, { width: col.sr }]}> </Text>
-              <Text style={[s.td, { width: col.desc }]}> </Text>
-              {hasHSN && <Text style={[s.td, { width: col.hsn }]}> </Text>}
-              <Text style={[s.td, { width: col.qty }]}> </Text>
-              <Text style={[s.td, { width: col.rate }]}> </Text>
-              <Text style={[s.tdLast, { width: col.amt }]}> </Text>
-            </View>
-          ))}
+
 
           {/* Tax rows */}
           {invoiceData.taxes && invoiceData.taxes.length > 0 && (

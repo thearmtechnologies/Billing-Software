@@ -640,3 +640,28 @@
 .adt-row-enter {
   animation: adt-fadeIn var(--adt-transition-slow) ease both;
 }
+
+/* ── Action Dropdown ── */
+.adt-action-dropdown {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  margin-top: 4px;
+  width: 200px;
+  background: var(--adt-bg-primary);
+  border-radius: 12px;
+  box-shadow: var(--adt-shadow-lg);
+  border: 1px solid var(--adt-border);
+  overflow: hidden;
+  padding: 4px;
+}
+
+@media (max-width: 768px) {
+  .adt-action-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 12px;
+    box-shadow: none;
+    border: 1px solid var(--adt-border-light);
+  }
+}
