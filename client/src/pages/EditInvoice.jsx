@@ -25,6 +25,7 @@ const EditInvoice = () => {
   const [totals, setTotals] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
   const [collapsedItems, setCollapsedItems] = useState([]);
+  const [invoicePreferences, setInvoicePreferences] = useState({ prefix: "", suffix: "" });
   
   const toggleCollapse = (index) => {
     setCollapsedItems((prev) =>
@@ -49,10 +50,14 @@ const EditInvoice = () => {
   });
 
   useEffect(() => {
-    fetchClients();
-    fetchServices();
-    fetchBankAccounts();
-    fetchInvoice();
+    const loadData = async () => {
+      fetchClients();
+      fetchServices();
+      fetchBankAccounts();
+      const prefs = await fetchProfile();
+      fetchInvoice(prefs);
+    };
+    loadData();
   }, []);
 
   const fetchClients = async () => {
@@ -92,13 +97,41 @@ const EditInvoice = () => {
     setFormData((prev) => ({ ...prev, bankDetails: selected || null }));
   };
 
-  const fetchInvoice = async () => {
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/users/profile`);
+      if (res.data.invoicePreferences) {
+        const prefs = {
+          prefix: res.data.invoicePreferences.prefix || "",
+          suffix: res.data.invoicePreferences.suffix || "",
+        };
+        setInvoicePreferences(prefs);
+        return prefs;
+      }
+    } catch {
+      console.error("Failed to fetch profile");
+    }
+    return { prefix: "", suffix: "" };
+  };
+
+  const fetchInvoice = async (prefs) => {
     try {
       const res = await axios.get(`${BASE_URL}/invoices/${id}`);
       const invoice = res.data;
 
+      let editableInvoiceNumber = invoice.invoiceNumber || "";
+      const currentPrefix = prefs?.prefix || invoicePreferences.prefix;
+      const currentSuffix = prefs?.suffix || invoicePreferences.suffix;
+      
+      if (currentPrefix && editableInvoiceNumber.startsWith(currentPrefix)) {
+        editableInvoiceNumber = editableInvoiceNumber.slice(currentPrefix.length);
+      }
+      if (currentSuffix && editableInvoiceNumber.endsWith(currentSuffix)) {
+        editableInvoiceNumber = editableInvoiceNumber.slice(0, -currentSuffix.length);
+      }
+
       setFormData({
-        invoiceNumber: invoice.invoiceNumber || "",
+        invoiceNumber: editableInvoiceNumber,
         invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split("T")[0] : "",
         client: invoice.client || "",
         items: invoice.items || [],
@@ -430,6 +463,7 @@ const EditInvoice = () => {
   const cleanPayload = (payload) => {
     return {
       ...payload,
+      invoiceNumber: `${invoicePreferences.prefix}${payload.invoiceNumber}${invoicePreferences.suffix}`,
       items: payload.items.map((item) => {
         const cleanedItem = { ...item };
         if (!cleanedItem.service) delete cleanedItem.service;
@@ -596,16 +630,44 @@ const EditInvoice = () => {
               <label style={labelStyle}>
                 Invoice Number <span style={{ color: "red" }}>*</span>
               </label>
-              <input
-                name="invoiceNumber"
-                value={formData.invoiceNumber}
-                onChange={handleInputChange}
-                style={{
-                  ...inputStyle,
-                  borderColor: validationErrors.invoiceNumber ? "#DC2626" : "var(--border, #E5E5E7)",
+              <div 
+                style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  ...inputStyle, 
+                  padding: 0, 
+                  overflow: "hidden", 
+                  borderColor: validationErrors.invoiceNumber ? "#DC2626" : "var(--border, #E5E5E7)" 
                 }}
                 {...errorFocusProps(validationErrors.invoiceNumber)}
-              />
+              >
+                {invoicePreferences.prefix && (
+                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                    {invoicePreferences.prefix}
+                  </span>
+                )}
+                <input
+                  name="invoiceNumber"
+                  value={formData.invoiceNumber}
+                  onChange={handleInputChange}
+                  style={{
+                    flex: "1 1 auto",
+                    minWidth: 0,
+                    padding: "12px 16px",
+                    border: "none",
+                    background: "transparent",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    color: "var(--text-primary, #1D1D1F)",
+                    outline: "none",
+                  }}
+                />
+                {invoicePreferences.suffix && (
+                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                    {invoicePreferences.suffix}
+                  </span>
+                )}
+              </div>
               {validationErrors.invoiceNumber && (
                 <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.invoiceNumber}</p>
               )}

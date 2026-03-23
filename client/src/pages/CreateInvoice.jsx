@@ -644,7 +644,8 @@ const CreateInvoice = () => {
                   value={formData.invoiceNumber}
                   onChange={handleInputChange}
                   style={{
-                    flex: 1,
+                    flex: "1 1 auto",
+                    minWidth: 0,
                     padding: "12px 16px",
                     border: "none",
                     background: "transparent",
