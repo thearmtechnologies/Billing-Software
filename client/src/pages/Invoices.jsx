@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -184,7 +185,7 @@ const Invoices = () => {
         toast.success(`Email sent to ${emailInvoice.client.email}`);
       }
       
-      // Send Twilio SMS Notification if selected
+      // Send SMS Notification via MSG91 if selected
       if (notificationTypes.sms && emailInvoice.client?.phone) {
         try {
           await axios.post(`${import.meta.env.VITE_BASE_URL}/notifications/send-sms`, {
@@ -196,7 +197,7 @@ const Invoices = () => {
           });
           toast.success(`SMS reminder sent to ${emailInvoice.client.phone}`);
         } catch (smsError) {
-          console.error("Twilio SMS Error:", smsError);
+          console.error("MSG91 SMS Error:", smsError);
           toast.error("Failed to send SMS reminder.");
         }
       }
@@ -312,15 +313,20 @@ const Invoices = () => {
     }
   };
 
-  // Close dropdowns when clicking outside
+  // Close dropdowns when clicking outside or pressing Escape
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleCloseAll = (e) => {
+      if (e.type === 'keydown' && e.key !== 'Escape') return;
       setOpenDropdownId(null);
       setOpenActionId(null);
     };
 
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("click", handleCloseAll);
+    document.addEventListener("keydown", handleCloseAll);
+    return () => {
+      document.removeEventListener("click", handleCloseAll);
+      document.removeEventListener("keydown", handleCloseAll);
+    };
   }, []);
 
   /* ── Shared Styles ── */
@@ -377,6 +383,66 @@ const Invoices = () => {
     overflow: 'hidden',
     padding: '4px',
   };
+
+  const renderActionItems = (row) => (
+    <>
+      {/* View */}
+      <Link
+        to={`/invoices/${row._id}`}
+        style={actionItemStyle}
+        onClick={() => setOpenActionId(null)}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      >
+        <Eye style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+        View Invoice
+      </Link>
+
+      {/* Manage Payment */}
+      <Link
+        to={`/invoices/${row._id}/payments`}
+        style={actionItemStyle}
+        onClick={() => setOpenActionId(null)}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      >
+        <IndianRupee style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+        Manage Payments
+      </Link>
+
+      {/* Edit */}
+      <Link
+        to={`/invoices/edit/${row._id}`}
+        style={actionItemStyle}
+        onClick={() => setOpenActionId(null)}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      >
+        <Pencil style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+        Edit Invoice
+      </Link>
+
+      {/* Divider */}
+      <div style={{ height: '1px', background: 'var(--border, #E5E5E7)', margin: '2px 8px' }} />
+
+      {/* Delete */}
+      <button
+        onClick={() => {
+          handleDeleteInvoice(row._id);
+          setOpenActionId(null);
+        }}
+        style={{
+          ...actionItemStyle,
+          color: '#DC2626',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      >
+        <Trash2 style={{ width: '15px', height: '15px' }} />
+        Delete Invoice
+      </button>
+    </>
+  );
 
   // ── Column config ──
   const invoiceColumns = [
@@ -578,8 +644,8 @@ const Invoices = () => {
               border: 'none',
               cursor: isPending ? 'pointer' : 'not-allowed',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: '',
+              justifyContent: 'flex-end',
               width: '100%',
               opacity: isPending ? 1 : 0.4
             }}
@@ -611,63 +677,26 @@ const Invoices = () => {
           </button>
 
           {openActionId === row._id && (
-            <div className="adt-action-dropdown">
-              {/* View */}
-              <Link
-                to={`/invoices/${row._id}`}
-                style={actionItemStyle}
-                onClick={() => setOpenActionId(null)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Eye style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
-                View Invoice
-              </Link>
-
-              {/* Manage Payment */}
-              <Link
-                to={`/invoices/${row._id}/payments`}
-                style={actionItemStyle}
-                onClick={() => setOpenActionId(null)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <IndianRupee style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
-                Manage Payments
-              </Link>
-
-              {/* Edit */}
-              <Link
-                to={`/invoices/edit/${row._id}`}
-                style={actionItemStyle}
-                onClick={() => setOpenActionId(null)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-light, #F0F0F2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Pencil style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
-                Edit Invoice
-              </Link>
-
-              {/* Divider */}
-              <div style={{ height: '1px', background: 'var(--border, #E5E5E7)', margin: '2px 8px' }} />
-
-              {/* Delete */}
-              <button
-                onClick={() => {
-                  handleDeleteInvoice(row._id);
-                  setOpenActionId(null);
-                }}
-                style={{
-                  ...actionItemStyle,
-                  color: '#DC2626',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Trash2 style={{ width: '15px', height: '15px' }} />
-                Delete Invoice
-              </button>
-            </div>
+            <>
+              {/* Desktop inline dropdown */}
+              <div className="adt-action-dropdown adt-desktop-only">
+                {renderActionItems(row)}
+              </div>
+              
+              {/* Mobile portal overlay */}
+              {createPortal(
+                <div 
+                  className="adt-mobile-overlay" 
+                  onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }}
+                >
+                  <div className="adt-mobile-sheet" onClick={(e) => e.stopPropagation()}>
+                    <div className="adt-mobile-sheet-handler"></div>
+                    {renderActionItems(row)}
+                  </div>
+                </div>,
+                document.body
+              )}
+            </>
           )}
         </div>
       ),
