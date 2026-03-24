@@ -189,7 +189,7 @@ const s = StyleSheet.create({
 
 const safeText = (value, fallback = "") => (value ? String(value) : fallback);
 
-const Template6PDF = ({ invoiceData, currentUser, numberToWords }) => {
+const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
   const items = Array.isArray(invoiceData?.items) ? invoiceData.items : [];
   
   const subtotal = Number(invoiceData?.subtotal) || 0;
@@ -305,7 +305,14 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords }) => {
 
               <View style={s.signatureArea}>
                 <Text style={s.bold}>For {safeText(currentUser?.businessName || "Billing")}</Text>
-                <View style={{ height: 40 }} />
+                {signatureBase64 && invoiceData.includeSignature !== false ? (
+                  <Image 
+                    src={signatureBase64} 
+                    style={{ width: 180, height: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10, marginTop: 10 }} 
+                  />
+                ) : (
+                  <View style={{ height: 60 }} />
+                )}
                 <Text style={{ fontSize: 9 }}>Authorised Signatory</Text>
               </View>
             </View>

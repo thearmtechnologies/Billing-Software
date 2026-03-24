@@ -396,7 +396,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
             {signatureBase64 && invoiceData.includeSignature !== false && (
               <Image 
                 src={signatureBase64} 
-                style={{ width: 100, height: 40, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                style={{ width: 160, height: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
               />
             )}
             <Text style={s.sigLine}>Authorized Signatory</Text>

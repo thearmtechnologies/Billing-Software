@@ -353,7 +353,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             {signatureBase64 && invoiceData.includeSignature !== false && (
               <Image 
                 src={signatureBase64} 
-                style={{ width: 100, height: 35, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                style={{ width: 140, height: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
               />
             )}
             <View style={s.sigLine}>

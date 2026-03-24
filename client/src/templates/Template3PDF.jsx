@@ -434,7 +434,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {signatureBase64 && invoiceData.includeSignature !== false && (
                   <Image 
                     src={signatureBase64} 
-                    style={{ width: 100, height: 35, maxWidth: 100, maxHeight: 35, alignSelf: "flex-end", marginBottom: 10 }} 
+                    style={{ width: 100, height: 60, maxWidth: 100, maxHeight: 60, alignSelf: "flex-end", marginBottom: 10 }} 
                   />
                 )}
                 <Text style={s.sigLabel}>Authorized Signatory</Text>
