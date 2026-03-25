@@ -47,6 +47,7 @@ const s = StyleSheet.create({
   
   // 3. Bill To & Invoice Info Box
   billToColLeft: { width: "65%", padding: 6, borderRightWidth: 1, borderColor: "#000" },
+  shipToColMid: { padding: 6, borderRightWidth: 1, borderColor: "#000" },
   billToColRight: { width: "35%", padding: 6 },
   sectionTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 4, color: "#444" },
   customerName: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 2 },
@@ -156,6 +157,22 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   const totalSgst = taxSummaryRows.reduce((sum, row) => sum + row.sgstAmt, 0);
   const totalSummaryTax = taxSummaryRows.reduce((sum, row) => sum + row.totalTax, 0);
 
+  // Safely extract and format shipping address (can be string or object)
+  const rawShipping = invoiceData.shippingAddress || invoiceData.shipping_address || invoiceData.client?.shippingAddress;
+  let shipStr = "";
+  if (typeof rawShipping === "string") {
+    shipStr = rawShipping;
+  } else if (typeof rawShipping === "object" && rawShipping !== null) {
+    const parts = [
+      rawShipping.street || "",
+      [rawShipping.city || "", rawShipping.state || "", rawShipping.zipCode || ""].filter(Boolean).join(" "),
+      rawShipping.country || ""
+    ];
+    shipStr = parts.filter(Boolean).join("\n").trim();
+  }
+  
+  const hasShipping = Boolean(shipStr && shipStr.trim() !== "");
+
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -183,8 +200,8 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
 
         {/* 3. Bill To + Invoice Details Box */}
         <View style={[s.box, s.boxRow]}>
-          <View style={s.billToColLeft}>
-            <Text style={s.sectionTitle}>Bill To:</Text>
+          <View style={{ ...s.billToColLeft, width: hasShipping ? "32.5%" : "65%" }}>
+            <Text style={s.sectionTitle}>{hasShipping ? "Bill To Party:" : "Bill To:"}</Text>
             <Text style={s.customerName}>{invoiceData.client?.companyName || "Customer Name"}</Text>
             {invoiceData.client?.address && (
               <Text style={s.customerText}>
@@ -194,6 +211,13 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             )}
             <Text style={s.customerText}>Phone: {invoiceData.client?.phone || "N/A"}</Text>
           </View>
+          {hasShipping ? (
+            <View style={{ ...s.shipToColMid, width: "32.5%" }}>
+              <Text style={s.sectionTitle}>Ship To Party:</Text>
+              <Text style={s.customerName}>{invoiceData.client?.companyName || "Customer Name"}</Text>
+              <Text style={s.customerText}>{shipStr}</Text>
+            </View>
+          ) : null}
           <View style={s.billToColRight}>
             <View style={s.metaRow}>
               <Text style={s.metaLabel}>Invoice No:</Text>

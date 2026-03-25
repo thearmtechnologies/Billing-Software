@@ -110,6 +110,11 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
     },
 
+    shippingAddress: {
+      type: String,
+      required: false,
+    },
+
     items: [invoiceItemSchema],
 
     bankDetails: {

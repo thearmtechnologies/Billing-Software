@@ -37,6 +37,7 @@ const EditInvoice = () => {
     invoiceNumber: "",
     invoiceDate: "",
     client: "",
+    shippingAddress: "",
     items: [],
     discount: "",
     discountType: "fixed",
@@ -134,6 +135,7 @@ const EditInvoice = () => {
         invoiceNumber: editableInvoiceNumber,
         invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split("T")[0] : "",
         client: invoice.client || "",
+        shippingAddress: invoice.shippingAddress || "",
         items: invoice.items || [],
         discount: invoice.discount || "",
         discountType: invoice.discountType || "fixed",
@@ -737,6 +739,20 @@ const EditInvoice = () => {
               {validationErrors.client && (
                 <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.client}</p>
               )}
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>
+                Shipping Address (Optional)
+              </label>
+              <textarea
+                name="shippingAddress"
+                value={formData.shippingAddress}
+                onChange={handleInputChange}
+                style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+                placeholder="Enter separate shipping address (if different from client address)..."
+                {...focusProps}
+              />
             </div>
 
             <div style={{ gridColumn: "1 / -1" }}>

@@ -37,6 +37,7 @@ const CreateInvoice = () => {
     invoiceNumber: "",
     invoiceDate: "",
     client: "",
+    shippingAddress: "",
     items: [
       {
         service: "",
@@ -730,6 +731,20 @@ const CreateInvoice = () => {
               {validationErrors.client && (
                 <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.client}</p>
               )}
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>
+                Shipping Address (Optional)
+              </label>
+              <textarea
+                name="shippingAddress"
+                value={formData.shippingAddress}
+                onChange={handleInputChange}
+                style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+                placeholder="Enter separate shipping address (if different from client address)..."
+                {...focusProps}
+              />
             </div>
             
             <div style={{ gridColumn: "1 / -1" }}>
