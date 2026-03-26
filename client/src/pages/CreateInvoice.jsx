@@ -447,6 +447,10 @@ const CreateInvoice = () => {
           errors[`item_${index}_baseRate`] = "Base Rate is required";
           isValid = false;
         }
+        if (item.unitType === "other" && !item.customUnitType?.trim()) {
+          errors[`item_${index}_customUnit`] = "Custom unit is required";
+          isValid = false;
+        }
       });
     }
 
@@ -461,6 +465,10 @@ const CreateInvoice = () => {
       items: payload.items.map((item) => {
         const cleanedItem = { ...item };
         if (!cleanedItem.service) delete cleanedItem.service;
+        if (cleanedItem.unitType === "other" && cleanedItem.customUnitType?.trim()) {
+          cleanedItem.unitType = cleanedItem.customUnitType.trim();
+        }
+        delete cleanedItem.customUnitType;
         return cleanedItem;
       }),
     };
@@ -821,7 +829,7 @@ const CreateInvoice = () => {
                     </span>
                     {isCollapsed && item.quantity > 0 && (
                       <span style={{ fontSize: "13px", color: "var(--text-secondary, #6E6E73)", whiteSpace: "nowrap" }}>
-                        × {item.quantity} {item.unitType !== "item" ? item.unitType : ""}
+                        × {item.quantity} {item.unitType === "other" ? (item.customUnitType || "") : (item.unitType !== "item" ? item.unitType : "")}
                       </span>
                     )}
                   </div>
@@ -927,13 +935,39 @@ const CreateInvoice = () => {
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Unit</label>
                         <select
                           value={item.unitType}
-                          onChange={(e) => handleItemChange(index, "unitType", e.target.value)}
+                          onChange={(e) => {
+                            handleItemChange(index, "unitType", e.target.value);
+                            if (e.target.value !== "other") handleItemChange(index, "customUnitType", "");
+                          }}
                           style={{ ...inputStyle, marginTop: 0, padding: "10px 14px", height: "42px" }}
                           {...focusProps}
                         >
                           {unitTypes.map((u) => <option key={u} value={u}>{u}</option>)}
                         </select>
                       </div>
+
+                      {/* Custom Unit (shown when "other" selected) */}
+                      {item.unitType === "other" && (
+                        <div style={{ flex: "1 1 120px", minWidth: "120px", opacity: 1, transition: "opacity 200ms ease" }}>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Custom Unit <span style={{ color: "#DC2626" }}>*</span></label>
+                          <input
+                            placeholder="e.g. hours, sessions, boxes"
+                            value={item.customUnitType || ""}
+                            onChange={(e) => handleItemChange(index, "customUnitType", e.target.value)}
+                            style={{
+                              ...inputStyle,
+                              marginTop: 0,
+                              padding: "10px 14px",
+                              height: "42px",
+                              borderColor: validationErrors[`item_${index}_customUnit`] ? "#DC2626" : "var(--border, #E5E5E7)",
+                            }}
+                            {...errorFocusProps(validationErrors[`item_${index}_customUnit`])}
+                          />
+                          {validationErrors[`item_${index}_customUnit`] && (
+                            <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "4px" }}>{validationErrors[`item_${index}_customUnit`]}</p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Pricing Type */}
                       <div style={{ flex: "1 1 120px", minWidth: "120px" }}>
