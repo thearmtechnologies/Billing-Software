@@ -271,15 +271,32 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
         )}
 
         {/* ═══ TITLE ═══ */}
-        <View style={s.titleBlock}>
-          <Text style={s.title}>TAX INVOICE</Text>
-          <Text style={s.subtitle}>({copyLabel})</Text>
+        <View style={[s.titleBlock, { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }]}>
+          <View style={{ flex: 1, alignItems: "flex-start", paddingTop: 4 }}>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+              Invoice No: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceNumber || "-"}</Text>
+            </Text>
+          </View>
+
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={s.title}>TAX INVOICE</Text>
+            <Text style={s.subtitle}>({copyLabel})</Text>
+          </View>
+
+          <View style={{ flex: 1, alignItems: "flex-end", paddingTop: 4 }}>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 2 }}>
+              Invoice Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}</Text>
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+              Due Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}</Text>
+            </Text>
+          </View>
         </View>
 
-        {/* ═══ BILL-TO + INVOICE META ═══ */}
-        <View style={s.twoCol}>
+        {/* ═══ BILL TO + SHIP TO ═══ */}
+        <View style={{ flexDirection: "row", gap: 12, marginBottom: 12, justifyContent: "space-between" }}>
           {/* Left: Bill To */}
-          <View style={[s.halfCol, s.billToBox]}>
+          <View style={[s.billToBox, { flex: 1 }]}>
             <Text style={s.billToLabel}>Bill To:</Text>
             <Text style={s.clientName}>{invoiceData.client?.companyName || ""}</Text>
             <Text style={s.bodyText}>{invoiceData.client?.address?.street || ""}</Text>
@@ -297,27 +314,36 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             </Text>
           </View>
 
-          {/* Right: Invoice Details */}
-          <View style={s.halfCol}>
-            <View style={s.metaTable}>
-              <View style={s.metaRow}>
-                <Text style={[s.metaCellLabel, { width: "30%" }]}>Invoice No.</Text>
-                <Text style={[s.metaCellValue, { width: "20%" }]}>
-                  {invoiceData.invoiceNumber}
-                </Text>
-                <Text style={[s.metaCellLabel, { width: "20%" }]}>Invoice Date</Text>
-                <Text style={[s.metaCellValueWide, { width: "30%" }]}>
-                  {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
-                </Text>
-              </View>
-              <View style={s.metaRowLast}>
-                <Text style={[s.metaCellLabel, { width: "30%" }]}>Due Date</Text>
-                <Text style={[s.metaCellValueWide]}>
-                  {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
-                </Text>
-              </View>
+          {/* Right: Ship To */}
+          {invoiceData.shippingAddress && (
+            <View style={[s.billToBox, { flex: 1 }]}>
+              <Text style={s.billToLabel}>Ship To:</Text>
+              {typeof invoiceData.shippingAddress === "string" ? (
+                invoiceData.shippingAddress.split("\n").map((line, i) => (
+                  <Text key={i} style={s.bodyText}>
+                    {line}
+                  </Text>
+                ))
+              ) : (
+                <>
+                  {invoiceData.shippingAddress.street && (
+                    <Text style={s.bodyText}>{invoiceData.shippingAddress.street}</Text>
+                  )}
+                  {(invoiceData.shippingAddress.city || invoiceData.shippingAddress.state || invoiceData.shippingAddress.zipCode) && (
+                    <Text style={s.bodyText}>
+                      {[
+                        invoiceData.shippingAddress.city,
+                        invoiceData.shippingAddress.state,
+                        invoiceData.shippingAddress.zipCode,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </Text>
+                  )}
+                </>
+              )}
             </View>
-          </View>
+          )}
         </View>
 
         {/* ═══ ITEMS TABLE ═══ */}
