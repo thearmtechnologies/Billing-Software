@@ -60,6 +60,21 @@ export const createService = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating service:", error);
+
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({
+        message: "Validation error",
+        errors: errors,
+      });
+    }
+
+    if (error.message.includes("pricing tier")) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       message: "Server error while creating service",
       error: error.message,

@@ -109,9 +109,9 @@ const Invoices = () => {
 
     setIsSendingEmail(true);
     try {
-      const serviceId = 'service_pz0xzv8';
-      const templateId = 'template_p9ttwae';
-      const publicKey = 'x1_RUwD-1cdvAc52E';
+      const serviceId = '';
+      const templateId = '';
+      const publicKey = '';
 
       // ── Generate PDF blob and convert to Base64 ──
       let pdfBase64 = "";
