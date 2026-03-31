@@ -109,9 +109,9 @@ const Invoices = () => {
 
     setIsSendingEmail(true);
     try {
-      const serviceId = '';
-      const templateId = '';
-      const publicKey = '';
+      const serviceId = 'service_pz0xzv8';
+      const templateId = 'template_p9ttwae';
+      const publicKey = 'x1_RUwD-1cdvAc52E';
 
       // ── Generate PDF blob and convert to Base64 ──
       let pdfBase64 = "";
@@ -181,14 +181,22 @@ const Invoices = () => {
 
       // Send Email if selected
       if (notificationTypes.email) {
-        await emailjs.send(serviceId, templateId, templateParams, publicKey);
-        toast.success(`Email sent to ${emailInvoice.client.email}`);
+        try {
+          await axios.post(`${import.meta.env.VITE_BASE_URL}/notifications/check-email-cooldown`, { invoiceId: emailInvoice._id });
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+          await axios.post(`${import.meta.env.VITE_BASE_URL}/notifications/log-email`, { invoiceId: emailInvoice._id });
+          toast.success(`Email sent to ${emailInvoice.client.email}`);
+        } catch (emailError) {
+          console.error("Email Error:", emailError);
+          toast.error(emailError.response?.data?.message || "Failed to send Email.");
+        }
       }
       
-      // Send SMS Notification via MSG91 if selected
+      // Send SMS Notification via Twilio if selected
       if (notificationTypes.sms && emailInvoice.client?.phone) {
         try {
           await axios.post(`${import.meta.env.VITE_BASE_URL}/notifications/send-sms`, {
+            invoiceId: emailInvoice._id,
             to: emailInvoice.client.phone,
             invoiceNumber: emailInvoice.invoiceNumber,
             amount: emailInvoice.totalAmount,
@@ -197,8 +205,8 @@ const Invoices = () => {
           });
           toast.success(`SMS reminder sent to ${emailInvoice.client.phone}`);
         } catch (smsError) {
-          console.error("MSG91 SMS Error:", smsError);
-          toast.error("Failed to send SMS reminder.");
+          console.error("Twilio SMS Error:", smsError);
+          toast.error(smsError.response?.data?.message || "Failed to send SMS reminder.");
         }
       }
 

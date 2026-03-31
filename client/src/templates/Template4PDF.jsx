@@ -28,6 +28,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
   halfBox: { width: "48%" },
+  thirdBox: { width: "32%" },
   sectionTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 6 },
   companyName: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 3 },
   textRow: { fontSize: 9, marginBottom: 2 },
@@ -162,38 +163,94 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
     <Document>
       <Page size="A4" style={s.page}>
         
-        {/* 1. Bill From & Bill To */}
-        <View style={s.topGrid}>
-          {/* Bill From */}
-          <View style={s.halfBox}>
-            <Text style={s.sectionTitle}>Bill From:</Text>
-            <Text style={s.companyName}>{currentUser?.businessName || ""}</Text>
-            <Text style={s.textRow}>
-              {currentUser?.address?.street || ""}, {currentUser?.address?.city || ""}
-            </Text>
-            <Text style={s.textRow}>
-              {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
-            </Text>
-            <Text style={s.textRow}>GST: {currentUser?.taxId || "N/A"}</Text>
-            {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
-            {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
-          </View>
+        {/* 1. Bill From / Bill To / Ship To */}
+        {invoiceData.shippingAddress ? (
+          <View style={s.topGrid}>
+            {/* Bill From */}
+            <View style={s.thirdBox}>
+              <Text style={s.sectionTitle}>Bill From:</Text>
+              <Text style={s.companyName}>{currentUser?.businessName || ""}</Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.street || ""}, {currentUser?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>GST: {currentUser?.taxId || "N/A"}</Text>
+              {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
+              {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
+            </View>
 
-          {/* Bill To */}
-          <View style={s.halfBox}>
-            <Text style={s.sectionTitle}>Bill To:</Text>
-            <Text style={s.companyName}>{invoiceData.client?.companyName || ""}</Text>
-            <Text style={s.textRow}>
-              {invoiceData.client?.address?.street || ""}, {invoiceData.client?.address?.city || ""}
-            </Text>
-            <Text style={s.textRow}>
-              {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
-            </Text>
-            <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
-            {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
-            {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
+            {/* Bill To */}
+            <View style={s.thirdBox}>
+              <Text style={s.sectionTitle}>Bill To:</Text>
+              <Text style={s.companyName}>{invoiceData.client?.companyName || ""}</Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.street || ""}, {invoiceData.client?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
+              {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
+            </View>
+
+            {/* Ship To */}
+            <View style={s.thirdBox}>
+              <Text style={s.sectionTitle}>Ship To:</Text>
+              {typeof invoiceData.shippingAddress === "string" ? (
+                invoiceData.shippingAddress.split("\n").map((line, i) => (
+                  <Text key={i} style={s.textRow}>{line}</Text>
+                ))
+              ) : (
+                <>
+                  <Text style={s.textRow}>
+                    {invoiceData.shippingAddress.street || ""}, {invoiceData.shippingAddress.city || ""}
+                  </Text>
+                  <Text style={s.textRow}>
+                    {invoiceData.shippingAddress.state || ""} - {invoiceData.shippingAddress.zipCode || ""}
+                  </Text>
+                  {invoiceData.shippingAddress.country && (
+                    <Text style={s.textRow}>{invoiceData.shippingAddress.country}</Text>
+                  )}
+                </>
+              )}
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={s.topGrid}>
+            {/* Bill From */}
+            <View style={s.halfBox}>
+              <Text style={s.sectionTitle}>Bill From:</Text>
+              <Text style={s.companyName}>{currentUser?.businessName || ""}</Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.street || ""}, {currentUser?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>GST: {currentUser?.taxId || "N/A"}</Text>
+              {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
+              {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
+            </View>
+
+            {/* Bill To */}
+            <View style={s.halfBox}>
+              <Text style={s.sectionTitle}>Bill To:</Text>
+              <Text style={s.companyName}>{invoiceData.client?.companyName || ""}</Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.street || ""}, {invoiceData.client?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
+              {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
+            </View>
+          </View>
+        )}
 
         {/* 2. Metadata Block */}
         <View style={s.metaBox}>

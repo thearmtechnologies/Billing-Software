@@ -40,11 +40,13 @@ const s = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Helvetica-Bold",
     color: "#8B0000",
-    marginBottom: 10,
+    marginBottom: 14,
     letterSpacing: 0.5,
+
   },
   companyDetails: {
     fontSize: 10,
+    marginTop: 8,
     // textAlign: "center",
   },
 
@@ -224,66 +226,155 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           
           {/* Header */}
           <View style={s.headerWrap} fixed>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {(logoBase64 && invoiceData.includeLogo !== false) ? (
-                <Image
-                  src={logoBase64}
-                  style={{ width: 56, height: 40, maxWidth: 56, maxHeight: 40, marginRight: 8 }}
-                />
-              ) : null}
-              <View>
-                <Text style={s.companyName}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
-                <View style={s.companyDetails}>
-                  <Text>
-                    Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
-                    {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
-                  </Text>
-                  <Text>
-                    Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
-                    {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-                  </Text>
+            {(logoBase64 && invoiceData.includeLogo !== false) ? (
+              <View style={{ flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 14 }}>
+                <View style={{ width: 72, height: 72, alignItems: "center", justifyContent: "center" }}>
+                  <Image
+                    src={logoBase64}
+                    style={{ maxWidth: 72, maxHeight: 72 }}
+                  />
+                </View>
+                <View style={{ textAlign: "left", flex: 1 }}>
+                  <Text style={[s.companyName, { marginBottom: 4, textAlign: "left" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
+                  <View style={[s.companyDetails, { textAlign: "left" }]}>
+                    <Text>
+                      Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
+                      {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                    </Text>
+                    <Text>
+                      Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
+                      {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            ) : (
+              <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+                <View style={{ textAlign: "center", width: "100%" }}>
+                  <Text style={[s.companyName, { marginBottom: 4, textAlign: "center" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
+                  <View style={[s.companyDetails, { textAlign: "center" }]}>
+                    <Text>
+                      Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
+                      {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                    </Text>
+                    <Text>
+                      Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
+                      {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Main Content */}
           <View style={s.mainContainer}>
-            <Text style={s.invoiceTitle}>TAX INVOICE</Text>
+            {invoiceData.shippingAddress ? (
+              <>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <View style={{ flex: 1, alignItems: "flex-start", paddingTop: 4 }}>
+                    <Text style={s.metaBoldRow}>Invoice No: {invoiceData.invoiceNumber}</Text>
+                    {invoiceData.poNumber && (
+                      <Text style={s.metaBoldRow}>PO Number: {invoiceData.poNumber}</Text>
+                    )}
+                  </View>
 
-            {/* Bill To & Meta Data */}
-            <View style={s.metaWrapper}>
-              <View style={s.billToCol}>
-                <Text style={s.billToName}>{invoiceData.client?.companyName || ""}</Text>
-                <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
-                <Text style={s.textRow}>
-                  {invoiceData.client?.address?.street || ""},{" "}
-                  {invoiceData.client?.address?.city || ""},{" "}
-                  {invoiceData.client?.address?.state || ""} -{" "}
-                  {invoiceData.client?.address?.zipCode || ""},{" "}
-                  {invoiceData.client?.address?.country || ""}
-                </Text>
-                {invoiceData.client?.phone && (
-                  <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
-                )}
-                {invoiceData.client?.email && (
-                  <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>
-                )}
-              </View>
-              
-              <View style={s.metaCol}>
-                <Text style={s.metaBoldRow}>Invoice No: {invoiceData.invoiceNumber}</Text>
-                <Text style={s.metaBoldRow}>
-                  Date: {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
-                </Text>
-                <Text style={s.metaBoldRow}>
-                  Due Date: {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
-                </Text>
-                {invoiceData.poNumber && (
-                  <Text style={s.metaBoldRow}>PO Number: {invoiceData.poNumber}</Text>
-                )}
-              </View>
-            </View>
+                  <View style={{ flex: 1, alignItems: "center" }}>
+                    <Text style={[s.invoiceTitle, { textAlign: "center", marginBottom: 0 }]}>TAX INVOICE</Text>
+                  </View>
+
+                  <View style={{ flex: 1, alignItems: "flex-end", paddingTop: 4 }}>
+                    <Text style={s.metaBoldRow}>
+                      Date: {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
+                    </Text>
+                    <Text style={s.metaBoldRow}>
+                      Due Date: {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Bill To & Ship To Data */}
+                <View style={[s.metaWrapper, { marginBottom: 15 }]}>
+                  <View style={[s.billToCol, { paddingRight: 10 }]}>
+                    <Text style={s.billToName}>Bill To:</Text>
+                    <Text style={[s.billToName, { marginTop: 4 }]}>{invoiceData.client?.companyName || ""}</Text>
+                    <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
+                    <Text style={s.textRow}>
+                      {invoiceData.client?.address?.street || ""},{" "}
+                      {invoiceData.client?.address?.city || ""},{" "}
+                      {invoiceData.client?.address?.state || ""} -{" "}
+                      {invoiceData.client?.address?.zipCode || ""},{" "}
+                      {invoiceData.client?.address?.country || ""}
+                    </Text>
+                    {invoiceData.client?.phone && (
+                      <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
+                    )}
+                    {invoiceData.client?.email && (
+                      <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>
+                    )}
+                  </View>
+
+                  <View style={s.billToCol}>
+                    <Text style={s.billToName}>Ship To:</Text>
+                    {typeof invoiceData.shippingAddress === "string" ? (
+                      invoiceData.shippingAddress.split("\n").map((line, i) => (
+                        <Text key={i} style={s.textRow}>{line}</Text>
+                      ))
+                    ) : (
+                      <View style={{ marginTop: 4 }}>
+                        {invoiceData.shippingAddress.street && (
+                          <Text style={s.textRow}>{invoiceData.shippingAddress.street}</Text>
+                        )}
+                        <Text style={s.textRow}>
+                          {invoiceData.shippingAddress.city || ""},{" "}
+                          {invoiceData.shippingAddress.state || ""} -{" "}
+                          {invoiceData.shippingAddress.zipCode || ""},{" "}
+                          {invoiceData.shippingAddress.country || ""}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={[s.invoiceTitle, { textAlign: "center" }]}>TAX INVOICE</Text>
+
+                {/* Bill To & Meta Data */}
+                <View style={s.metaWrapper}>
+                  <View style={s.billToCol}>
+                    <Text style={s.billToName}>{invoiceData.client?.companyName || ""}</Text>
+                    <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
+                    <Text style={s.textRow}>
+                      {invoiceData.client?.address?.street || ""},{" "}
+                      {invoiceData.client?.address?.city || ""},{" "}
+                      {invoiceData.client?.address?.state || ""} -{" "}
+                      {invoiceData.client?.address?.zipCode || ""},{" "}
+                      {invoiceData.client?.address?.country || ""}
+                    </Text>
+                    {invoiceData.client?.phone && (
+                      <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
+                    )}
+                    {invoiceData.client?.email && (
+                      <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>
+                    )}
+                  </View>
+                  
+                  <View style={s.metaCol}>
+                    <Text style={s.metaBoldRow}>Invoice No: {invoiceData.invoiceNumber}</Text>
+                    <Text style={s.metaBoldRow}>
+                      Date: {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
+                    </Text>
+                    <Text style={s.metaBoldRow}>
+                      Due Date: {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
+                    </Text>
+                    {invoiceData.poNumber && (
+                      <Text style={s.metaBoldRow}>PO Number: {invoiceData.poNumber}</Text>
+                    )}
+                  </View>
+                </View>
+              </>
+            )}
 
             {/* Items Table */}
             <View style={s.table}>
