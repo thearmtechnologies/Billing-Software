@@ -244,10 +244,15 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                 {currentUser?.address?.zipCode || ""}
               </Text>
               <Text style={s.headerDetails}>
-                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
-                {currentUser?.taxId ? ` | GSTIN/UIN: ${currentUser.taxId}` : ""}
-                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} | {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
               </Text>
+              {(currentUser?.taxId || currentUser?.udyamNo) && (
+                <Text style={s.headerDetails}>
+                  {/* {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""} */}
+                  {currentUser?.taxId && currentUser?.udyamNo ? " | " : ""}
+                  {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                </Text>
+              )}
             </View>
           </View>
         ) : (
@@ -263,9 +268,14 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
               <Text style={s.headerDetails}>
                 Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
-                {currentUser?.taxId ? ` | GSTIN/UIN: ${currentUser.taxId}` : ""}
-                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
               </Text>
+              {(currentUser?.taxId || currentUser?.udyamNo) && (
+                <Text style={s.headerDetails}>
+                  {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                  {currentUser?.taxId && currentUser?.udyamNo ? " | " : ""}
+                  {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                </Text>
+              )}
             </View>
           </View>
         )}

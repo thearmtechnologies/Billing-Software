@@ -17,7 +17,11 @@ export const sendInvoiceSMS = async (req, res) => {
 
     const check = canSendNotification(invoice.lastSmsSentAt, 48);
     if (!check.canSend) {
-      return res.status(400).json({ success: false, message: `SMS already sent recently. Try again after ${check.remainingHours} hours.` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `SMS already sent recently. Try again after ${check.remainingHours} hours.`,
+        nextAllowedAt: check.nextAllowedAt 
+      });
     }
 
     // Twilio requires E.164 format (e.g., '+919876543210')
@@ -58,7 +62,11 @@ export const checkEmailCooldown = async (req, res) => {
 
     const check = canSendNotification(invoice.lastEmailSentAt, 48);
     if (!check.canSend) {
-      return res.status(400).json({ success: false, message: `Email already sent recently. Try again after ${check.remainingHours} hours.` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Email already sent recently. Try again after ${check.remainingHours} hours.`,
+        nextAllowedAt: check.nextAllowedAt 
+      });
     }
 
     return res.status(200).json({ success: true, message: "Can send email" });
@@ -105,7 +113,11 @@ export const sendInvoiceWhatsApp = async (req, res) => {
 
     const check = canSendNotification(invoice.lastWhatsAppSentAt, 48);
     if (!check.canSend) {
-      return res.status(400).json({ success: false, message: `WhatsApp already sent recently. Try again after ${check.remainingHours} hours.` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `WhatsApp already sent recently. Try again after ${check.remainingHours} hours.`,
+        nextAllowedAt: check.nextAllowedAt 
+      });
     }
 
     // Format 'to' with +91 if 10-digit number

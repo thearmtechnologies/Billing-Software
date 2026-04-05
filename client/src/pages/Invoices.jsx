@@ -189,7 +189,15 @@ const Invoices = () => {
           toast.success(`Email sent to ${emailInvoice.client.email}`);
         } catch (emailError) {
           console.error("Email Error:", emailError);
-          toast.error(emailError.response?.data?.message || "Failed to send Email.");
+          const responseData = emailError.response?.data;
+          let errMsg = responseData?.message || "Failed to send Email.";
+          if (responseData?.nextAllowedAt) {
+            const dateObj = new Date(responseData.nextAllowedAt);
+            const formattedDate = dateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+            const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
+            errMsg = `Email already sent recently. You can send again on ${formattedDate} at ${formattedTime}.`;
+          }
+          toast.error(errMsg);
         }
       }
       
@@ -207,7 +215,15 @@ const Invoices = () => {
           toast.success(`SMS reminder sent to ${emailInvoice.client.phone}`);
         } catch (smsError) {
           console.error("Twilio SMS Error:", smsError);
-          toast.error(smsError.response?.data?.message || "Failed to send SMS reminder.");
+          const responseData = smsError.response?.data;
+          let errMsg = responseData?.message || "Failed to send SMS reminder.";
+          if (responseData?.nextAllowedAt) {
+            const dateObj = new Date(responseData.nextAllowedAt);
+            const formattedDate = dateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+            const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
+            errMsg = `SMS already sent recently. You can send again on ${formattedDate} at ${formattedTime}.`;
+          }
+          toast.error(errMsg);
         }
       }
 
@@ -225,7 +241,15 @@ const Invoices = () => {
           toast.success(`WhatsApp reminder sent to ${emailInvoice.client.phone}`);
         } catch (waError) {
           console.error("Twilio WhatsApp Error:", waError);
-          toast.error(waError.response?.data?.message || "Failed to send WhatsApp reminder.");
+          const responseData = waError.response?.data;
+          let errMsg = responseData?.message || "Failed to send WhatsApp reminder.";
+          if (responseData?.nextAllowedAt) {
+            const dateObj = new Date(responseData.nextAllowedAt);
+            const formattedDate = dateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+            const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
+            errMsg = `WhatsApp already sent recently. You can send again on ${formattedDate} at ${formattedTime}.`;
+          }
+          toast.error(errMsg);
         }
       }
 

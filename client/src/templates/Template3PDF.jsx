@@ -225,46 +225,32 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
         <View style={s.outerBorder}>
           
           {/* Header */}
-          <View style={s.headerWrap} fixed>
-            {(logoBase64 && invoiceData.includeLogo !== false) ? (
-              <View style={{ flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 14 }}>
-                <View style={{ width: 72, height: 72, alignItems: "center", justifyContent: "center" }}>
-                  <Image
-                    src={logoBase64}
-                    style={{ maxWidth: 72, maxHeight: 72 }}
-                  />
-                </View>
-                <View style={{ textAlign: "left", flex: 1 }}>
-                  <Text style={[s.companyName, { marginBottom: 4, textAlign: "left" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
-                  <View style={[s.companyDetails, { textAlign: "left" }]}>
-                    <Text>
-                      Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
-                      {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
-                    </Text>
-                    <Text>
-                      Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
-                      {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-                <View style={{ textAlign: "center", width: "100%" }}>
-                  <Text style={[s.companyName, { marginBottom: 4, textAlign: "center" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
-                  <View style={[s.companyDetails, { textAlign: "center" }]}>
-                    <Text>
-                      Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
-                      {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
-                    </Text>
-                    <Text>
-                      Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
-                      {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+          <View style={[s.headerWrap, { flexDirection: "row", alignItems: "center" }]} fixed>
+            {( (logoBase64 || currentUser?.logo || currentUser?.logoUrl) && invoiceData.includeLogo !== false) && (
+              <Image
+                src={logoBase64 || currentUser?.logo || currentUser?.logoUrl}
+                style={{
+                  height: "100%",
+                  width: 90,
+                  objectFit: "contain",
+                }}
+              />
             )}
+            <View style={{ flex: 1, paddingLeft: ((logoBase64 || currentUser?.logo || currentUser?.logoUrl) && invoiceData.includeLogo !== false) ? 10 : 0 }}>
+              <View style={{ textAlign: "center", width: "100%" }}>
+                <Text style={[s.companyName, { marginBottom: 4, textAlign: "center" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
+                <View style={[s.companyDetails, { textAlign: "center" }]}>
+                  <Text>
+                    Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
+                    {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                  </Text>
+                  <Text>
+                    Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
+                    {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
 
           {/* Main Content */}
