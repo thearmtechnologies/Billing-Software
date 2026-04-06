@@ -35,6 +35,7 @@ const Profile = () => {
     phone: "",
     email: "",
     taxId: "",
+    panNumber: "",
     udyamNo: "",
     hsnCode: "",
     address: {
@@ -58,6 +59,7 @@ const Profile = () => {
     newPassword: "",
     confirmNewPassword: "",
   });
+  const [errors, setErrors] = useState({});
   const [bankDetails, setBankDetails] = useState(null);
   const [bankLoading, setBankLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
@@ -76,6 +78,7 @@ const Profile = () => {
           phone: data.phone || "",
           email: data.email || "",
           taxId: data.taxId || "",
+          panNumber: data.panNumber || "",
           udyamNo: data.udyamNo || "",
           hsnCode: data.hsnCode || "",
           address: {
@@ -122,9 +125,18 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Auto-format Udyam Number to uppercase
-    if (name === "udyamNo") {
-      setFormData((prev) => ({ ...prev, [name]: value.toUpperCase() }));
+    // Auto-format Udyam Number and PAN to uppercase
+    if (name === "udyamNo" || name === "panNumber") {
+      const upValue = value.toUpperCase();
+      setFormData((prev) => ({ ...prev, [name]: upValue }));
+      
+      if (name === "panNumber") {
+        if (upValue && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(upValue)) {
+          setErrors(prev => ({ ...prev, panNumber: "Enter a valid PAN Card Number" }));
+        } else {
+          setErrors(prev => { const newE = { ...prev }; delete newE.panNumber; return newE; });
+        }
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -164,6 +176,11 @@ const Profile = () => {
 
   // Save changes
   const handleSave = async () => {
+    if (formData.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber)) {
+      toast.error("Enter a valid PAN Card Number");
+      return;
+    }
+
     try {
       setLoading(true);
       const payload = { ...formData };
@@ -378,6 +395,31 @@ const Profile = () => {
               style={{ padding: "10px" }}
               placeholder="Enter tax ID or GST number"
             />
+          </div>
+
+          {/* PAN Card Number */}
+          <div className="md:col-span-2">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              style={{ marginBottom: "8px" }}
+            >
+              <CreditCard
+                className="w-4 h-4 inline"
+                style={{ marginRight: "8px" }}
+              />
+              PAN Card Number
+            </label>
+            <input
+              type="text"
+              name="panNumber"
+              value={formData.panNumber}
+              onChange={handleChange}
+              className={`w-full border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors?.panNumber ? 'border-red-500' : 'border-gray-300'}`}
+              style={{ padding: "10px" }}
+              placeholder="Enter PAN Card Number"
+              maxLength={10}
+            />
+            {errors?.panNumber && <p className="text-red-500 text-xs mt-1">{errors.panNumber}</p>}
           </div>
 
 

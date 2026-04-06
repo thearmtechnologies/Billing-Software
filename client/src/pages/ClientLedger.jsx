@@ -276,7 +276,12 @@ const ClientLedger = () => {
               {clientInfo ? clientInfo.name : 'Client Ledger'}
             </h1>
             <p className="text-base text-gray-500" style={{ marginTop: "4px" }}>
-              {clientInfo ? `${clientInfo.phone || 'No Phone'}` : 'Loading details...'}
+              {clientInfo ? (
+                <>
+                  {clientInfo.phone || 'No Phone'}
+                  {clientInfo.panNumber && ` • PAN: ${clientInfo.panNumber}`}
+                </>
+              ) : 'Loading details...'}
             </p>
           </div>
         </div>

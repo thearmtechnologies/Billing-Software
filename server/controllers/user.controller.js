@@ -142,6 +142,7 @@ export const editUserProfile = async (req, res) => {
       taxId,
       businessType,
       udyamNo,
+      panNumber,
       invoicePreferences
     } = req.body;
 
@@ -174,6 +175,7 @@ export const editUserProfile = async (req, res) => {
     if (businessName?.trim()) user.businessName = businessName.trim();
     if (taxId?.trim()) user.taxId = taxId.trim();
     if (udyamNo?.trim()) user.udyamNo = udyamNo.trim();
+    if (panNumber?.trim()) user.panNumber = panNumber.trim().toUpperCase();
 
     // === Phone Validation ===
     if (phone?.trim()) {
@@ -271,7 +273,7 @@ export const addClient = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const { companyName, address, email, phone, gstNumber, notes } = req.body;
+    const { companyName, address, email, phone, gstNumber, panNumber, notes } = req.body;
 
     if (!companyName) {
       return res.status(400).json({ message: "Company name is required." });
@@ -306,6 +308,7 @@ export const addClient = async (req, res) => {
       email: email?.trim().toLowerCase(),
       phone: phone?.trim(),
       gstNumber: gstNumber?.trim(),
+      panNumber: panNumber?.trim().toUpperCase(),
       notes: notes?.trim(),
     });
 
@@ -326,7 +329,7 @@ export const editClient = async (req, res) => {
     const userId = req.user._id;
     const clientId = req.params.id;
 
-    const { companyName, address, email, phone, gstNumber, notes } = req.body;
+    const { companyName, address, email, phone, gstNumber, panNumber, notes } = req.body;
 
     if (phone && !/^[6-9]\d{9}$/.test(phone)) {
       return res.status(400).json({ message: "Enter a valid 10-digit Indian mobile number" });
@@ -347,6 +350,7 @@ export const editClient = async (req, res) => {
 
     if (phone?.trim()) client.phone = phone.trim();
     if (gstNumber?.trim()) client.gstNumber = gstNumber.trim();
+    if (panNumber?.trim()) client.panNumber = panNumber.trim().toUpperCase();
     if (notes?.trim()) client.notes = notes.trim();
 
     // Update nested address if provided
@@ -674,7 +678,8 @@ export const getClientLedger = async (req, res) => {
       client: {
          name: client.companyName,
          email: client.email,
-         phone: client.phone
+         phone: client.phone,
+         panNumber: client.panNumber
       }
     });
 

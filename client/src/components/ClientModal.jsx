@@ -13,6 +13,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
     phone: "",
     address: { street: "", city: "", state: "", zipCode: "", country: "India" },
     gstNumber: "",
+    panNumber: "",
     notes: "",
   };
 
@@ -40,6 +41,10 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
       if (formData.phone && !/^[6-9]\d{9}$/.test(formData.phone)) {
         stepErrors.phone = "Enter a valid 10-digit Indian mobile number";
       }
+    } else if (step === 2) {
+      if (formData.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber)) {
+        stepErrors.panNumber = "Enter a valid PAN Card Number";
+      }
     }
     setErrors(stepErrors);
     return Object.keys(stepErrors).length === 0;
@@ -57,6 +62,19 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
         setErrors((prev) => {
           const newE = { ...prev };
           delete newE.phone;
+          return newE;
+        });
+      }
+    } else if (name === "panNumber") {
+      const upValue = value.toUpperCase();
+      setFormData((prev) => ({ ...prev, [name]: upValue }));
+      
+      if (upValue && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(upValue)) {
+        setErrors((prev) => ({ ...prev, panNumber: "Enter a valid PAN Card Number" }));
+      } else {
+        setErrors((prev) => {
+          const newE = { ...prev };
+          delete newE.panNumber;
           return newE;
         });
       }
@@ -469,6 +487,37 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+                    <label style={labelStyle}>PAN Card Number</label>
+                    <input
+                      type="text"
+                      name="panNumber"
+                      value={formData.panNumber}
+                      onChange={handleInputChange}
+                      style={{
+                        ...inputStyle,
+                        borderColor: errors.panNumber ? "#DC2626" : "var(--border, #E5E5E7)",
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.panNumber) {
+                          e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
+                        } else {
+                          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
+                        }
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = errors.panNumber ? "#DC2626" : "var(--border, #E5E5E7)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                      maxLength={10}
+                    />
+                    {errors.panNumber && (
+                      <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>
+                        {errors.panNumber}
+                      </p>
+                    )}
                   </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={labelStyle}>Notes</label>

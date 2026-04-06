@@ -31,6 +31,11 @@ const clientSchema = new mongoose.Schema({
       type: String,
       trim: true,
     },
+    panNumber: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
     notes: {
       type: String,
       trim: true,
