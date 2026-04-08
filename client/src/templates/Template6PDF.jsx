@@ -245,13 +245,28 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <Text style={s.headerLabel}>E-mail ID</Text>
                 <Text style={s.headerValue}>: {safeText(invoiceData?.client?.email)}</Text>
               </View>
+              {invoiceData?.client?.gstNumber && (
+                <View style={s.flexRow}>
+                  <Text style={s.headerLabel}>GSTIN</Text>
+                  <Text style={s.headerValue}>: {invoiceData.client.gstNumber}</Text>
+                </View>
+              )}
+              {invoiceData?.client?.panNumber && (
+                <View style={s.flexRow}>
+                  <Text style={s.headerLabel}>PAN</Text>
+                  <Text style={s.headerValue}>: {invoiceData.client.panNumber}</Text>
+                </View>
+              )}
             </View>
           </View>
 
           {/* Info Bar */}
           <View style={s.infoBar}>
             <View style={[s.infoCell, { width: "40%" }]}>
-              <Text>GSTIN : {safeText(currentUser?.taxId)}</Text>
+              <Text>GSTIN : {safeText(currentUser?.taxId)}
+                {currentUser?.udyamNo ? ` | Udyam : ${currentUser.udyamNo}` : ""}
+                {currentUser?.panNumber ? ` | PAN : ${currentUser.panNumber}` : ""}
+              </Text>
             </View>
             <View style={[s.infoCell, { width: "30%" }]}>
               <Text>Invoice No. : {safeText(invoiceData?.invoiceNumber)}</Text>

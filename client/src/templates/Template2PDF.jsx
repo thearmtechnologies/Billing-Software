@@ -184,7 +184,11 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
               {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""},{" "}
               {currentUser?.address?.country || ""}
             </Text>
-            <Text style={s.textRow}>GST No: {currentUser?.taxId || "N/A"}</Text>
+            <Text style={s.textRow}>
+              GST No: {currentUser?.taxId || "N/A"}
+              {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+              {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+            </Text>
             <Text style={s.textRow}>Mobile: {currentUser?.phone || "N/A"}</Text>
             <Text style={s.textRow}>Email: {currentUser?.email || "N/A"}</Text>
           </View>
@@ -229,6 +233,9 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
                 {invoiceData.client?.address?.country || ""}
               </Text>
               <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              {invoiceData.client?.panNumber && (
+                <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+              )}
               {invoiceData.client?.phone && (
                 <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
               )}

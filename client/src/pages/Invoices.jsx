@@ -697,7 +697,7 @@ const Invoices = () => {
         </span>
       ),
     },
-    {
+    /* {
       key: 'notify',
       label: 'Notify',
       width: '7%',
@@ -736,7 +736,7 @@ const Invoices = () => {
           </button>
         );
       }
-    },
+    }, */
     {
       key: 'actions',
       label: '',

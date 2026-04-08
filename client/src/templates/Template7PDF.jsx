@@ -160,7 +160,9 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           <View style={s.headerTop}>
             <View style={s.headerLeft}>
               <Text>GSTIN NO: {currentUser?.taxId || "-"}</Text>
-              <Text>UDHYAM NO: {currentUser?.udyamNo || "-"}</Text>
+              <Text>UDHYAM NO: {currentUser?.udyamNo || "-"}
+                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+              </Text>
             </View>
             <View style={s.headerCenter}>
               <Text style={s.title}>TAX INVOICE</Text>
@@ -187,7 +189,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
               <Text>ADDRESS: {invoiceData.client?.address?.street}</Text>
               <Text>{invoiceData.client?.address?.city}, {invoiceData.client?.address?.state} - {invoiceData.client?.address?.zipCode}</Text>
               <Text style={s.bold}>GSTIN: {invoiceData.client?.gstNumber}</Text>
-              <Text>PAN NO: {invoiceData.client?.panNo || "-"}</Text>
+              <Text>PAN NO: {invoiceData.client?.panNumber || invoiceData.client?.panNo || "-"}</Text>
               <Text>PLACE OF SUPPLY: {invoiceData.client?.address?.state || "-"}</Text>
             </View>
             

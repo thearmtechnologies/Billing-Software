@@ -176,7 +176,11 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={s.textRow}>
                 {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
               </Text>
-              <Text style={s.textRow}>GST: {currentUser?.taxId || "N/A"}</Text>
+              <Text style={s.textRow}>
+                GST: {currentUser?.taxId || "N/A"}
+                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+              </Text>
               {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
               {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
             </View>
@@ -192,6 +196,9 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
               </Text>
               <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              {invoiceData.client?.panNumber && (
+                <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+              )}
               {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
               {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
             </View>
@@ -230,7 +237,11 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={s.textRow}>
                 {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
               </Text>
-              <Text style={s.textRow}>GST: {currentUser?.taxId || "N/A"}</Text>
+              <Text style={s.textRow}>
+                GST: {currentUser?.taxId || "N/A"}
+                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+              </Text>
               {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
               {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
             </View>
@@ -246,6 +257,9 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
               </Text>
               <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              {invoiceData.client?.panNumber && (
+                <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+              )}
               {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
               {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
             </View>

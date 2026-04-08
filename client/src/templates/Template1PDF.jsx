@@ -246,11 +246,13 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={s.headerDetails}>
                 Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} | {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
               </Text>
-              {(currentUser?.taxId || currentUser?.udyamNo) && (
+              {(currentUser?.taxId || currentUser?.udyamNo || currentUser?.panNumber) && (
                 <Text style={s.headerDetails}>
                   {/* {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""} */}
-                  {currentUser?.taxId && currentUser?.udyamNo ? " | " : ""}
+                  {currentUser?.taxId && (currentUser?.udyamNo || currentUser?.panNumber) ? " | " : ""}
                   {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                  {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
+                  {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
                 </Text>
               )}
             </View>
@@ -269,11 +271,13 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={s.headerDetails}>
                 Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
               </Text>
-              {(currentUser?.taxId || currentUser?.udyamNo) && (
+              {(currentUser?.taxId || currentUser?.udyamNo || currentUser?.panNumber) && (
                 <Text style={s.headerDetails}>
                   {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-                  {currentUser?.taxId && currentUser?.udyamNo ? " | " : ""}
+                  {currentUser?.taxId && (currentUser?.udyamNo || currentUser?.panNumber) ? " | " : ""}
                   {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                  {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
+                  {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
                 </Text>
               )}
             </View>
@@ -323,6 +327,9 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             </Text>
             {invoiceData.client?.gstNumber && (
               <Text style={s.bodyText}>GSTIN/UIN: {invoiceData.client.gstNumber}</Text>
+            )}
+            {invoiceData.client?.panNumber && (
+              <Text style={s.bodyText}>PAN: {invoiceData.client.panNumber}</Text>
             )}
             <Text style={s.bodyText}>
               State Name: {invoiceData.client?.address?.state || ""}, Code:{" "}

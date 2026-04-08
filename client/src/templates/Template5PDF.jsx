@@ -194,7 +194,11 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           </View>
           <View style={s.headerColRight}>
             <Text style={s.sectionTitle}>GSTIN</Text>
-            <Text style={[s.bold, { fontSize: 11 }]}>{currentUser?.taxId || "N/A"}</Text>
+            <Text style={[s.bold, { fontSize: 11 }]}>
+              {currentUser?.taxId || "N/A"}
+              {currentUser?.udyamNo ? ` | Udyam: ${currentUser.udyamNo}` : ""}
+              {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+            </Text>
           </View>
         </View>
 
@@ -210,6 +214,12 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </Text>
             )}
             <Text style={s.customerText}>Phone: {invoiceData.client?.phone || "N/A"}</Text>
+            {invoiceData.client?.gstNumber && (
+              <Text style={s.customerText}>GST: {invoiceData.client.gstNumber}</Text>
+            )}
+            {invoiceData.client?.panNumber && (
+              <Text style={s.customerText}>PAN: {invoiceData.client.panNumber}</Text>
+            )}
           </View>
           {hasShipping ? (
             <View style={{ ...s.shipToColMid, width: "32.5%" }}>

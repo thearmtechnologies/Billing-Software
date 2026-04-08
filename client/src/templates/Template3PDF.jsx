@@ -247,6 +247,8 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                   <Text>
                     Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} |{" "}
                     {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                    {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
+                    {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
                   </Text>
                 </View>
               </View>
@@ -285,6 +287,9 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                     <Text style={s.billToName}>Bill To:</Text>
                     <Text style={[s.billToName, { marginTop: 4 }]}>{invoiceData.client?.companyName || ""}</Text>
                     <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
+                    {invoiceData.client?.panNumber && (
+                      <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+                    )}
                     <Text style={s.textRow}>
                       {invoiceData.client?.address?.street || ""},{" "}
                       {invoiceData.client?.address?.city || ""},{" "}
@@ -331,6 +336,9 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                   <View style={s.billToCol}>
                     <Text style={s.billToName}>{invoiceData.client?.companyName || ""}</Text>
                     <Text style={s.textRow}>GST No: {invoiceData.client?.gstNumber || "N/A"}</Text>
+                    {invoiceData.client?.panNumber && (
+                      <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+                    )}
                     <Text style={s.textRow}>
                       {invoiceData.client?.address?.street || ""},{" "}
                       {invoiceData.client?.address?.city || ""},{" "}
