@@ -262,6 +262,9 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                   <View style={{ flex: 1, alignItems: "flex-start", paddingTop: 4 }}>
                     <Text style={s.metaBoldRow}>Invoice No: {invoiceData.invoiceNumber}</Text>
+                    <Text style={s.metaBoldRow}>
+                      Date: {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
+                    </Text>
                     {invoiceData.poNumber && (
                       <Text style={s.metaBoldRow}>PO Number: {invoiceData.poNumber}</Text>
                     )}
@@ -272,9 +275,6 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                   </View>
 
                   <View style={{ flex: 1, alignItems: "flex-end", paddingTop: 4 }}>
-                    <Text style={s.metaBoldRow}>
-                      Date: {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
-                    </Text>
                     <Text style={s.metaBoldRow}>
                       Due Date: {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
                     </Text>

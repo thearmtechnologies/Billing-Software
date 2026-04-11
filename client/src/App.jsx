@@ -19,6 +19,7 @@ import BankDetailsForm from "./components/BankDetailsForm";
 import PaymentManagement from "./components/PaymentManagement";
 import Logout from "./pages/Logout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminUsers from "./pages/AdminUsers";
 
 const AxiosInterceptor = ({ children }) => {
   const navigate = useNavigate();
@@ -84,6 +85,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/bank-details" element={<BankDetailsForm />} />
             <Route path="/invoices/:id/payments" element={<PaymentManagement />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
 
           {/* Fallback route - redirect to dashboard */}

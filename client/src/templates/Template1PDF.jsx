@@ -308,9 +308,14 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
         <View style={[s.titleBlock, { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }]}>
           <View style={{ flex: 1, alignItems: "flex-start", paddingTop: 4 }}>
             {invoiceData.shippingAddress && (
-              <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
-                Invoice No: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceNumber || "-"}</Text>
-              </Text>
+              <>
+                <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 2 }}>
+                  Invoice No: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceNumber || "-"}</Text>
+                </Text>
+                <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+                  Invoice Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}</Text>
+                </Text>
+              </>
             )}
           </View>
 
@@ -321,14 +326,9 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
 
           <View style={{ flex: 1, alignItems: "flex-end", paddingTop: 4 }}>
             {invoiceData.shippingAddress && (
-              <>
-                <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 2 }}>
-                  Invoice Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}</Text>
-                </Text>
-                <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
-                  Due Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}</Text>
-                </Text>
-              </>
+              <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+                Due Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}</Text>
+              </Text>
             )}
           </View>
         </View>

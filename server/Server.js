@@ -8,6 +8,8 @@ import userRoutes from './routes/user.routes.js'
 import invoiceRoutes from './routes/invoice.routes.js'
 import serviceRoutes from './routes/service.routes.js'
 import notificationRoutes from './routes/notification.routes.js'
+import adminRoutes from './routes/admin.routes.js'
+import { seedAdminUser } from './utils/seedAdmin.js';
 dotenv.config()
 
 const app = express()
@@ -30,8 +32,10 @@ app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/invoices', invoiceRoutes)
 app.use('/api/v1/services', serviceRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
+app.use('/api/v1/admin', adminRoutes)
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    connectMongoDB()
+    await connectMongoDB();
+    await seedAdminUser();
 })

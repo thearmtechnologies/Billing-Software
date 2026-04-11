@@ -30,3 +30,16 @@ export const isAuthenticated = async(req, res, next) => {
         return res.status(500).json({ message: 'Server Error' });
     }
 }
+
+export const isAdmin = async(req, res, next) => {
+    try {
+        if (req.user && req.user.role === 'admin') {
+            next();
+        } else {
+            return res.status(403).json({ message: 'Forbidden. Admin access required.' });
+        }
+    } catch (error) {
+        console.error("Error in admin middleware:", error);
+        return res.status(500).json({ message: 'Server Error' });
+    }
+}

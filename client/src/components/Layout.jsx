@@ -30,6 +30,10 @@ const Layout = () => {
     { name: "Invoices", href: "/invoices", icon: FileText },
   ];
 
+  if (currentUser?.role === 'admin') {
+    navigation.push({ name: "Users", href: "/admin/users", icon: Settings });
+  }
+
   const isActive = (path) => {
     return location.pathname === path;
   };
