@@ -49,7 +49,7 @@ const s = StyleSheet.create({
   },
   logo: { maxWidth: 72, maxHeight: 72 },
   headerCenter: { textAlign: "center", flex: 1 },
-  headerCenterWithLogo: { textAlign: "left" },
+  headerCenterWithLogo: { textAlign: "left", flex: 1 },
   businessName: { fontSize: 28, fontFamily: "Helvetica-Bold", letterSpacing: 2 },
   headerDetails: { fontSize: 9, lineHeight: 1.4 },
 
@@ -239,17 +239,8 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                 {currentUser?.businessName?.toUpperCase() || ""}
               </Text>
               <View style={{ width: "100%" }}>
-                <Text style={s.headerDetails}>Office: </Text>
-                {((currentUser?.address?.street || ""))
-                  .replace(/(.{60})/g, "$1\n")
-                  .split("\n")
-                  .filter((l) => l.trim().length > 0)
-                  .map((line, i) => (
-                    <Text key={`off1-${i}`} style={s.headerDetails}>
-                      {line}
-                    </Text>
-                  ))}
                 <Text style={s.headerDetails}>
+                  Office: {currentUser?.address?.street ? currentUser.address.street + ", " : ""}
                   {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
                 </Text>
               </View>
@@ -274,17 +265,8 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                 {currentUser?.businessName?.toUpperCase() || ""}
               </Text>
               <View style={{ width: "100%" }}>
-                <Text style={s.headerDetails}>Office: </Text>
-                {((currentUser?.address?.street || ""))
-                  .replace(/(.{60})/g, "$1\n")
-                  .split("\n")
-                  .filter((l) => l.trim().length > 0)
-                  .map((line, i) => (
-                    <Text key={`off2-${i}`} style={s.headerDetails}>
-                      {line}
-                    </Text>
-                  ))}
                 <Text style={s.headerDetails}>
+                  Office: {currentUser?.address?.street ? currentUser.address.street + ", " : ""}
                   {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
                 </Text>
               </View>
