@@ -148,7 +148,7 @@ const InvoiceView = () => {
   };
 
   const handlePrint = async () => {
-    const isPDFTemplate = ["template1", "template2", "template3", "template4", "template5", "template6", "template7"].includes(selectedTemplate);
+    const isPDFTemplate = ["Template1PDF", "Template2PDF", "Template3PDF", "Template4PDF", "Template5PDF", "Template6PDF", "Template7PDF"].includes(selectedTemplate);
     if (isPDFTemplate) {
       try {
         toast.loading("Preparing print...", { id: "print-pdf" });

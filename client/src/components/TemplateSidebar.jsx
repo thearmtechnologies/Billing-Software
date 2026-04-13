@@ -42,7 +42,7 @@ const TemplateSidebar = ({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 300, opacity: 0 }}
           transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
-          className="fixed inset-y-0 right-0 z-50 lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] 
+          className="fixed inset-y-0 right-0 z-50 lg:z-10 lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] 
             bg-black/70 backdrop-blur-md border-l border-gray-700 flex flex-col shadow-xl
             w-64 sm:w-68 md:w-70 lg:w-74"
         >
