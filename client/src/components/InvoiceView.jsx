@@ -322,19 +322,19 @@ const InvoiceView = () => {
             <FileText size={48} style={{ margin: '0 auto' }} />
           </div>
           <h3 className="text-lg font-semibold text-slate-800 mb-2">PDF Preview Not Available</h3>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm">
+          <p className="text-sm text-slate-500 max-w-sm" style={{marginBottom: "24px"}}>
             Mobile browsers do not support inline PDF previews. Please open or download the PDF to view it.
           </p>
           <BlobProvider document={document}>
             {({ url, loading, error }) => {
-              if (loading) return <button disabled className="px-6 py-2 bg-blue-600/50 text-white rounded-lg">Generating PDF...</button>;
+              if (loading) return <button disabled className="px-6 py-2 bg-blue-600/50 text-white rounded-lg" style={{padding: "8px 24px"}}>Generating PDF...</button>;
               if (error) return <p className="text-red-500">Failed to generate PDF</p>;
               return (
                 <div className="flex gap-3">
-                  <a href={url} target="_blank" rel="noreferrer" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
+                  <a href={url} target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors" style={{padding: "8px 24px"}}>
                     Open PDF
                   </a>
-                  <button onClick={handleDownloadPdf} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg shadow transition-colors cursor-pointer">
+                  <button onClick={handleDownloadPdf} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg shadow transition-colors cursor-pointer" style={{padding: "8px 24px"}}>
                     Download
                   </button>
                 </div>
