@@ -13,7 +13,7 @@ const s = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 20,
+    padding: 40,
     color: "#000",
     backgroundColor: "#fff",
   },
@@ -21,6 +21,8 @@ const s = StyleSheet.create({
   mainContainer: {
     borderWidth: 1,
     borderColor: "#000",
+    margin: "auto auto",
+    width: "100%",
   },
   // Header Section
   headerTop: {
@@ -119,6 +121,24 @@ const s = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     fontFamily: "Helvetica-Bold",
     fontSize: 11,
+  },
+  // Signature section styles
+  signatureSection: {
+    padding: 5,
+    alignItems: "center",
+    marginTop: "auto",
+    width: "100%",
+  },
+  signatureLine: {
+    borderTopWidth: 1,
+    borderColor: "#000",
+    width: "80%",
+    marginTop: 5,
+    marginBottom: 5,
+  },
+  signatureText: {
+    fontSize: 8,
+    marginTop: 4,
   }
 });
 
@@ -295,18 +315,19 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                 <Text>Rs. {invoiceData.totalAmount?.toFixed(2)}</Text>
               </View>
               
-              {/* Signature Area */}
-              <View style={{ padding: 5, alignItems: "center", marginTop: 5 }}>
-                {signatureBase64 && (
-                  <Image src={signatureBase64} style={{ width: 100, height: 40 }} />
+              {/* Signature Area - Always shows line even without signature */}
+              <View style={s.signatureSection}>
+                {signatureBase64 && invoiceData.includeSignature !== false && (
+                  <Image src={signatureBase64} style={{ width: 100, height: 40, marginBottom: 4 }} />
                 )}
-                <Text style={{ fontSize: 8 }}>Authorized Signatory</Text>
+                <View style={s.signatureLine} />
+                <Text style={s.signatureText}>Authorized Signatory</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <Text style={{ textAlign: "center", fontSize: 8, marginTop: 5 }}>
+        <Text style={{ textAlign: "center", fontSize: 8, marginTop: 10 }}>
           This is a Computer Generated Invoice
         </Text>
       </Page>

@@ -208,7 +208,7 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
 
           {/* Title */}
           <View style={s.titleBar}>
-            <Text style={s.titleText}>SALE BILL</Text>
+            <Text style={s.titleText}>TAX INVOICE</Text>
           </View>
 
           {/* Header: Company & Party Details */}
