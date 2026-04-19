@@ -209,7 +209,7 @@ const Profile = () => {
   };
 
   return (
-    <div style={{ padding: "20px" }} className="flex flex-col gap-6">
+    <div style={{ padding: "0px" }} className="flex flex-col gap-6">
       {/* Header */}
       <div
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between"

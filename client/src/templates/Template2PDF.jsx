@@ -117,6 +117,10 @@ const s = StyleSheet.create({
     width: "48%",
     textAlign: "right",
   },
+  sigBoxFull: {
+    width: "100%",
+    textAlign: "right",
+  },
   bankTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 6, color: "#2c3e50" },
   bankRow: { fontSize: 9, marginBottom: 2 },
   sigLabel: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 40 },
@@ -394,49 +398,56 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
           </View>
         )}
 
-        {/* 9. Bank details & Signature */}
+        {/* 9. Bank details & Signature - Fixed alignment */}
         <View style={s.bottomWrapper} wrap={false}>
-          <View style={s.bankBox}>
-            <Text style={s.bankTitle}>Bank Details</Text>
-            {displayBankDetails?.accountHolderName && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
-              </Text>
-            )}
-            {displayBankDetails?.bankName && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>Bank Name:</Text> {displayBankDetails.bankName}
-              </Text>
-            )}
-            {displayBankDetails?.branchName && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>Branch:</Text> {displayBankDetails.branchName}
-              </Text>
-            )}
-            {displayBankDetails?.accountType && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>Account Type:</Text> {formatAccountType(displayBankDetails.accountType)} Account
-              </Text>
-            )}
-            {displayBankDetails?.accountNumber && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
-              </Text>
-            )}
-            {displayBankDetails?.ifscCode && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>IFSC Code:</Text> {displayBankDetails.ifscCode}
-              </Text>
-            )}
-            {displayBankDetails?.upiId && (
-              <Text style={s.bankRow}>
-                <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
-              </Text>
-            )}
-          </View>
+          {/* Bank Details - Only render if exists */}
+          {displayBankDetails && (
+            <View style={s.bankBox}>
+              <Text style={s.bankTitle}>Bank Details</Text>
+              {displayBankDetails?.accountHolderName && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+                </Text>
+              )}
+              {displayBankDetails?.bankName && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>Bank Name:</Text> {displayBankDetails.bankName}
+                </Text>
+              )}
+              {displayBankDetails?.branchName && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>Branch:</Text> {displayBankDetails.branchName}
+                </Text>
+              )}
+              {displayBankDetails?.accountType && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>Account Type:</Text> {formatAccountType(displayBankDetails.accountType)} Account
+                </Text>
+              )}
+              {displayBankDetails?.accountNumber && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
+                </Text>
+              )}
+              {displayBankDetails?.ifscCode && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>IFSC Code:</Text> {displayBankDetails.ifscCode}
+                </Text>
+              )}
+              {displayBankDetails?.upiId && (
+                <Text style={s.bankRow}>
+                  <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
+                </Text>
+              )}
+            </View>
+          )}
 
-          <View style={s.sigBox}>
-            <Text style={[s.sigLabel, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>For {currentUser?.businessName || ""},</Text>
+          {/* Signature Box - Always on the right side */}
+          {/* If bank details exist, width is 48%; if not, width is 100% and aligned right */}
+          <View style={displayBankDetails ? s.sigBox : s.sigBoxFull}>
+            <Text style={[s.sigLabel, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+              For {currentUser?.businessName || ""},
+            </Text>
             {signatureBase64 && invoiceData.includeSignature !== false && (
               <Image 
                 src={signatureBase64} 

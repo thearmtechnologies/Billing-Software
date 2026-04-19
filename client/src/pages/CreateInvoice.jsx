@@ -168,7 +168,6 @@ const CreateInvoice = () => {
         shortCode: newUnitShortCode.trim(),
       });
       setCustomUnits(res.data.customUnits);
-      // Select the newly added unit for the current item
       if (addUnitForIndex !== null) {
         handleItemChange(addUnitForIndex, "unitType", trimmed);
       }
@@ -271,7 +270,6 @@ const CreateInvoice = () => {
         },
       ],
     }));
-    // Make sure new item isn't collapsed
     setCollapsedItems((prev) => prev.filter((i) => i !== formData.items.length));
   };
 
@@ -281,7 +279,6 @@ const CreateInvoice = () => {
         ...prev,
         items: prev.items.filter((_, i) => i !== index),
       }));
-      // Adjust collapsed items after removal
       setCollapsedItems((prev) => 
         prev.filter((i) => i !== index).map((i) => i > index ? i - 1 : i)
       );
@@ -301,7 +298,7 @@ const CreateInvoice = () => {
               ...item.pricingTiers,
               {
                 minValue: nextMin,
-                maxValue: null, // null = Infinity
+                maxValue: null,
                 rate: 0,
                 rateType: "slabRate",
               },
@@ -413,7 +410,7 @@ const CreateInvoice = () => {
 
       if (tier.rateType === "slabRate") {
         if (qty <= tier.maxValue) {
-          return tier.rate; // pure slab uses total as the rate
+          return tier.rate;
         } else {
           total = tier.rate;
           lastCoveredMax = tier.maxValue;
@@ -568,8 +565,6 @@ const CreateInvoice = () => {
     }
   };
 
-
-  /* ── Apple-Style Tokens ── */
   const cardStyle = {
     background: "var(--surface, #FFFFFF)",
     borderRadius: "20px",
@@ -652,11 +647,10 @@ const CreateInvoice = () => {
     }
   });
 
-
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "32px 24px 80px 24px" }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px 16px 60px 16px" }}>
       {/* Header */}
-      <div className="flex items-center" style={{ marginBottom: "32px" }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
         <button
           onClick={() => navigate("/invoices")}
           style={{
@@ -668,11 +662,11 @@ const CreateInvoice = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginRight: "16px",
             color: "var(--text-secondary, #6E6E73)",
             cursor: "pointer",
             transition: "all 150ms ease",
             boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = "var(--text-primary, #1D1D1F)";
@@ -683,23 +677,23 @@ const CreateInvoice = () => {
             e.currentTarget.style.transform = "scale(1)";
           }}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-primary, #1D1D1F)", letterSpacing: "-0.03em" }}>
+          <h1 style={{ fontSize: "clamp(24px, 5vw, 28px)", fontWeight: 700, color: "var(--text-primary, #1D1D1F)", letterSpacing: "-0.03em", margin: 0 }}>
             Create Invoice
           </h1>
-          <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "15px", marginTop: "4px" }}>
+          <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "14px", marginTop: "4px" }}>
             Fill in the details to generate a new invoice
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         
         {/* Invoice Details Card */}
         <div style={cardStyle}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
             <div>
               <label style={labelStyle}>
                 Invoice Number <span style={{ color: "red" }}>*</span>
@@ -716,7 +710,7 @@ const CreateInvoice = () => {
                 {...errorFocusProps(validationErrors.invoiceNumber)}
               >
                 {invoicePreferences.prefix && (
-                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span style={{ padding: "12px 12px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
                     {invoicePreferences.prefix}
                   </span>
                 )}
@@ -727,7 +721,7 @@ const CreateInvoice = () => {
                   style={{
                     flex: "1 1 auto",
                     minWidth: 0,
-                    padding: "12px 16px",
+                    padding: "12px 12px",
                     border: "none",
                     background: "transparent",
                     fontSize: "14px",
@@ -737,13 +731,13 @@ const CreateInvoice = () => {
                   }}
                 />
                 {invoicePreferences.suffix && (
-                  <span style={{ padding: "12px 16px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span style={{ padding: "12px 12px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
                     {invoicePreferences.suffix}
                   </span>
                 )}
               </div>
               {validationErrors.invoiceNumber && (
-                <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.invoiceNumber}</p>
+                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.invoiceNumber}</p>
               )}
             </div>
             
@@ -763,7 +757,7 @@ const CreateInvoice = () => {
                 {...errorFocusProps(validationErrors.invoiceDate)}
               />
               {validationErrors.invoiceDate && (
-                <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.invoiceDate}</p>
+                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.invoiceDate}</p>
               )}
             </div>
 
@@ -783,7 +777,7 @@ const CreateInvoice = () => {
                 {...errorFocusProps(validationErrors.dueDate)}
               />
               {validationErrors.dueDate && (
-                <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.dueDate}</p>
+                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.dueDate}</p>
               )}
             </div>
 
@@ -809,26 +803,26 @@ const CreateInvoice = () => {
                 ))}
               </select>
               {validationErrors.client && (
-                <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{validationErrors.client}</p>
+                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.client}</p>
               )}
             </div>
 
             {invoicePreferences.addressBehavior !== "billing_only" && (
               <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
                 {invoicePreferences.addressBehavior === "billing_and_shipping" && (
-                  <label className="flex items-center cursor-pointer mb-3">
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "12px" }}>
                     <input
                       type="checkbox"
                       checked={isShippingDifferent}
                       onChange={(e) => setIsShippingDifferent(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer mr-2"
+                      style={{ width: "18px", height: "18px", marginRight: "10px", cursor: "pointer" }}
                     />
-                    <span className="text-sm font-medium text-gray-700">Shipping address is different</span>
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-primary, #1D1D1F)" }}>Shipping address is different</span>
                   </label>
                 )}
                 
                 {(invoicePreferences.addressBehavior === "always_both" || isShippingDifferent) && (
-                  <div className="mt-2">
+                  <div>
                     <label style={labelStyle}>
                       Shipping Address (Optional)
                     </label>
@@ -855,6 +849,7 @@ const CreateInvoice = () => {
                   value={formData.bankDetails?._id || ""}
                   onChange={handleBankChange}
                   style={inputStyle}
+                  {...focusProps}
                 >
                   <option value="">Select Bank Account</option>
                   {bankAccounts.map((b) => (
@@ -864,9 +859,9 @@ const CreateInvoice = () => {
                   ))}
                 </select>
               ) : (
-                <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "14px", color: "#6E6E73" }}>No bank accounts found.</span>
-                  <button type="button" onClick={() => navigate("/profile")} style={{ padding: "6px 12px", borderRadius: "8px", background: "#F5F5F7", border: "none", color: "#0071E3", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
+                  <button type="button" onClick={() => navigate("/profile")} style={{ padding: "8px 16px", borderRadius: "10px", background: "#F5F5F7", border: "none", color: "#0071E3", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
                     Add Account
                   </button>
                 </div>
@@ -876,8 +871,8 @@ const CreateInvoice = () => {
         </div>
 
         {/* Items Section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.02em", marginTop: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h2 style={{ fontSize: "clamp(18px, 4vw, 20px)", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.02em", marginTop: "4px" }}>
             Invoice Items
           </h2>
           
@@ -893,39 +888,50 @@ const CreateInvoice = () => {
               }}>
                 {/* Header Toggle */}
                 <div
-                  className="flex justify-between items-center cursor-pointer"
                   onClick={() => toggleCollapse(index)}
                   style={{ 
-                    padding: "16px 20px",
+                    padding: "14px 16px",
                     background: isCollapsed ? "transparent" : "var(--bg-page, #F7F7F8)",
                     borderBottom: isCollapsed ? "none" : "1px solid var(--border-light, #F0F0F2)",
                     borderRadius: isCollapsed ? "20px" : "20px 20px 0 0",
-                    transition: "all 200ms ease"
+                    transition: "all 200ms ease",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
                   }}
                 >
-                  <div className="flex items-center gap-3" style={{ flex: 1, minWidth: 0, paddingRight: "16px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-tertiary, #86868B)", minWidth: "20px" }}>
-                      {index + 1}.
-                    </span>
-                    <span style={{ 
-                      fontSize: "15px", 
-                      fontWeight: 600, 
-                      color: "var(--text-primary, #1D1D1F)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis"
-                    }}>
-                      {item.description || <span style={{ color: "var(--text-tertiary, #86868B)", fontStyle: "italic" }}>New Item</span>}
-                    </span>
-                    {isCollapsed && item.quantity > 0 && (
-                      <span style={{ fontSize: "13px", color: "var(--text-secondary, #6E6E73)", whiteSpace: "nowrap" }}>
-                        × {item.quantity} {item.unitType !== "item" ? item.unitType : ""}
+                  <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-tertiary, #86868B)", flexShrink: 0 }}>
+                        {index + 1}.
                       </span>
+                      <span 
+                        style={{ 
+                          fontSize: "14px", 
+                          fontWeight: 600, 
+                          color: "var(--text-primary, #1D1D1F)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                        title={item.description || "New Item"}
+                      >
+                        {item.description || <span style={{ color: "var(--text-tertiary, #86868B)", fontStyle: "italic" }}>New Item</span>}
+                      </span>
+                    </div>
+                    {isCollapsed && item.quantity > 0 && (
+                      <div style={{ fontSize: "12px", color: "var(--text-secondary, #6E6E73)", marginTop: "4px" }}>
+                        Qty: {item.quantity} {item.unitType !== "item" ? item.unitType : ""}
+                      </div>
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                       Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                     </span>
                     <div style={{
@@ -933,77 +939,52 @@ const CreateInvoice = () => {
                       border: "1px solid var(--border, #E5E5E7)", display: "flex", alignItems: "center", justifyContent: "center",
                       transition: "transform 200ms ease"
                     }}>
-                      {isCollapsed ? <ChevronDown className="h-4 w-4 text-gray-500" /> : <ChevronUp className="h-4 w-4 text-gray-500" />}
+                      {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                     </div>
                   </div>
                 </div>
 
                 {/* Form Content */}
                 {!isCollapsed && (
-                  <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--surface, #FFFFFF)", borderRadius: "0 0 20px 20px" }}>
+                  <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--surface, #FFFFFF)", borderRadius: "0 0 20px 20px" }}>
                     
-                    {/* Row 1: Service Type, Description, Action */}
-                    <div className="flex flex-col md:flex-row items-end gap-3 w-full">
-                      {/* Service Template */}
-                      <div style={{ flex: "0 0 160px" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Service</label>
-                        <select
-                          value={item.service || ""}
-                          onChange={(e) => handleServiceChange(index, e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 14px", height: "42px" }}
-                          {...focusProps}
-                        >
-                          <option value="">Custom (Manual)</option>
-                          {services.map((s) => (
-                            <option key={s._id} value={s._id}>{s.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Description Field */}
-                      <div style={{ flex: "1 1 auto", minWidth: "0" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Item Description <span style={{ color: "#DC2626" }}>*</span></label>
-                        <input
-                          placeholder="e.g. Website Design, Server Hosting..."
-                          value={item.description}
-                          onChange={(e) => handleItemChange(index, "description", e.target.value)}
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 14px",
-                            height: "42px",
-                            borderColor: validationErrors[`item_${index}_description`] ? "#DC2626" : "var(--border, #E5E5E7)",
-                          }}
-                          {...errorFocusProps(validationErrors[`item_${index}_description`])}
-                        />
-                      </div>
-
-                      {/* Remove Button (Desktop) */}
-                      <div className="hidden md:flex items-center pb-[2px]">
-                        {formData.items.length > 1 ? (
-                          <button
-                            type="button"
-                            aria-label="Remove item"
-                            onClick={() => removeItem(index)}
-                            style={{
-                              display: "flex", alignItems: "center", justifyContent: "center", height: "38px", width: "38px", color: "#DC2626", background: "transparent", border: "none", cursor: "pointer", borderRadius: "8px", transition: "all 150ms ease"
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = "#FEF2F2"}
-                            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        ) : (
-                          <div style={{ width: "38px" }}></div>
-                        )}
-                      </div>
+                    {/* Service Type */}
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Service</label>
+                      <select
+                        value={item.service || ""}
+                        onChange={(e) => handleServiceChange(index, e.target.value)}
+                        style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
+                        {...focusProps}
+                      >
+                        <option value="">Custom (Manual)</option>
+                        {services.map((s) => (
+                          <option key={s._id} value={s._id}>{s.name}</option>
+                        ))}
+                      </select>
                     </div>
 
-                    {/* Row 2: Inline Controls Row */}
-                    <div className="flex flex-wrap items-end gap-3 w-full">
-                      {/* Qty */}
-                      <div style={{ flex: "1 1 80px", minWidth: "80px" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Qty <span style={{ color: "#DC2626" }}>*</span></label>
+                    {/* Description Field */}
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Item Description <span style={{ color: "#DC2626" }}>*</span></label>
+                      <input
+                        placeholder="e.g. Website Design, Server Hosting..."
+                        value={item.description}
+                        onChange={(e) => handleItemChange(index, "description", e.target.value)}
+                        style={{
+                          ...inputStyle,
+                          marginTop: 0,
+                          padding: "10px 12px",
+                          borderColor: validationErrors[`item_${index}_description`] ? "#DC2626" : "var(--border, #E5E5E7)",
+                        }}
+                        {...errorFocusProps(validationErrors[`item_${index}_description`])}
+                      />
+                    </div>
+
+                    {/* Qty & Unit Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Qty <span style={{ color: "#DC2626" }}>*</span></label>
                         <input
                           type="number"
                           placeholder="0"
@@ -1012,21 +993,19 @@ const CreateInvoice = () => {
                           style={{
                             ...inputStyle,
                             marginTop: 0,
-                            padding: "10px 14px",
-                            height: "42px",
+                            padding: "10px 12px",
                             borderColor: validationErrors[`item_${index}_quantity`] ? "#DC2626" : "var(--border, #E5E5E7)",
                           }}
                           {...errorFocusProps(validationErrors[`item_${index}_quantity`])}
                         />
                       </div>
 
-                      {/* Unit */}
-                      <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Unit</label>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Unit</label>
                         <select
                           value={DEFAULT_UNITS.includes(item.unitType) || customUnits.some(u => u.name === item.unitType) ? item.unitType : item.unitType}
                           onChange={(e) => handleUnitChange(index, e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 14px", height: "42px" }}
+                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
                           {...focusProps}
                         >
                           <optgroup label="Default Units">
@@ -1040,42 +1019,41 @@ const CreateInvoice = () => {
                           <optgroup label="">
                             <option value="__add_custom__">+ Add Custom Unit</option>
                           </optgroup>
-                          {/* Show current value if it's a legacy unit not in any list */}
-                          {item.unitType && !DEFAULT_UNITS.includes(item.unitType) && !customUnits.some(u => u.name === item.unitType) && item.unitType !== "__add_custom__" && (
-                            <option value={item.unitType} hidden>{item.unitType}</option>
-                          )}
                         </select>
                       </div>
+                    </div>
 
-                      {/* Pricing Type */}
-                      <div style={{ flex: "1 1 120px", minWidth: "120px" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pricing Type</label>
+                    {/* Pricing Type & HSN Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Pricing Type</label>
                         <select
                           value={item.pricingType}
                           onChange={(e) => handleItemChange(index, "pricingType", e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 14px", height: "42px" }}
+                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
                           {...focusProps}
                         >
                           {pricingTypes.map((p) => <option key={p} value={p}>{p}</option>)}
                         </select>
                       </div>
 
-                      {/* HSN Code (Opt) */}
-                      <div style={{ flex: "1 1 100px", minWidth: "100px" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>HSN/SAC <span style={{ fontWeight: 400, textTransform: "none" }}>(opt)</span></label>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>HSN/SAC <span style={{ fontWeight: 400 }}>(opt)</span></label>
                         <input
                           placeholder="-"
                           value={item.hsnCode || ""}
                           onChange={(e) => handleItemChange(index, "hsnCode", e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 14px", height: "42px" }}
+                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
                           {...focusProps}
                         />
                       </div>
+                    </div>
 
-                      {/* Base Rate */}
+                    {/* Rate & Item Total */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                       {item.pricingType !== "tiered" ? (
-                        <div style={{ flex: "1 1 110px", minWidth: "110px" }}>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Rate (Rs. ) <span style={{ color: "#DC2626" }}>*</span></label>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Rate (Rs.) <span style={{ color: "#DC2626" }}>*</span></label>
                           <input
                             type="number"
                             placeholder="0.00"
@@ -1084,108 +1062,114 @@ const CreateInvoice = () => {
                             style={{
                               ...inputStyle,
                               marginTop: 0,
-                              padding: "10px 14px",
-                              height: "42px",
-                              textAlign: "right",
+                              padding: "10px 12px",
                               borderColor: validationErrors[`item_${index}_baseRate`] ? "#DC2626" : "var(--border, #E5E5E7)",
                             }}
                             {...errorFocusProps(validationErrors[`item_${index}_baseRate`])}
                           />
                         </div>
                       ) : (
-                        <div style={{ flex: "1 1 110px", minWidth: "110px", textAlign: "right", color: "var(--text-secondary)", fontSize: "14px", alignSelf: "center", paddingBottom: "10px" }}>
-                          Tiered
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Rate</label>
+                          <div style={{ 
+                            ...inputStyle, 
+                            marginTop: 0, 
+                            padding: "10px 12px", 
+                            background: "var(--bg-page, #F7F7F8)",
+                            color: "var(--text-secondary)",
+                            textAlign: "center"
+                          }}>
+                            Tiered Pricing
+                          </div>
                         </div>
                       )}
 
-                      {/* Item Total Display */}
-                      <div style={{ flex: "1 1 120px", minWidth: "120px", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Item Total</label>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Item Total</label>
                         <div style={{ 
-                          height: "42px", 
-                          display: "flex", 
-                          alignItems: "center", 
-                          padding: "0 14px", 
-                          background: "var(--bg-page, #F7F7F8)", 
-                          borderRadius: "12px", 
-                          border: "1px solid transparent",
-                          fontSize: "15px",
+                          ...inputStyle, 
+                          marginTop: 0, 
+                          padding: "10px 12px", 
+                          background: "var(--bg-page, #F7F7F8)",
                           fontWeight: 600,
-                          color: "var(--text-primary)",
-                          fontVariantNumeric: "tabular-nums",
-                          width: "100%",
-                          justifyContent: "flex-end"
+                          textAlign: "right"
                         }}>
                           Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Mobile Remove Button Row */}
+
+                    {/* Remove Button */}
                     {formData.items.length > 1 && (
-                      <div className="flex md:hidden justify-end pt-2">
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: "6px", color: "#DC2626", background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: "6px 10px", borderRadius: "8px", transition: "all 150ms ease"
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = "#FEF2F2"}
-                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                        >
-                          <Trash2 className="h-4 w-4" /> <span>Remove Item</span>
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                          color: "#DC2626", background: "#FEF2F2", border: "1px solid #FEE2E2",
+                          cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: "10px",
+                          borderRadius: "12px", transition: "all 150ms ease", width: "100%"
+                        }}
+                      >
+                        <Trash2 size={16} /> Remove Item
+                      </button>
                     )}
 
-                    {/* Validation errors for inline row */}
+                    {/* Validation errors summary */}
                     {(validationErrors[`item_${index}_description`] || validationErrors[`item_${index}_quantity`] || validationErrors[`item_${index}_baseRate`]) && (
-                      <div style={{ color: "#DC2626", fontSize: "12px", marginTop: "-4px", paddingLeft: "4px" }}>
+                      <div style={{ color: "#DC2626", fontSize: "11px", paddingLeft: "4px" }}>
                         Please ensure description, valid quantity, and rate are provided.
                       </div>
                     )}
 
-                    {/* Tiered Pricing Config inside Item */}
+                    {/* Tiered Pricing Config */}
                     {item.pricingType === "tiered" && (
-                      <div style={{ marginTop: "8px", padding: "16px", background: "var(--bg-page, #F7F7F8)", borderRadius: "12px", border: "1px solid var(--border-light, #F0F0F2)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                          <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>Tiered Rates</h4>
+                      <div style={{ marginTop: "8px", padding: "12px", background: "var(--bg-page, #F7F7F8)", borderRadius: "12px", border: "1px solid var(--border-light, #F0F0F2)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                          <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>Tiered Rates</h4>
                           <button
                             type="button"
                             onClick={() => addTier(index)}
-                            style={{ ...btnSecondary, padding: "4px 10px", fontSize: "12px", borderRadius: "8px" }}
+                            style={{ ...btnSecondary, padding: "6px 12px", fontSize: "12px", borderRadius: "8px" }}
                           >
-                            <Plus className="h-3 w-3 mr-1" /> Add Tier
+                            <Plus size={12} style={{ marginRight: "4px" }} /> Add Tier
                           </button>
                         </div>
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                           {item.pricingTiers.map((tier, tIndex) => (
-                            <div key={tIndex} className="flex flex-wrap sm:flex-nowrap gap-2 items-center" style={{ background: "#fff", padding: "8px", borderRadius: "8px", border: "1px solid var(--border, #E5E5E7)" }}>
-                              <div style={{ flex: 1, minWidth: "70px" }}>
-                                <input type="number" placeholder="Min Qty" value={tier.minValue} onChange={(e) => handleTierChange(index, tIndex, "minValue", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
+                            <div key={tIndex} style={{ background: "#fff", padding: "10px", borderRadius: "10px", border: "1px solid var(--border, #E5E5E7)" }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "6px", marginBottom: "8px" }}>
+                                <input type="number" placeholder="Min" value={tier.minValue} onChange={(e) => handleTierChange(index, tIndex, "minValue", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
+                                <span style={{ textAlign: "center", paddingTop: "8px" }}>-</span>
+                                <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max" style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
                               </div>
-                              <span style={{ color: "var(--text-tertiary)" }}>-</span>
-                              <div style={{ flex: 1, minWidth: "70px" }}>
-                                <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max (∞)" style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
-                              </div>
-                              <div style={{ flex: 1, minWidth: "80px" }}>
-                                <input type="number" placeholder="Rate Rs. " value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps} />
-                              </div>
-                              <div style={{ flex: 1, minWidth: "90px" }}>
-                                <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "6px 10px", fontSize: "12px" }} {...focusProps}>
-                                  <option value="slabRate">Slab Rate</option>
-                                  <option value="unitRate">Unit Rate</option>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "6px" }}>
+                                <input type="number" placeholder="Rate" value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
+                                <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps}>
+                                  <option value="slabRate">Slab</option>
+                                  <option value="unitRate">Unit</option>
                                 </select>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => deleteTier(index, tIndex)}
                                 style={{
-                                  background: "#FEF2F2", border: "none", color: "#DC2626", borderRadius: "6px", cursor: "pointer", height: "30px", width: "30px", display: "flex", alignItems: "center", justifyContent: "center"
+                                  marginTop: "8px",
+                                  width: "100%",
+                                  background: "#FEF2F2", 
+                                  border: "1px solid #FEE2E2", 
+                                  color: "#DC2626", 
+                                  borderRadius: "8px", 
+                                  cursor: "pointer", 
+                                  padding: "6px",
+                                  fontSize: "11px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
                                 }}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 size={12} style={{ marginRight: "4px" }} /> Remove Tier
                               </button>
                             </div>
                           ))}
@@ -1202,46 +1186,44 @@ const CreateInvoice = () => {
             type="button"
             onClick={addItem}
             style={{ ...btnSecondary, padding: "14px", width: "100%", borderStyle: "dashed", borderColor: "var(--border, #E5E5E7)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; e.currentTarget.style.borderColor = "var(--accent, #0071E3)"; color: "var(--accent, #0071E3)" }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; e.currentTarget.style.borderColor = "var(--border, #E5E5E7)"; color: "var(--text-primary)" }}
           >
-            <Plus className="h-4 w-4 mr-2" /> Add Another Item
+            <Plus size={16} style={{ marginRight: "8px" }} /> Add Another Item
           </button>
         </div>
 
         {/* Global Configuration & Totals */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }} className="max-md:grid-cols-1">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
-          <div style={{ ...cardStyle, flex: 1 }}>
-            <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "20px" }}>Discounts & Taxes</h3>
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Discounts & Taxes</h3>
             
             <div style={{ marginBottom: "20px" }}>
               <label style={labelStyle}>Global Discount</label>
-              <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+              <div style={{ display: "flex", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
                 <input
                   type="number"
                   name="discount"
                   value={formData.discount || ""}
                   onChange={handleInputChange}
                   placeholder="0"
-                  style={{ ...inputStyle, marginTop: 0, flex: 2 }}
+                  style={{ ...inputStyle, marginTop: 0, flex: "2", minWidth: "120px" }}
                   {...focusProps}
                 />
                 <select
                   name="discountType"
                   value={formData.discountType || "fixed"}
                   onChange={handleInputChange}
-                  style={{ ...inputStyle, marginTop: 0, flex: 1 }}
+                  style={{ ...inputStyle, marginTop: 0, flex: "1", minWidth: "100px" }}
                   {...focusProps}
                 >
-                  <option value="fixed">Fixed (Rs. )</option>
+                  <option value="fixed">Fixed (Rs.)</option>
                   <option value="percentage">%</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
                 <label style={labelStyle}>Taxes Applied</label>
                 <button
                   type="button"
@@ -1254,16 +1236,16 @@ const CreateInvoice = () => {
               
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {formData.taxes?.map((tax, index) => (
-                  <div key={index} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div key={index} style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <input
                       type="text"
-                      placeholder="Tax Name (e.g. CGST)"
+                      placeholder="Tax Name"
                       value={tax.name}
                       onChange={(e) => handleTaxChange(index, "name", e.target.value)}
-                      style={{ ...inputStyle, marginTop: 0, flex: 2 }}
+                      style={{ ...inputStyle, marginTop: 0, flex: "2", minWidth: "120px" }}
                       {...focusProps}
                     />
-                    <div style={{ display: "flex", alignItems: "center", position: "relative", flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", position: "relative", flex: "1", minWidth: "80px" }}>
                       <input
                         type="number"
                         placeholder="0"
@@ -1279,14 +1261,14 @@ const CreateInvoice = () => {
                       onClick={() => removeTax(index)}
                       style={{ background: "transparent", border: "none", color: "#DC2626", padding: "8px", cursor: "pointer" }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ marginTop: "24px" }}>
+            <div style={{ marginTop: "20px" }}>
               <label style={labelStyle}>Additional Notes / Terms</label>
               <textarea
                 name="notes"
@@ -1299,8 +1281,8 @@ const CreateInvoice = () => {
             </div>
           </div>
 
-          <div style={{ ...cardStyle, flex: 1 }}>
-            <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "20px" }}>Display Preferences</h3>
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Display Preferences</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", userSelect: "none" }}>
                 <div style={{
@@ -1367,11 +1349,12 @@ const CreateInvoice = () => {
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
-          <div style={{ ...cardStyle, background: "var(--surface-secondary, #FBFBFD)", border: "none", minWidth: "300px", width: "100%", maxWidth: "500px" }}>
-            <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "20px" }}>Summary</h3>
+        {/* Summary Card */}
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ ...cardStyle, background: "var(--surface-secondary, #FBFBFD)", border: "none", width: "100%", maxWidth: "500px" }}>
+            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Summary</h3>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
                 <span>Subtotal</span>
                 <span>Rs. {(totals?.subtotal ?? 0).toFixed(2)}</span>
@@ -1384,7 +1367,7 @@ const CreateInvoice = () => {
                 </div>
               )}
               
-              <div style={{ borderTop: "1px solid var(--border, #E5E5E7)", padding: "8px 0", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ borderTop: "1px solid var(--border, #E5E5E7)", padding: "8px 0", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {totals?.taxes?.map((tax, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
                     <span>{tax.name || 'Tax'} ({tax.rate}%)</span>
@@ -1393,9 +1376,9 @@ const CreateInvoice = () => {
                 ))}
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border, #E5E5E7)", paddingTop: "20px", marginTop: "4px" }}>
-                <span style={{ fontSize: "18px", fontWeight: 600 }}>Total Amount</span>
-                <span style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border, #E5E5E7)", paddingTop: "16px", marginTop: "4px" }}>
+                <span style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600 }}>Total Amount</span>
+                <span style={{ fontSize: "clamp(22px, 5vw, 28px)", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                   Rs. {(totals?.totalAmount ?? 0).toFixed(2)}
                 </span>
               </div>
@@ -1404,21 +1387,7 @@ const CreateInvoice = () => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              style={{ ...btnPrimary, width: "100%", marginTop: "32px", padding: "16px", fontSize: "16px" }}
-              onMouseEnter={(e) => {
-                if(!loading) {
-                  e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 113, 227, 0.25)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if(!loading) {
-                  e.currentTarget.style.background = "var(--accent, #0071E3)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
-                }
-              }}
+              style={{ ...btnPrimary, width: "100%", marginTop: "24px", padding: "14px 20px", fontSize: "15px" }}
             >
               {loading ? "Generating Invoice..." : "Create Invoice"}
             </button>
@@ -1433,7 +1402,7 @@ const CreateInvoice = () => {
           position: "fixed", inset: 0, zIndex: 9999,
           background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "24px",
+          padding: "20px",
         }}
           onClick={() => setShowAddUnitModal(false)}
         >
@@ -1441,8 +1410,7 @@ const CreateInvoice = () => {
             style={{
               background: "#fff", borderRadius: "20px",
               boxShadow: "0 24px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
-              padding: "28px", width: "100%", maxWidth: "400px",
-              animation: "fadeInScale 200ms ease",
+              padding: "24px", width: "100%", maxWidth: "400px",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1451,15 +1419,15 @@ const CreateInvoice = () => {
               <button
                 type="button"
                 onClick={() => setShowAddUnitModal(false)}
-                style={{ background: "var(--surface-secondary, #F5F5F7)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-secondary, #6E6E73)" }}
+                style={{ background: "var(--surface-secondary, #F5F5F7)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
               >
-                <X className="h-4 w-4" />
+                <X size={16} />
               </button>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>
                   Unit Name <span style={{ color: "#DC2626" }}>*</span>
                 </label>
                 <input
@@ -1468,20 +1436,18 @@ const CreateInvoice = () => {
                   placeholder="e.g. litre, bundle, session"
                   style={{ ...inputStyle, marginTop: 0 }}
                   autoFocus
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomUnit(); } }}
                   {...focusProps}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.02em" }}>
-                  Short Code <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span>
+                <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>
+                  Short Code <span style={{ fontWeight: 400 }}>(optional)</span>
                 </label>
                 <input
                   value={newUnitShortCode}
                   onChange={(e) => setNewUnitShortCode(e.target.value)}
                   placeholder="e.g. ltr, bdl, sess"
                   style={{ ...inputStyle, marginTop: 0 }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomUnit(); } }}
                   {...focusProps}
                 />
               </div>
@@ -1491,9 +1457,7 @@ const CreateInvoice = () => {
               <button
                 type="button"
                 onClick={() => setShowAddUnitModal(false)}
-                style={{
-                  ...btnSecondary, flex: 1, padding: "12px",
-                }}
+                style={{ ...btnSecondary, flex: 1, padding: "12px" }}
               >
                 Cancel
               </button>
@@ -1501,10 +1465,7 @@ const CreateInvoice = () => {
                 type="button"
                 onClick={handleAddCustomUnit}
                 disabled={addingUnit}
-                style={{
-                  ...btnPrimary, flex: 1, padding: "12px",
-                  opacity: addingUnit ? 0.6 : 1,
-                }}
+                style={{ ...btnPrimary, flex: 1, padding: "12px", opacity: addingUnit ? 0.6 : 1 }}
               >
                 {addingUnit ? "Saving..." : "Save Unit"}
               </button>

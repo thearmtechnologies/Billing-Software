@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   tTotalTax: { width: "20%" },
 
   // 7. Totals & Words
-  bottomSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 15 },
+  bottomSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   wordsBox: { width: "55%", paddingRight: 10 },
   wordsLabel: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 3 },
   wordsText: { fontSize: 9, fontStyle: "italic", color: "#333", lineHeight: 1.5 },
@@ -114,12 +114,28 @@ const s = StyleSheet.create({
   totalLabel: { fontSize: 9, fontFamily: "Helvetica-Bold" },
   totalValBold: { fontSize: 10, fontFamily: "Helvetica-Bold", textAlign: "right" },
 
-  // 8 & 9. Footer
-  footerBox: { flexDirection: "row", justifyContent: "space-between", marginTop: "auto", paddingTop: 10 },
+  // 8. Bank Details
+  bankBox: { 
+    marginBottom: 10, 
+    padding: 6, 
+    borderWidth: 1, 
+    borderColor: "#000", 
+    backgroundColor: "#f8f9fa" 
+  },
+  bankTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 4 },
+  bankRow: { fontSize: 8, marginBottom: 2 },
+
+  // 9. Footer
+  footerBox: { flexDirection: "row", justifyContent: "space-between", marginTop: 10, paddingTop: 5 },
   termsBox: { width: "55%" },
-  sigBox: { width: "35%", alignItems: "flex-end", paddingTop: 30 },
+  sigBox: { width: "35%", alignItems: "flex-end" },
   sigLine: { borderTopWidth: 1, borderColor: "#000", width: "100%", textAlign: "center", paddingTop: 4 },
 });
+
+const formatAccountType = (type) => {
+  if (!type) return "";
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+};
 
 // ── Component ───────────────────────────────────────────────────
 const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
@@ -128,7 +144,6 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   const aggregateSubtotal = invoiceData.subtotal;
 
   // Aggregate Tax Summary by HSN / Tax Rate
-  // Since we shouldn't change the calculation logic globally, we just group the existing items for display
   const taxSummary = invoiceData.items.reduce((acc, item) => {
     const hsn = item.hsnCode || "None";
     const taxable = item.subtotal;
@@ -157,7 +172,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   const totalSgst = taxSummaryRows.reduce((sum, row) => sum + row.sgstAmt, 0);
   const totalSummaryTax = taxSummaryRows.reduce((sum, row) => sum + row.totalTax, 0);
 
-  // Safely extract and format shipping address (can be string or object)
+  // Safely extract and format shipping address
   const rawShipping = invoiceData.shippingAddress || invoiceData.shipping_address || invoiceData.client?.shippingAddress;
   let shipStr = "";
   if (typeof rawShipping === "string") {
@@ -172,6 +187,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   }
   
   const hasShipping = Boolean(shipStr && shipStr.trim() !== "");
+  const displayBankDetails = invoiceData?.bankDetails;
 
   return (
     <Document>
@@ -191,14 +207,19 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </Text>
             )}
             <Text style={s.companyText}>Phone: {currentUser?.phone || "N/A"}</Text>
+            {currentUser?.email && <Text style={s.companyText}>Email: {currentUser.email}</Text>}
           </View>
           <View style={s.headerColRight}>
             <Text style={s.sectionTitle}>GSTIN</Text>
             <Text style={[s.bold, { fontSize: 11 }]}>
               {currentUser?.taxId || "N/A"}
-              {currentUser?.udyamNo ? ` | Udyam: ${currentUser.udyamNo}` : ""}
-              {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
             </Text>
+            {currentUser?.udyamNo && (
+              <Text style={[s.companyText, { marginTop: 2 }]}>Udyam: {currentUser.udyamNo}</Text>
+            )}
+            {currentUser?.panNumber && (
+              <Text style={[s.companyText, { marginTop: 2 }]}>PAN: {currentUser.panNumber}</Text>
+            )}
           </View>
         </View>
 
@@ -214,6 +235,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </Text>
             )}
             <Text style={s.customerText}>Phone: {invoiceData.client?.phone || "N/A"}</Text>
+            {invoiceData.client?.email && <Text style={s.customerText}>Email: {invoiceData.client.email}</Text>}
             {invoiceData.client?.gstNumber && (
               <Text style={s.customerText}>GST: {invoiceData.client.gstNumber}</Text>
             )}
@@ -245,6 +267,12 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}
               </Text>
             </View>
+            {invoiceData.poNumber && (
+              <View style={s.metaRow}>
+                <Text style={s.metaLabel}>PO Number:</Text>
+                <Text style={s.metaValue}>{invoiceData.poNumber}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -255,9 +283,9 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <Text style={[s.colHeader, s.wItem, { textAlign: "left" }]}>Item name</Text>
             <Text style={[s.colHeader, s.wHsn]}>HSN/SAC</Text>
             <Text style={[s.colHeader, s.wQty, s.textRight]}>Quantity</Text>
-            <Text style={[s.colHeader, s.wPrice, s.textRight]}>Price / Unit (Rs. )</Text>
-            <Text style={[s.colHeader, s.wGst, s.textRight]}>GST (Rs. )</Text>
-            <Text style={[s.colHeaderLast, s.wAmt, s.textRight]}>Amount (Rs. )</Text>
+            <Text style={[s.colHeader, s.wPrice, s.textRight]}>Price / Unit (Rs.)</Text>
+            <Text style={[s.colHeader, s.wGst, s.textRight]}>GST (Rs.)</Text>
+            <Text style={[s.colHeaderLast, s.wAmt, s.textRight]}>Amount (Rs.)</Text>
           </View>
           
           {invoiceData.items.map((item, index) => {
@@ -267,7 +295,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <View key={index} style={isLast ? s.tableRowLast : s.tableRow}>
                 <Text style={[s.colCell, s.wNo, s.textCenter]}>{index + 1}</Text>
                 <View style={[s.colCell, s.wItem]}>
-                  <Text style={s.bold}>{item.description}</Text>
+                  <Text>{item.description}</Text>
                   {item.notes && <Text style={{ fontSize: 7, color: "#555", marginTop: 2 }}>{item.notes}</Text>}
                 </View>
                 <Text style={[s.colCell, s.wHsn, s.textCenter]}>{item.hsnCode || "-"}</Text>
@@ -296,7 +324,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
 
         {/* 6. Tax Summary Section */}
         {taxSummaryRows.length > 0 && (
-          <View style={{ marginBottom: 15 }}>
+          <View style={{ marginBottom: 10 }}>
             <Text style={s.taxTitle}>Tax Summary</Text>
             <View style={[s.table, { marginBottom: 0 }]}>
               <View style={s.tableHeader}>
@@ -332,56 +360,102 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           </View>
         )}
 
-        {/* 7. Totals & Words Right Side block */}
+        {/* 7. Bank Details Section */}
+        {displayBankDetails && (
+          <View style={s.bankBox}>
+            <Text style={s.bankTitle}>Bank Details:</Text>
+            {displayBankDetails?.accountHolderName && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+              </Text>
+            )}
+            {displayBankDetails?.bankName && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>Bank Name:</Text> {displayBankDetails.bankName}
+              </Text>
+            )}
+            {displayBankDetails?.branchName && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>Branch:</Text> {displayBankDetails.branchName}
+              </Text>
+            )}
+            {displayBankDetails?.accountType && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>Account Type:</Text> {formatAccountType(displayBankDetails.accountType)} Account
+              </Text>
+            )}
+            {displayBankDetails?.accountNumber && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
+              </Text>
+            )}
+            {displayBankDetails?.ifscCode && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>IFSC Code:</Text> {displayBankDetails.ifscCode}
+              </Text>
+            )}
+            {displayBankDetails?.upiId && (
+              <Text style={s.bankRow}>
+                <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* 8. Totals & Words */}
         <View style={s.bottomSection}>
           <View style={s.wordsBox}>
             <Text style={s.wordsLabel}>Invoice Amount in Words:</Text>
             <Text style={s.wordsText}>
-              {numberToWords ? numberToWords(invoiceData.totalAmount) : "Amount in words not available."}
+              {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)} only`}
             </Text>
           </View>
           
           <View style={s.totalsBox}>
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Sub Total</Text>
-              <Text style={s.totalValue}>{invoiceData.subtotal.toFixed(2)}</Text>
+              <Text style={s.totalValue}>Rs. {invoiceData.subtotal.toFixed(2)}</Text>
             </View>
             {invoiceData.discount > 0 && (
               <View style={s.totalRow}>
                 <Text style={s.totalLabel}>Discount</Text>
-                <Text style={s.totalValue}>- {invoiceData.discount.toFixed(2)}</Text>
+                <Text style={s.totalValue}>- Rs. {invoiceData.discount.toFixed(2)}</Text>
               </View>
             )}
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Total Tax</Text>
-              <Text style={s.totalValue}>{invoiceData.totalTax.toFixed(2)}</Text>
+              <Text style={s.totalValue}>Rs. {invoiceData.totalTax.toFixed(2)}</Text>
             </View>
             <View style={s.totalRow}>
               <Text style={[s.totalLabel, { fontSize: 11 }]}>Total</Text>
               <Text style={s.totalValBold}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>
             </View>
-            <View style={s.totalRow}>
-              <Text style={s.totalLabel}>Received</Text>
-              <Text style={s.totalValue}>{invoiceData.receivedAmount?.toFixed(2) || "0.00"}</Text>
-            </View>
-            <View style={s.totalRowLast}>
-              <Text style={s.totalLabel}>Balance</Text>
-              <Text style={s.totalValBold}>Rs. {(invoiceData.totalAmount - (invoiceData.receivedAmount || 0)).toFixed(2)}</Text>
-            </View>
+            {invoiceData.receivedAmount > 0 && (
+              <>
+                <View style={s.totalRow}>
+                  <Text style={s.totalLabel}>Received</Text>
+                  <Text style={s.totalValue}>Rs. {invoiceData.receivedAmount?.toFixed(2) || "0.00"}</Text>
+                </View>
+                <View style={s.totalRowLast}>
+                  <Text style={s.totalLabel}>Balance</Text>
+                  <Text style={s.totalValBold}>Rs. {(invoiceData.totalAmount - (invoiceData.receivedAmount || 0)).toFixed(2)}</Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
-        {/* 8. Terms & 9. Signature Sections */}
+        {/* 9. Terms & Signature Sections */}
         <View style={s.footerBox}>
           <View style={s.termsBox}>
             <Text style={s.sectionTitle}>Terms & Conditions:</Text>
             <Text style={{ fontSize: 8, color: "#444" }}>
-              {invoiceData.notes || "Thanks for doing business with us!"}
+              {invoiceData.notes || invoiceData.termsAndConditions || "Thanks for doing business with us!"}
             </Text>
           </View>
 
           <View style={s.sigBox}>
-            <Text style={[s.bold, { fontSize: 10, marginBottom: signatureBase64 && invoiceData.includeSignature !== false ? 10 : 35 }]}>
+            <Text style={[s.bold, { fontSize: 10, marginBottom: signatureBase64 && invoiceData.includeSignature !== false ? 10 : 30 }]}>
               For {currentUser?.businessName || "Your Company Name"}
             </Text>
             {signatureBase64 && invoiceData.includeSignature !== false && (
@@ -391,7 +465,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               />
             )}
             <View style={s.sigLine}>
-              <Text style={s.sectionTitle}>Authorized Signatory</Text>
+              <Text>Authorized Signatory</Text>
             </View>
           </View>
         </View>

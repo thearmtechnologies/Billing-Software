@@ -121,8 +121,17 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#dee2e6",
   },
+  footerRowFull: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderColor: "#dee2e6",
+  },
   bankBox: { width: "60%" },
-  sigBox: { width: "35%", alignItems: "center" },
+  sigBox: { width: "35%", alignItems: "flex-end" },
+  sigBoxFull: { width: "100%", alignItems: "flex-end" },
   sigFor: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 40 },
   sigLine: {
     fontSize: 9, 
@@ -130,7 +139,7 @@ const s = StyleSheet.create({
     borderTopWidth: 1, 
     borderColor: "#adb5bd", 
     paddingTop: 5,
-    width: "100%",
+    // width: "100%",
     textAlign: "center"
   },
 });
@@ -331,7 +340,7 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <View style={[s.coloredBlock, s.wordBlock, { marginBottom: 0 }]}>
               <Text style={s.blockTitle}>Amount in Words:</Text>
               <Text style={s.blockBody}>
-                {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} only
+                {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} 
               </Text>
             </View>
           </View>
@@ -397,42 +406,66 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           </View>
         )}
 
-        {/* 6. Footer (Bank & Sign) */}
-        <View style={s.footerRow} wrap={false}>
-          <View style={s.bankBox}>
-            <Text style={s.sectionTitle}>Bank Details:</Text>
-            {displayBankDetails?.accountHolderName && (
-              <Text style={s.textRow}>
-                <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+        {/* 6. Footer (Bank & Sign) - Fixed Alignment */}
+        {/* Use different wrapper based on whether bank details exist */}
+        {displayBankDetails ? (
+          <View style={s.footerRow} wrap={false}>
+            {/* Bank Details */}
+            <View style={s.bankBox}>
+              <Text style={s.sectionTitle}>Bank Details:</Text>
+              {displayBankDetails?.accountHolderName && (
+                <Text style={s.textRow}>
+                  <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+                </Text>
+              )}
+              {displayBankDetails?.bankName && (
+                <Text style={s.textRow}>
+                  <Text style={s.bold}>Bank:</Text> {displayBankDetails.bankName}
+                </Text>
+              )}
+              {displayBankDetails?.accountNumber && (
+                <Text style={s.textRow}>
+                  <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
+                </Text>
+              )}
+              {displayBankDetails?.ifscCode && (
+                <Text style={s.textRow}>
+                  <Text style={s.bold}>IFSC:</Text> {displayBankDetails.ifscCode}
+                </Text>
+              )}
+            </View>
+
+            {/* Signature Box - 35% width, right-aligned */}
+            <View style={s.sigBox}>
+              <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+                For {currentUser?.businessName || ""}
               </Text>
-            )}
-            {displayBankDetails?.bankName && (
-              <Text style={s.textRow}>
-                <Text style={s.bold}>Bank:</Text> {displayBankDetails.bankName}
-              </Text>
-            )}
-            {displayBankDetails?.accountNumber && (
-              <Text style={s.textRow}>
-                <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
-              </Text>
-            )}
-            {displayBankDetails?.ifscCode && (
-              <Text style={s.textRow}>
-                <Text style={s.bold}>IFSC:</Text> {displayBankDetails.ifscCode}
-              </Text>
-            )}
+              {signatureBase64 && invoiceData.includeSignature !== false && (
+                <Image 
+                  src={signatureBase64} 
+                  style={{ width: 140, height: 60, maxWidth: 160, maxHeight: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                />
+              )}
+              <Text style={s.sigLine}>Authorized Signatory</Text>
+            </View>
           </View>
-          <View style={s.sigBox}>
-            <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>For {currentUser?.businessName || ""}</Text>
-            {signatureBase64 && invoiceData.includeSignature !== false && (
-              <Image 
-                src={signatureBase64} 
-                style={{ width: 140, height: 60, maxWidth: 160, maxHeight: 60, objectFit: "contain", alignSelf: "center", marginBottom: 10 }} 
-              />
-            )}
-            <Text style={s.sigLine}>Authorized Signatory</Text>
+        ) : (
+          
+          <View style={s.footerRowFull} wrap={false}>
+            <View style={s.sigBoxFull}>
+              <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+                For {currentUser?.businessName || ""}
+              </Text>
+              {signatureBase64 && invoiceData.includeSignature !== false && (
+                <Image 
+                  src={signatureBase64} 
+                  style={{ width: 140, height: 60, maxWidth: 160, maxHeight: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                />
+              )}
+              <Text style={s.sigLine}>Authorized Signatory</Text>
+            </View>
           </View>
-        </View>
+        )}
 
       </Page>
     </Document>

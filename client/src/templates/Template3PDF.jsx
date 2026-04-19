@@ -161,20 +161,24 @@ const s = StyleSheet.create({
     marginTop: 15,
   },
   bankBox: {
-    width: "50%",
+    width: "48%",
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
     borderColor: "#dee2e6",
     borderRadius: 4,
     padding: 8,
   },
-  bankTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 4, color: "#2c3e50" },
   sigBox: {
-    width: "45%",
+    width: "48%",
+    alignItems: "flex-end",
+  },
+  sigBoxFull: {
+    width: "100%",
     alignItems: "flex-end",
   },
   sigFor: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 35 },
   sigLabel: { fontSize: 9 },
+  bankTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 4, color: "#2c3e50" },
 
   /* ── T&C & Footer ──────────────────────────────── */
   tcBox: {
@@ -454,7 +458,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={{ fontSize: 9 }}>
                 {numberToWords
                   ? numberToWords(invoiceData.totalAmount)
-                  : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} only
+                  : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} 
               </Text>
             </View>
 
@@ -466,49 +470,56 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </View>
             )}
 
-            {/* Bank Details & Footer */}
+            {/* Bank Details & Signature - Fixed Alignment */}
             <View style={s.bankSigWrapper} wrap={false}>
-              <View style={s.bankBox}>
-                <Text style={s.bankTitle}>Bank Details:</Text>
-                {displayBankDetails?.accountHolderName && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
-                  </Text>
-                )}
-                {displayBankDetails?.bankName && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>Bank Name:</Text> {displayBankDetails.bankName}
-                  </Text>
-                )}
-                {displayBankDetails?.branchName && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>Branch:</Text> {displayBankDetails.branchName}
-                  </Text>
-                )}
-                {displayBankDetails?.accountType && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>Account Type:</Text> {formatAccountType(displayBankDetails.accountType)} Account
-                  </Text>
-                )}
-                {displayBankDetails?.accountNumber && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
-                  </Text>
-                )}
-                {displayBankDetails?.ifscCode && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>IFSC Code:</Text> {displayBankDetails.ifscCode}
-                  </Text>
-                )}
-                {displayBankDetails?.upiId && (
-                  <Text style={s.textRow}>
-                    <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
-                  </Text>
-                )}
-              </View>
+              {/* Bank Details - Only render if exists */}
+              {displayBankDetails && (
+                <View style={s.bankBox}>
+                  <Text style={s.bankTitle}>Bank Details:</Text>
+                  {displayBankDetails?.accountHolderName && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+                    </Text>
+                  )}
+                  {displayBankDetails?.bankName && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>Bank Name:</Text> {displayBankDetails.bankName}
+                    </Text>
+                  )}
+                  {displayBankDetails?.branchName && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>Branch:</Text> {displayBankDetails.branchName}
+                    </Text>
+                  )}
+                  {displayBankDetails?.accountType && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>Account Type:</Text> {formatAccountType(displayBankDetails.accountType)} Account
+                    </Text>
+                  )}
+                  {displayBankDetails?.accountNumber && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
+                    </Text>
+                  )}
+                  {displayBankDetails?.ifscCode && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>IFSC Code:</Text> {displayBankDetails.ifscCode}
+                    </Text>
+                  )}
+                  {displayBankDetails?.upiId && (
+                    <Text style={s.textRow}>
+                      <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
+                    </Text>
+                  )}
+                </View>
+              )}
 
-              <View style={s.sigBox}>
-                <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>For {currentUser?.businessName || ""}</Text>
+              {/* Signature Box - Always on the right side */}
+              {/* If bank details exist, width is 48%; if not, width is 100% and aligned right */}
+              <View style={displayBankDetails ? s.sigBox : s.sigBoxFull}>
+                <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+                  For {currentUser?.businessName || ""}
+                </Text>
                 {signatureBase64 && invoiceData.includeSignature !== false && (
                   <Image 
                     src={signatureBase64} 

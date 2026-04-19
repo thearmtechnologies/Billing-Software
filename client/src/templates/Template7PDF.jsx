@@ -247,7 +247,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             {/* Left Column: Bank & Amount in Words */}
             <View style={s.footerLeft}>
               <Text style={s.bold}>AMOUNT IN WORDS:</Text>
-              <Text style={{ marginBottom: 10 }}>{numberToWords(invoiceData.totalAmount || 0)} ONLY.</Text>
+              <Text style={{ marginBottom: 10 }}>{numberToWords(invoiceData.totalAmount || 0)}</Text>
               
               {invoiceData?.bankDetails && (
                 <>

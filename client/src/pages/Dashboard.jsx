@@ -246,7 +246,7 @@ const Dashboard = () => {
       title: "Sent Invoices",
       value: stats.sentInvoices,
       icon: FileText,
-      accentText: "#6366F1", // Indigo
+      accentText: "#6366F1",
       accentBg: "#EEF2FF",
       link: "/invoices",
       sparklineData: stats.sparklines.sentInvoices,
@@ -264,7 +264,7 @@ const Dashboard = () => {
       title: "Partial",
       value: stats.partialPayments,
       icon: CreditCard,
-      accentText: "#EA580C", // Orange
+      accentText: "#EA580C",
       accentBg: "#FFF7ED",
       link: "/invoices",
       sparklineData: stats.sparklines.partialPayments,
@@ -316,8 +316,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Summary Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6" style={{ marginBottom: tokens.spacing.xl }}>
+        {/* Summary Cards Grid - Responsive: 1 column on mobile, 2 on tablet, 4 on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style={{ marginBottom: tokens.spacing.xl }}>
           {statCards.map((card, index) => {
             const Icon = card.icon;
             return (
@@ -336,11 +336,18 @@ const Dashboard = () => {
               >
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: "13px", fontWeight: "500", color: tokens.colors.textSecondary, marginBottom: "4px" }} className="truncate">
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p style={{ fontSize: "13px", fontWeight: "500", color: tokens.colors.textSecondary, marginBottom: "4px" }}>
                         {card.title}
                       </p>
-                      <p style={{ fontWeight: "600", color: tokens.colors.textPrimary, lineHeight: "1.2" }} className="text-[20px] sm:text-[24px] break-words whitespace-normal sm:whitespace-nowrap sm:truncate">
+                      <p style={{ 
+                        fontWeight: "600", 
+                        color: tokens.colors.textPrimary, 
+                        lineHeight: "1.2",
+                        fontSize: "18px",
+                        wordBreak: "break-word",
+                        whiteSpace: "normal"
+                      }}>
                         {card.value}
                       </p>
                     </div>
@@ -412,6 +419,8 @@ const Dashboard = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "12px",
                       }}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center" style={{ gap: tokens.spacing.md, flex: 1, minWidth: 0 }}>
@@ -419,8 +428,8 @@ const Dashboard = () => {
                           <StatusIcon className="h-5 w-5" />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 style={{ fontSize: "15px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }} className="truncate">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 style={{ fontSize: "15px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }}>
                               {invoice.invoiceNumber}
                             </h3>
                             <span
@@ -435,7 +444,7 @@ const Dashboard = () => {
                               {invoice.status}
                             </span>
                           </div>
-                          <p style={{ fontSize: "13px", color: tokens.colors.textSecondary, margin: 0 }} className="truncate">
+                          <p style={{ fontSize: "13px", color: tokens.colors.textSecondary, margin: 0 }}>
                             {invoice.client?.companyName || "Unknown Client"} 
                             {(invoice.status === 'partial' || invoice.status === 'sent' || invoice.status === 'overdue') && invoice.amountDue && (
                               <span style={{ marginLeft: "8px", color: invoice.status === 'overdue' ? tokens.colors.danger : tokens.colors.textSecondary }}>
@@ -505,42 +514,42 @@ const Dashboard = () => {
               </div>
             </div>
 
-          {/* Business Types Panel */}
-          <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "600", color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md }}>
-              Business Modules
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
-              {(Array.isArray(currentUser?.businessType) ? currentUser.businessType : []).map((type) => {
-                const meta = BUSINESS_META[type] || { name: titleize(type), icon: Settings };
-                const Icon = meta.icon;
-                return (
-                  <div
-                    key={type}
-                    className="app-card"
-                    style={{
-                      padding: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: tokens.spacing.md,
-                    }}
-                  >
-                    <div style={{ backgroundColor: "#F3F4F6", color: "#6B7280", borderRadius: "10px", padding: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon className="h-5 w-5" />
+            {/* Business Types Panel */}
+            <div>
+              <h2 style={{ fontSize: "20px", fontWeight: "600", color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md }}>
+                Business Modules
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+                {(Array.isArray(currentUser?.businessType) ? currentUser.businessType : []).map((type) => {
+                  const meta = BUSINESS_META[type] || { name: titleize(type), icon: Settings };
+                  const Icon = meta.icon;
+                  return (
+                    <div
+                      key={type}
+                      className="app-card"
+                      style={{
+                        padding: "16px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: tokens.spacing.md,
+                      }}
+                    >
+                      <div style={{ backgroundColor: "#F3F4F6", color: "#6B7280", borderRadius: "10px", padding: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: "14px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }}>
+                          {meta.name}
+                        </h3>
+                        <p style={{ fontSize: "12px", color: tokens.colors.textSecondary, margin: "2px 0 0 0" }}>
+                          Active module
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 style={{ fontSize: "14px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }}>
-                        {meta.name}
-                      </h3>
-                      <p style={{ fontSize: "12px", color: tokens.colors.textSecondary, margin: "2px 0 0 0" }}>
-                        Active module
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

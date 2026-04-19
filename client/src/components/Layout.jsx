@@ -288,6 +288,7 @@ const Layout = () => {
           <Link
             to="/invoices/create"
             className="btn-primary"
+            onClick={() => setSidebarOpen(false)}
             style={{ width: '100%', padding: '0.875rem' }}
           >
             <Plus style={{ width: '18px', height: '18px' }} />
