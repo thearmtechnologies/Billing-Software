@@ -249,12 +249,16 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
               <Text style={s.bold}>AMOUNT IN WORDS:</Text>
               <Text style={{ marginBottom: 10 }}>{numberToWords(invoiceData.totalAmount || 0)} ONLY.</Text>
               
-              <Text style={s.bankTitle}>BANK DETAILS FOR PAYMENT</Text>
-              <Text>BANK NAME: {currentUser?.bankDetails?.bankName || "-"}</Text>
-              <Text>AC NAME: {currentUser?.bankDetails?.accountHolderName || "-"}</Text>
-              <Text>AC NO: {currentUser?.bankDetails?.accountNumber || "-"}</Text>
-              <Text>IFSC CODE: {currentUser?.bankDetails?.ifscCode || "-"}</Text>
-              <Text>BRANCH: {currentUser?.bankDetails?.branchName || "-"}</Text>
+              {invoiceData?.bankDetails && (
+                <>
+                  <Text style={s.bankTitle}>BANK DETAILS FOR PAYMENT</Text>
+                  <Text>BANK NAME: {invoiceData.bankDetails.bankName || "-"}</Text>
+                  <Text>AC NAME: {invoiceData.bankDetails.accountHolderName || "-"}</Text>
+                  <Text>AC NO: {invoiceData.bankDetails.accountNumber || "-"}</Text>
+                  <Text>IFSC CODE: {invoiceData.bankDetails.ifscCode || "-"}</Text>
+                  <Text>BRANCH: {invoiceData.bankDetails.branchName || "-"}</Text>
+                </>
+              )}
               
               <View style={{ marginTop: 20 }}>
                 <Text style={s.bold}>CUSTOMER RECEIVING</Text>

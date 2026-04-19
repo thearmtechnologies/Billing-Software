@@ -151,13 +151,6 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
     : { sr: "6%", desc: "48%", qty: "12%", rate: "20%", amt: "14%" };
 
   let displayBankDetails = invoiceData?.bankDetails;
-  if (!displayBankDetails) {
-    if (currentUser?.bankAccounts && currentUser.bankAccounts.length > 0) {
-      displayBankDetails = currentUser.bankAccounts.find(a => a.isPrimary) || currentUser.bankAccounts[0];
-    } else if (currentUser?.bankDetails) {
-      displayBankDetails = currentUser.bankDetails;
-    }
-  }
 
   return (
     <Document>
@@ -331,8 +324,19 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           ))}
         </View>
 
-        {/* 4. Totals */}
-        <View style={s.totalsWrapper} wrap={false}>
+        {/* 4. Amount in Words & Totals */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }} wrap={false}>
+          {/* Left: Amount in Words */}
+          <View style={{ width: "48%" }}>
+            <View style={[s.coloredBlock, s.wordBlock, { marginBottom: 0 }]}>
+              <Text style={s.blockTitle}>Amount in Words:</Text>
+              <Text style={s.blockBody}>
+                {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} only
+              </Text>
+            </View>
+          </View>
+
+          {/* Right: Totals */}
           <View style={s.totalsBox}>
             {invoiceData.subtotal > 0 && (
               <View style={s.calcRow}>
@@ -371,12 +375,6 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
         </View>
 
         {/* 5. Info Blocks */}
-        <View style={[s.coloredBlock, s.wordBlock]} wrap={false}>
-          <Text style={s.blockTitle}>Amount in Words:</Text>
-          <Text style={s.blockBody}>
-            {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} only
-          </Text>
-        </View>
 
         {invoiceData.paymentTerms && (
           <View style={[s.coloredBlock, s.termBlock]} wrap={false}>

@@ -196,9 +196,32 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
         </table>
       </div>
 
-      {/* Totals Section - Responsive */}
-      <div style={{ marginBottom: "20px" }}>
-        <div style={{ maxWidth: "400px", marginLeft: "auto" }}>
+      {/* Amount in Words & Totals - Responsive */}
+      <div style={{ 
+        display: "flex", 
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+        marginBottom: "20px",
+        gap: "20px"
+      }}>
+        {/* Amount in Words */}
+        <div style={{ 
+          flex: "1 1 300px",
+          padding: "15px", 
+          backgroundColor: "#f8f9fa", 
+          borderRadius: "8px"
+        }}>
+          <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "8px" }}>
+            Amount in Words:
+          </div>
+          <div style={{ fontSize: "14px" }}>
+            {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${invoiceData.totalAmount.toFixed(2)}`} only
+          </div>
+        </div>
+
+        {/* Totals Section */}
+        <div style={{ flex: "1 1 300px", maxWidth: "400px", marginLeft: "auto" }}>
           {/* Sub Total */}
           {invoiceData.subtotal > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #dee2e6" }}>
@@ -236,21 +259,6 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
             <span style={{ fontSize: "16px", fontWeight: "bold" }}>TOTAL</span>
             <span style={{ fontSize: "16px", fontWeight: "bold" }}>Rs. {invoiceData.totalAmount.toFixed(2)}</span>
           </div>
-        </div>
-      </div>
-
-      {/* Amount in Words */}
-      <div style={{ 
-        marginBottom: "20px", 
-        padding: "15px", 
-        backgroundColor: "#f8f9fa", 
-        borderRadius: "8px"
-      }}>
-        <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "8px" }}>
-          Amount in Words:
-        </div>
-        <div style={{ fontSize: "14px" }}>
-          {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${invoiceData.totalAmount.toFixed(2)}`} only
         </div>
       </div>
 
@@ -314,25 +322,29 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
           <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px" }}>
             Bank Details:
           </div>
-          {currentUser.bankDetails?.accountHolderName && (
-            <div style={{ fontSize: "13px", marginBottom: "4px" }}>
-              <strong>Account Holder:</strong> {currentUser.bankDetails.accountHolderName}
-            </div>
-          )}
-          {currentUser.bankDetails?.bankName && (
-            <div style={{ fontSize: "13px", marginBottom: "4px" }}>
-              <strong>Bank:</strong> {currentUser.bankDetails.bankName}
-            </div>
-          )}
-          {currentUser.bankDetails?.accountNumber && (
-            <div style={{ fontSize: "13px", marginBottom: "4px" }}>
-              <strong>Account No:</strong> {currentUser.bankDetails.accountNumber}
-            </div>
-          )}
-          {currentUser.bankDetails?.ifscCode && (
-            <div style={{ fontSize: "13px", marginBottom: "4px" }}>
-              <strong>IFSC:</strong> {currentUser.bankDetails.ifscCode}
-            </div>
+          {invoiceData?.bankDetails && (
+            <>
+              {invoiceData.bankDetails?.accountHolderName && (
+                <div style={{ fontSize: "13px", marginBottom: "4px" }}>
+                  <strong>Account Holder:</strong> {invoiceData.bankDetails.accountHolderName}
+                </div>
+              )}
+              {invoiceData.bankDetails?.bankName && (
+                <div style={{ fontSize: "13px", marginBottom: "4px" }}>
+                  <strong>Bank:</strong> {invoiceData.bankDetails.bankName}
+                </div>
+              )}
+              {invoiceData.bankDetails?.accountNumber && (
+                <div style={{ fontSize: "13px", marginBottom: "4px" }}>
+                  <strong>Account No:</strong> {invoiceData.bankDetails.accountNumber}
+                </div>
+              )}
+              {invoiceData.bankDetails?.ifscCode && (
+                <div style={{ fontSize: "13px", marginBottom: "4px" }}>
+                  <strong>IFSC:</strong> {invoiceData.bankDetails.ifscCode}
+                </div>
+              )}
+            </>
           )}
         </div>
 

@@ -113,12 +113,6 @@ const CreateInvoice = () => {
       const res = await axios.get(`${BASE_URL}/users/bank-accounts`);
       const accounts = res.data.bankAccounts || [];
       setBankAccounts(accounts);
-      const primary = accounts.find((a) => a.isPrimary);
-      if (primary) {
-        setFormData((prev) => ({ ...prev, bankDetails: primary }));
-      } else if (accounts.length > 0) {
-        setFormData((prev) => ({ ...prev, bankDetails: accounts[0] }));
-      }
     } catch {
       toast.error("Failed to fetch bank accounts");
     }

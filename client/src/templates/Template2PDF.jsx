@@ -142,13 +142,6 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
     : { sr: "8%", items: "48%", qty: "12%", rate: "18%", amt: "14%" };
 
   let displayBankDetails = invoiceData?.bankDetails;
-  if (!displayBankDetails) {
-    if (currentUser?.bankAccounts && currentUser.bankAccounts.length > 0) {
-      displayBankDetails = currentUser.bankAccounts.find(a => a.isPrimary) || currentUser.bankAccounts[0];
-    } else if (currentUser?.bankDetails) {
-      displayBankDetails = currentUser.bankDetails;
-    }
-  }
 
   const copyLabel = copyType || "ORIGINAL FOR RECIPIENT";
 

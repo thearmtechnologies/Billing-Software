@@ -480,64 +480,66 @@ const Template3 = forwardRef(({ invoiceData, numberToWords }, ref) => {
           }}
         >
           <div style={{ flex: 1 }}>
-            <div
-              style={{
-                backgroundColor: "#f8f9fa",
-                padding: "10px",
-                border: "1px solid #dee2e6",
-                borderRadius: "4px",
-              }}
-            >
+            {invoiceData?.bankDetails && (
               <div
                 style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  marginBottom: "6px",
-                  color: "#2c3e50",
+                  backgroundColor: "#f8f9fa",
+                  padding: "10px",
+                  border: "1px solid #dee2e6",
+                  borderRadius: "4px",
                 }}
               >
-                Bank Details:
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    marginBottom: "6px",
+                    color: "#2c3e50",
+                  }}
+                >
+                  Bank Details:
+                </div>
+                {invoiceData.bankDetails?.accountHolderName && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>Account Holder:</strong>{" "}
+                    {invoiceData.bankDetails.accountHolderName}
+                  </div>
+                )}
+                {invoiceData.bankDetails?.bankName && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>Bank Name:</strong> {invoiceData.bankDetails.bankName}
+                  </div>
+                )}
+                {invoiceData.bankDetails?.branchName && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>Branch:</strong> {invoiceData.bankDetails.branchName}
+                  </div>
+                )}
+                {invoiceData.bankDetails?.accountType && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>Account Type:</strong>{" "}
+                    {formatAccountType(invoiceData.bankDetails.accountType)}{" "}
+                    Account
+                  </div>
+                )}
+                {invoiceData.bankDetails?.accountNumber && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>Account No:</strong>{" "}
+                    {invoiceData.bankDetails.accountNumber}
+                  </div>
+                )}
+                {invoiceData.bankDetails?.ifscCode && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>IFSC Code:</strong> {invoiceData.bankDetails.ifscCode}
+                  </div>
+                )}
+                {invoiceData.bankDetails?.upiId && (
+                  <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                    <strong>UPI ID:</strong> {invoiceData.bankDetails.upiId}
+                  </div>
+                )}
               </div>
-              {currentUser.bankDetails?.accountHolderName && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>Account Holder:</strong>{" "}
-                  {currentUser.bankDetails.accountHolderName}
-                </div>
-              )}
-              {currentUser.bankDetails?.bankName && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>Bank Name:</strong> {currentUser.bankDetails.bankName}
-                </div>
-              )}
-              {currentUser.bankDetails?.branchName && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>Branch:</strong> {currentUser.bankDetails.branchName}
-                </div>
-              )}
-              {currentUser.bankDetails?.accountType && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>Account Type:</strong>{" "}
-                  {formatAccountType(currentUser.bankDetails.accountType)}{" "}
-                  Account
-                </div>
-              )}
-              {currentUser.bankDetails?.accountNumber && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>Account No:</strong>{" "}
-                  {currentUser.bankDetails.accountNumber}
-                </div>
-              )}
-              {currentUser.bankDetails?.ifscCode && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>IFSC Code:</strong> {currentUser.bankDetails.ifscCode}
-                </div>
-              )}
-              {currentUser.bankDetails?.upiId && (
-                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                  <strong>UPI ID:</strong> {currentUser.bankDetails.upiId}
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           <div style={{ textAlign: "right", flex: 1 }}>
