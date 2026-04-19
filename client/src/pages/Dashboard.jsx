@@ -340,7 +340,7 @@ const Dashboard = () => {
                       <p style={{ fontSize: "13px", fontWeight: "500", color: tokens.colors.textSecondary, marginBottom: "4px" }} className="truncate">
                         {card.title}
                       </p>
-                      <p style={{ fontSize: "24px", fontWeight: "600", color: tokens.colors.textPrimary, lineHeight: "1.2" }} className="truncate">
+                      <p style={{ fontWeight: "600", color: tokens.colors.textPrimary, lineHeight: "1.2" }} className="text-[20px] sm:text-[24px] break-words whitespace-normal sm:whitespace-nowrap sm:truncate">
                         {card.value}
                       </p>
                     </div>

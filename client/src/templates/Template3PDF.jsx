@@ -211,13 +211,6 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
     : { sr: "6%", items: "48%", qty: "8%", rate: "25%", amt: "13%" };
 
   let displayBankDetails = invoiceData?.bankDetails;
-  if (!displayBankDetails) {
-    if (currentUser?.bankAccounts && currentUser.bankAccounts.length > 0) {
-      displayBankDetails = currentUser.bankAccounts.find(a => a.isPrimary) || currentUser.bankAccounts[0];
-    } else if (currentUser?.bankDetails) {
-      displayBankDetails = currentUser.bankDetails;
-    }
-  }
 
   return (
     <Document>

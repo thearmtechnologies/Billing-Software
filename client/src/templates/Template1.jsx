@@ -729,7 +729,7 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
         }}
       >
         {/* Bank Details */}
-        {currentUser.bankDetails && (
+        {invoiceData?.bankDetails && (
           <div
             style={{
               fontSize: "14px",
@@ -746,43 +746,43 @@ const Template1 = forwardRef(({ invoiceData, numberToWords, copyType }, ref) => 
             >
               Company's Bank Details
             </div>
-            {currentUser.bankDetails?.bankName && (
+            {invoiceData.bankDetails?.bankName && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                <strong>Account Holder:</strong> {currentUser.bankDetails.accountHolderName}
+                <strong>Account Holder:</strong> {invoiceData.bankDetails.accountHolderName}
               </div>
             )}
-            {currentUser.bankDetails?.bankName && (
+            {invoiceData.bankDetails?.bankName && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                <strong>Bank Name:</strong> {currentUser.bankDetails.bankName}
+                <strong>Bank Name:</strong> {invoiceData.bankDetails.bankName}
               </div>
             )}
-            {currentUser.bankDetails?.branchName && (
+            {invoiceData.bankDetails?.branchName && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
                 <strong>Branch</strong>{" "}
-                {currentUser.bankDetails.branchName}
+                {invoiceData.bankDetails.branchName}
               </div>
             )}
-            {currentUser.bankDetails?.bankName && (
+            {invoiceData.bankDetails?.bankName && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                <strong>Account Type:</strong> {formatAccountType(currentUser.bankDetails.accountType)}{" "}
+                <strong>Account Type:</strong> {formatAccountType(invoiceData.bankDetails.accountType)}{" "}
                   Account
               </div>
             )}
-            {currentUser.bankDetails?.accountNumber && (
+            {invoiceData.bankDetails?.accountNumber && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
                 <strong>A/c No.:</strong>{" "}
-                {currentUser.bankDetails.accountNumber}
+                {invoiceData.bankDetails.accountNumber}
               </div>
             )}
-            {currentUser.bankDetails?.ifscCode && (
+            {invoiceData.bankDetails?.ifscCode && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
                 <strong>IFSC:</strong>{" "}
-                {currentUser.bankDetails.ifscCode}
+                {invoiceData.bankDetails.ifscCode}
               </div>
             )}
-            {currentUser.bankDetails?.upiId && (
+            {invoiceData.bankDetails?.upiId && (
               <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                <strong>UPI ID:</strong> {currentUser.bankDetails.upiId}
+                <strong>UPI ID:</strong> {invoiceData.bankDetails.upiId}
               </div>
             )}
           </div>

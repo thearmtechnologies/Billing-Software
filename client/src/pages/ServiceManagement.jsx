@@ -129,12 +129,9 @@ const ServiceManagement = () => {
       width: '28%',
       render: (row) => (
         <span
+          className="block sm:truncate"
           style={{
             color: 'var(--adt-text-secondary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            display: 'block',
           }}
           title={row.description}
         >

@@ -204,13 +204,6 @@ const fmtAcct = (t) =>
 // ── Component ───────────────────────────────────────────────────
 const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signatureBase64, logoBase64 }) => {
   let displayBankDetails = invoiceData?.bankDetails;
-  if (!displayBankDetails) {
-    if (currentUser?.bankAccounts && currentUser.bankAccounts.length > 0) {
-      displayBankDetails = currentUser.bankAccounts.find(a => a.isPrimary) || currentUser.bankAccounts[0];
-    } else if (currentUser?.bankDetails) {
-      displayBankDetails = currentUser.bankDetails;
-    }
-  }
 
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""

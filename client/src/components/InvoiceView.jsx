@@ -7,10 +7,10 @@ import Template2 from "../templates/Template2";
 import Template3 from "../templates/Template3";
 import Template4 from "../templates/Template4";
 import TemplateSidebar from "./TemplateSidebar";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { numberToWords } from "../utils/numberToWords";
 import { UserContext } from "../context/userContext";
-import { pdf, PDFViewer } from "@react-pdf/renderer";
+import { pdf, PDFViewer, BlobProvider } from "@react-pdf/renderer";
 import "../styles/invoice-print.css";
 import Template5PDF from "../templates/Template5PDF";
 import Template1PDF from "../templates/Template1PDF";
@@ -32,6 +32,16 @@ const InvoiceView = () => {
   const printRef = useRef(null);
   const [signatureBase64, setSignatureBase64] = useState(null);
   const [logoBase64, setLogoBase64] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Pre-fetch signature image as base64 to avoid CORS issues with @react-pdf/renderer
   useEffect(() => {
@@ -282,115 +292,66 @@ const InvoiceView = () => {
         safeTemplate = "Template1PDF";
       }
     }
-    switch (safeTemplate) {
-      case "Template1PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template1PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-                logoBase64={logoBase64}
-              />
-            </PDFViewer>
+    
+    const getDocument = () => {
+      switch (safeTemplate) {
+        case "Template2PDF":
+          return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+        case "Template3PDF":
+          return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+        case "Template4PDF":
+          return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+        case "Template5PDF":
+          return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+        case "Template6PDF":
+          return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+        case "Template7PDF":
+          return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+        case "Template1PDF":
+        default:
+          return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
+      }
+    };
+
+    const document = getDocument();
+
+    if (isMobile) {
+      return (
+        <div style={{ width: '100%', height: '400px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+          <div style={{ marginBottom: '16px', color: '#64748b' }}>
+            <FileText size={48} style={{ margin: '0 auto' }} />
           </div>
-        );
-      case "Template2PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template2PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      case "Template3PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template3PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      case "Template4PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template4PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      case "Template5PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template5PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      case "Template6PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template6PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-                logoBase64={logoBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      case "Template7PDF":
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template7PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
-      default:
-        return (
-          <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
-            <PDFViewer width="100%" height="100%" className="border-0">
-              <Template1PDF
-                invoiceData={invoiceData}
-                numberToWords={numberToWords}
-                currentUser={currentUser}
-                signatureBase64={signatureBase64}
-                logoBase64={logoBase64}
-              />
-            </PDFViewer>
-          </div>
-        );
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">PDF Preview Not Available</h3>
+          <p className="text-sm text-slate-500 mb-6 max-w-sm">
+            Mobile browsers do not support inline PDF previews. Please open or download the PDF to view it.
+          </p>
+          <BlobProvider document={document}>
+            {({ url, loading, error }) => {
+              if (loading) return <button disabled className="px-6 py-2 bg-blue-600/50 text-white rounded-lg">Generating PDF...</button>;
+              if (error) return <p className="text-red-500">Failed to generate PDF</p>;
+              return (
+                <div className="flex gap-3">
+                  <a href={url} target="_blank" rel="noreferrer" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
+                    Open PDF
+                  </a>
+                  <button onClick={handleDownloadPdf} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg shadow transition-colors cursor-pointer">
+                    Download
+                  </button>
+                </div>
+              );
+            }}
+          </BlobProvider>
+        </div>
+      );
     }
+
+    return (
+      <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
+        <PDFViewer width="100%" height="100%" className="border-0">
+          {document}
+        </PDFViewer>
+      </div>
+    );
   };
 
   return (
