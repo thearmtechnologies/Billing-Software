@@ -54,13 +54,14 @@ const calculateSparklineData = (invoices, metricType) => {
   return result;
 };
 
-const Sparkline = ({ data, color }) => {
-  if (!data || data.length === 0) return <div style={{height: "60px", marginTop: "16px"}} />;
+const Sparkline = ({ data, color, height = "60px", marginTop = "16px", strokeWidth = 2, hideTooltip = false, margin = { top: 5, bottom: 5, left: 0, right: 0} }) => {
+  if (!data || data.length === 0) return <div style={{height, marginTop}} />;
   const max = Math.max(...data.map(d => d.value));
   const min = Math.min(...data.map(d => d.value));
   const allZero = max === 0 && min === 0;
 
   const CustomTooltip = ({ active, payload }) => {
+    if (hideTooltip) return null;
     if (active && payload && payload.length) {
       return (
         <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', border: `1px solid ${tokens.colors.borderLight}`, padding: "4px 8px", borderRadius: "6px", fontSize: "12px", color: tokens.colors.textPrimary, boxShadow: tokens.shadows.soft }}>
@@ -72,17 +73,17 @@ const Sparkline = ({ data, color }) => {
   };
 
   return (
-    <div style={{ height: "60px", width: "100%", marginTop: "16px" }}>
+    <div style={{ height, width: "100%", marginTop }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, bottom: 5, left: 0, right: 0}}>
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: tokens.colors.borderLight, strokeWidth: 1, strokeDasharray: "3 3" }} />
+        <LineChart data={data} margin={margin}>
+          {!hideTooltip && <Tooltip content={<CustomTooltip />} cursor={{ stroke: tokens.colors.borderLight, strokeWidth: 1, strokeDasharray: "3 3" }} />}
           <Line 
             type="monotone" 
             dataKey="value" 
             stroke={allZero ? tokens.colors.borderLight : color} 
-            strokeWidth={2} 
+            strokeWidth={strokeWidth} 
             dot={false}
-            activeDot={{ r: 4, fill: color, stroke: "#fff", strokeWidth: 2 }}
+            activeDot={hideTooltip ? false : { r: 4, fill: color, stroke: "#fff", strokeWidth: 2 }}
             isAnimationActive={false}
           />
         </LineChart>
@@ -326,15 +327,70 @@ const Dashboard = () => {
                 to={card.link}
                 className="app-card"
                 style={{
-                  padding: tokens.spacing.lg,
                   textDecoration: "none",
                   display: "flex",
-                  alignItems: "center",
+                  flexDirection: "column",
                   outline: "none",
+                  overflow: "hidden", // ensures rounded corners contain the inner padded sections
+                  width: "100%",
                 }}
                 tabIndex={0}
               >
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                {/* Mobile View */}
+                <div className="flex sm:hidden flex-col w-full h-full" style={{ padding: "16px" }}>
+                  <div className="flex justify-between items-center" style={{ marginBottom: "12px" }}>
+                    <p style={{ fontSize: "13px", fontWeight: "600", color: tokens.colors.textSecondary, margin: "0" }} className="truncate">
+                      {card.title}
+                    </p>
+                    <div
+                      style={{
+                        backgroundColor: card.accentBg,
+                        color: card.accentText,
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "8px", 
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon style={{ width: "16px", height: "16px" }} />
+                    </div>
+                  </div>
+                  
+                  <div style={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+                    <p style={{ 
+                      fontSize: "22px", 
+                      fontWeight: "700", 
+                      color: tokens.colors.textPrimary, 
+                      lineHeight: "1.1",
+                      margin: 0,
+                      letterSpacing: "-0.5px"
+                    }} className="break-words">
+                      {card.value}
+                    </p>
+                  </div>
+
+                  {card.sparklineData ? (
+                     <div style={{ width: "100%", marginTop: "12px" }}>
+                       <Sparkline 
+                         data={card.sparklineData} 
+                         color={card.accentText} 
+                         height="32px" 
+                         marginTop="0px" 
+                         strokeWidth={2}
+                         hideTooltip={true}
+                         margin={{ top: 2, bottom: 2, left: 0, right: 0 }}
+                       />
+                     </div>
+                  ) : (
+                     <div style={{ height: "32px", marginTop: "12px", width: "100%" }} />
+                  )}
+                </div>
+
+                {/* Desktop View (UNCHANGED logic) */}
+                <div className="hidden sm:flex flex-col w-full h-full" style={{ padding: tokens.spacing.lg }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: "13px", fontWeight: "500", color: tokens.colors.textSecondary, marginBottom: "4px" }} className="truncate">

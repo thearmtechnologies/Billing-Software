@@ -230,7 +230,7 @@ const PaymentManagement = () => {
     <div style={{ padding: "20px" }}>
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+        <div className="flex items-center mb-4">
           <button
             onClick={() => navigate(-1)}
             style={{ 
@@ -239,27 +239,22 @@ const PaymentManagement = () => {
               marginRight: "12px",
               borderRadius: "8px"
             }}
-            className="cursor-pointer hover:bg-gray-100"
+            className="cursor-pointer hover:bg-gray-100 flex-shrink-0"
           >
             <ArrowLeft style={{ width: "20px", height: "20px" }} />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="text-[20px] sm:text-2xl font-bold text-gray-900 truncate">
               Payment Management
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600 truncate">
               Invoice #{invoice.invoiceNumber} - {invoice.client?.companyName}
             </p>
           </div>
         </div>
 
         {/* Invoice Summary */}
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "1fr", 
-          gap: "16px",
-          marginBottom: "24px"
-        }} className="md:grid-cols-4">
+        <div style={{ marginBottom: "24px" }} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <div style={{ 
             backgroundColor: "white", 
             padding: "16px", 
@@ -354,7 +349,7 @@ const PaymentManagement = () => {
           </div>
 
           <form onSubmit={editingPayment ? handleUpdatePayment : handleAddPayment}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }} className="md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
                   Amount *
@@ -466,13 +461,14 @@ const PaymentManagement = () => {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <button
                 type="submit"
                 disabled={!paymentData.amount || !isAmountValid}
                 style={{ 
                   display: "flex", 
-                  alignItems: "center", 
+                  alignItems: "center",
+                  justifyContent: "center",
                   padding: "8px 16px", 
                   backgroundColor: "#2563eb", 
                   color: "white", 
@@ -520,53 +516,53 @@ const PaymentManagement = () => {
         ) : (
           <div className="divide-y divide-gray-200">
             {paymentHistory.map((payment) => (
-              <div key={payment._id} style={{ padding: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        Rs. {payment.amountPaid?.toFixed(2)}
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                        <Calendar style={{ width: "16px", height: "16px", color: "#6b7280" }} />
-                        <span className="text-sm text-gray-600">
-                          {format(new Date(payment.paymentDate), "MMM dd, yyyy")}
-                        </span>
-                        <span className="text-sm text-gray-500 capitalize">
-                          • {payment.paymentMode}
-                        </span>
-                        {payment.recordedBy && (
-                          <span className="text-sm text-gray-500">
-                            • By {payment.recordedBy}
-                          </span>
-                        )}
+              <div key={payment._id} className="p-4 border-b border-gray-100 last:border-0">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 w-full">
+                  <div className="flex flex-col items-start gap-1 w-full sm:w-auto">
+                    <p className="font-semibold text-gray-900 text-lg sm:text-base">
+                      Rs. {payment.amountPaid?.toFixed(2)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-y-1 gap-x-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span>{format(new Date(payment.paymentDate), "MMM dd, yyyy")}</span>
                       </div>
-                      {payment.notes && (
-                        <p className="text-sm text-gray-600" style={{ marginTop: "4px" }}>
-                          {payment.notes}
-                        </p>
+                      <span className="text-gray-400 hidden sm:inline">•</span>
+                      <span className="capitalize">{payment.paymentMode}</span>
+                      {payment.recordedBy && (
+                        <>
+                          <span className="text-gray-400 hidden sm:inline">•</span>
+                          <span>By {payment.recordedBy}</span>
+                        </>
                       )}
                     </div>
+                    {payment.notes && (
+                      <p className="text-sm text-gray-500 mt-1 break-words">
+                        {payment.notes}
+                      </p>
+                    )}
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <p className="text-sm text-gray-600">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0 w-full sm:w-auto">
+                    <p className="text-sm font-medium text-gray-800 sm:text-gray-600">
                       Balance Due: Rs. {payment.balanceDueAfter?.toFixed(2)}
                     </p>
-                    <button
-                      onClick={() => startEditPayment(payment)}
-                      style={{ padding: "4px", color: "#6b7280" }}
-                      className="hover:bg-gray-100 rounded cursor-pointer"
-                    >
-                      <Edit style={{ width: "16px", height: "16px" }} />
-                    </button>
-                    <button
-                      onClick={() => handleDeletePayment(payment._id)}
-                      style={{ padding: "4px", color: "#6b7280" }}
-                      className="hover:bg-gray-100 rounded cursor-pointer"
-                    >
-                      <Trash2 style={{ width: "16px", height: "16px" }} />
-                    </button>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => startEditPayment(payment)}
+                        style={{ padding: "4px", color: "#6b7280" }}
+                        className="hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <Edit style={{ width: "16px", height: "16px" }} />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePayment(payment._id)}
+                        style={{ padding: "4px", color: "#6b7280" }}
+                        className="hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <Trash2 style={{ width: "16px", height: "16px" }} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

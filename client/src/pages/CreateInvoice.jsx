@@ -699,7 +699,7 @@ const CreateInvoice = () => {
         
         {/* Invoice Details Card */}
         <div style={cardStyle}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: "20px" }}>
             <div>
               <label style={labelStyle}>
                 Invoice Number <span style={{ color: "red" }}>*</span>
@@ -943,9 +943,9 @@ const CreateInvoice = () => {
                   <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--surface, #FFFFFF)", borderRadius: "0 0 20px 20px" }}>
                     
                     {/* Row 1: Service Type, Description, Action */}
-                    <div className="flex flex-col md:flex-row items-end gap-3 w-full">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-end w-full" style={{ gap: "12px" }}>
                       {/* Service Template */}
-                      <div style={{ flex: "0 0 160px" }}>
+                      <div className="w-full md:w-[160px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Service</label>
                         <select
                           value={item.service || ""}
@@ -961,7 +961,7 @@ const CreateInvoice = () => {
                       </div>
 
                       {/* Description Field */}
-                      <div style={{ flex: "1 1 auto", minWidth: "0" }}>
+                      <div className="flex-1 w-full min-w-0">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Item Description <span style={{ color: "#DC2626" }}>*</span></label>
                         <input
                           placeholder="e.g. Website Design, Server Hosting..."
@@ -1000,9 +1000,9 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* Row 2: Inline Controls Row */}
-                    <div className="flex flex-wrap items-end gap-3 w-full">
+                    <div className="grid grid-cols-2 md:flex md:flex-row md:flex-wrap items-end w-full" style={{ gap: "12px" }}>
                       {/* Qty */}
-                      <div style={{ flex: "1 1 80px", minWidth: "80px" }}>
+                      <div className="w-full md:w-auto md:flex-1 md:min-w-[80px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Qty <span style={{ color: "#DC2626" }}>*</span></label>
                         <input
                           type="number"
@@ -1021,7 +1021,7 @@ const CreateInvoice = () => {
                       </div>
 
                       {/* Unit */}
-                      <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
+                      <div className="w-full md:w-auto md:flex-1 md:min-w-[140px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Unit</label>
                         <select
                           value={DEFAULT_UNITS.includes(item.unitType) || customUnits.some(u => u.name === item.unitType) ? item.unitType : item.unitType}
@@ -1048,7 +1048,7 @@ const CreateInvoice = () => {
                       </div>
 
                       {/* Pricing Type */}
-                      <div style={{ flex: "1 1 120px", minWidth: "120px" }}>
+                      <div className="w-full md:w-auto md:flex-1 md:min-w-[120px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pricing Type</label>
                         <select
                           value={item.pricingType}
@@ -1061,7 +1061,7 @@ const CreateInvoice = () => {
                       </div>
 
                       {/* HSN Code (Opt) */}
-                      <div style={{ flex: "1 1 100px", minWidth: "100px" }}>
+                      <div className="w-full md:w-auto md:flex-1 md:min-w-[100px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>HSN/SAC <span style={{ fontWeight: 400, textTransform: "none" }}>(opt)</span></label>
                         <input
                           placeholder="-"
@@ -1074,7 +1074,7 @@ const CreateInvoice = () => {
 
                       {/* Base Rate */}
                       {item.pricingType !== "tiered" ? (
-                        <div style={{ flex: "1 1 110px", minWidth: "110px" }}>
+                        <div className="w-full md:w-auto md:flex-1 md:min-w-[110px]">
                           <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Rate (Rs. ) <span style={{ color: "#DC2626" }}>*</span></label>
                           <input
                             type="number"
@@ -1093,13 +1093,13 @@ const CreateInvoice = () => {
                           />
                         </div>
                       ) : (
-                        <div style={{ flex: "1 1 110px", minWidth: "110px", textAlign: "right", color: "var(--text-secondary)", fontSize: "14px", alignSelf: "center", paddingBottom: "10px" }}>
+                        <div className="w-full md:w-auto md:flex-1 md:min-w-[110px] text-left md:text-right" style={{ color: "var(--text-secondary)", fontSize: "14px", alignSelf: "center", paddingBottom: "10px" }}>
                           Tiered
                         </div>
                       )}
 
                       {/* Item Total Display */}
-                      <div style={{ flex: "1 1 120px", minWidth: "120px", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                      <div className="col-span-2 md:col-span-1 flex flex-col items-start md:items-end w-full md:w-auto md:flex-1 md:min-w-[120px]">
                         <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Item Total</label>
                         <div style={{ 
                           height: "42px", 
@@ -1210,7 +1210,7 @@ const CreateInvoice = () => {
         </div>
 
         {/* Global Configuration & Totals */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }} className="max-md:grid-cols-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-start" style={{ gap: "24px" }}>
           
           <div style={{ ...cardStyle, flex: 1 }}>
             <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "20px" }}>Discounts & Taxes</h3>
