@@ -320,6 +320,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style={{ marginBottom: tokens.spacing.xl }}>
           {statCards.map((card, index) => {
             const Icon = card.icon;
+            const valStr = String(card.value);
+            const dynamicFontSize = valStr.length >= 15 ? "clamp(18px, 3vw, 24px)" : valStr.length >= 11 ? "clamp(24px, 4vw, 32px)" : "clamp(28px, 5vw, 42px)";
+
             return (
               <Link
                 key={index}
@@ -337,16 +340,17 @@ const Dashboard = () => {
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: "13px", fontWeight: "500", color: tokens.colors.textSecondary, marginBottom: "4px" }}>
+                      <p style={{ fontSize: "15px", fontWeight: "600", color: tokens.colors.textSecondary, marginBottom: "6px" }}>
                         {card.title}
                       </p>
                       <p style={{ 
-                        fontWeight: "600", 
+                        fontWeight: "700", 
                         color: tokens.colors.textPrimary, 
                         lineHeight: "1.2",
-                        fontSize: "18px",
+                        fontSize: dynamicFontSize,
                         wordBreak: "break-word",
-                        whiteSpace: "normal"
+                        whiteSpace: "normal",
+                        letterSpacing: "-0.02em"
                       }}>
                         {card.value}
                       </p>

@@ -91,6 +91,23 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  footerRow: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderColor: "#000",
+  },
+  footerLeft: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  bankTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    marginTop: 8,
+    marginBottom: 4,
+    textDecoration: "underline",
+  },
   // Table
   tableHeader: {
     flexDirection: "row",
@@ -222,7 +239,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             </View>
           </View>
 
-          {/* SPLIT GRID: LEFT (Supplier+Recipient) | RIGHT (Invoice Meta) */}
+          {/* SPLIT GRID: LEFT (Supplier+Recipient+Financials) | RIGHT (Invoice Meta) */}
           <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000" }}>
             
             {/* LEFT HALF */}
@@ -237,8 +254,6 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
 
               {/* Supplier Meta */}
               <View style={s.leftRow}><Text style={s.bold}>GSTIN : {currentUser?.taxId || "-"}</Text></View>
-              <View style={s.leftRow}><Text style={s.bold}>Acc.No.-: {invoiceData?.bankDetails?.accountNumber || "-"}</Text></View>
-              <View style={s.leftRow}><Text style={s.bold}>IFSC Code-: {invoiceData?.bankDetails?.ifscCode || "-"}</Text></View>
 
               {/* Recipient Title */}
               <View style={s.leftRowCentered}>
@@ -270,27 +285,28 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                 <View style={s.recipientValue}><Text style={s.bold}>{invoiceData.client?.gstNumber || "-"}</Text></View>
               </View>
 
-          {/* Financials & Footer */}
-          <View style={s.footerRow}>
-            {/* Left Column: Bank & Amount in Words */}
-            <View style={s.footerLeft}>
-              <Text style={s.bold}>AMOUNT IN WORDS:</Text>
-              <Text style={{ marginBottom: 10 }}>{numberToWords(invoiceData.totalAmount || 0)}</Text>
-              
-              {invoiceData?.bankDetails && (
-                <>
-                  <Text style={s.bankTitle}>BANK DETAILS FOR PAYMENT</Text>
-                  <Text>BANK NAME: {invoiceData.bankDetails.bankName || "-"}</Text>
-                  <Text>AC NAME: {invoiceData.bankDetails.accountHolderName || "-"}</Text>
-                  <Text>AC NO: {invoiceData.bankDetails.accountNumber || "-"}</Text>
-                  <Text>IFSC CODE: {invoiceData.bankDetails.ifscCode || "-"}</Text>
-                  <Text>BRANCH: {invoiceData.bankDetails.branchName || "-"}</Text>
-                </>
-              )}
-              
-              <View style={{ marginTop: 20 }}>
-                <Text style={s.bold}>CUSTOMER RECEIVING</Text>
-                <View style={{ borderBottomWidth: 1, width: 150, marginTop: 20 }} />
+              {/* Financials & Bank Details (Restored) */}
+              <View style={s.footerLeft}>
+                <Text style={s.bold}>AMOUNT IN WORDS:</Text>
+                <Text style={{ marginBottom: 8 }}>{numToWordsStr} Rupees Only.</Text>
+                
+                {invoiceData?.bankDetails && (
+                  <View style={{ marginTop: 5 }}>
+                    <Text style={s.bankTitle}>BANK DETAILS FOR PAYMENT</Text>
+                    <View style={{ gap: 2 }}>
+                      <Text>BANK NAME: {invoiceData.bankDetails.bankName || "-"}</Text>
+                      <Text>AC NAME: {invoiceData.bankDetails.accountHolderName || "-"}</Text>
+                      <Text>AC NO: {invoiceData.bankDetails.accountNumber || "-"}</Text>
+                      <Text>IFSC CODE: {invoiceData.bankDetails.ifscCode || "-"}</Text>
+                      <Text>BRANCH: {invoiceData.bankDetails.branchName || "-"}</Text>
+                    </View>
+                  </View>
+                )}
+                
+                <View style={{ marginTop: 20, marginBottom: 10 }}>
+                  <Text style={s.bold}>CUSTOMER RECEIVING</Text>
+                  <View style={{ borderBottomWidth: 1, width: 120, marginTop: 20 }} />
+                </View>
               </View>
 
               {/* Description Of Service Note */}
@@ -424,7 +440,6 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             <Text style={s.bold}>Authorised signatory</Text>
           </View>
         </View>
-
       </Page>
     </Document>
   );

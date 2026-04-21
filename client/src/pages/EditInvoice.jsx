@@ -1181,39 +1181,57 @@ const EditInvoice = () => {
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                           {item.pricingTiers.map((tier, tIndex) => (
-                            <div key={tIndex} style={{ background: "#fff", padding: "10px", borderRadius: "10px", border: "1px solid var(--border, #E5E5E7)" }}>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "6px", marginBottom: "8px" }}>
-                                <input type="number" placeholder="Min" value={tier.minValue} onChange={(e) => handleTierChange(index, tIndex, "minValue", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
-                                <span style={{ textAlign: "center", paddingTop: "8px" }}>-</span>
-                                <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max" style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
+                            <div 
+                              key={tIndex} 
+                              style={{ 
+                                background: "#fff", 
+                                padding: "10px", 
+                                borderRadius: "10px", 
+                                border: "1px solid var(--border, #E5E5E7)",
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "10px",
+                                alignItems: "center"
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "2 1 min(200px, 100%)" }}>
+                                <input type="number" placeholder="Min" value={tier.minValue} onChange={(e) => handleTierChange(index, tIndex, "minValue", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
+                                <span style={{ fontWeight: 500, color: "var(--text-secondary)" }}>-</span>
+                                <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max" style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "6px" }}>
-                                <input type="number" placeholder="Rate" value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps} />
-                                <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "8px", fontSize: "12px" }} {...focusProps}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "2 1 min(200px, 100%)" }}>
+                                <input type="number" placeholder="Rate" value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
+                                <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "80px" }} {...focusProps}>
                                   <option value="slabRate">Slab</option>
                                   <option value="unitRate">Unit</option>
                                 </select>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => deleteTier(index, tIndex)}
-                                style={{
-                                  marginTop: "8px",
-                                  width: "100%",
-                                  background: "#FEF2F2", 
-                                  border: "1px solid #FEE2E2", 
-                                  color: "#DC2626", 
-                                  borderRadius: "8px", 
-                                  cursor: "pointer", 
-                                  padding: "6px",
-                                  fontSize: "11px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center"
-                                }}
-                              >
-                                <Trash2 size={12} style={{ marginRight: "4px" }} /> Remove Tier
-                              </button>
+                              <div style={{ display: "flex", flex: "1 1 min(120px, 100%)" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteTier(index, tIndex)}
+                                  style={{
+                                    width: "100%",
+                                    background: "#FEF2F2", 
+                                    border: "1px solid #FEE2E2", 
+                                    color: "#DC2626", 
+                                    borderRadius: "8px", 
+                                    cursor: "pointer", 
+                                    padding: "10px",
+                                    fontSize: "13px",
+                                    fontWeight: 500,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    height: "40px",
+                                    transition: "all 200ms ease"
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = "#FEE2E2"}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = "#FEF2F2"}
+                                >
+                                  <Trash2 size={14} style={{ marginRight: "6px" }} /> Remove Tier
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
