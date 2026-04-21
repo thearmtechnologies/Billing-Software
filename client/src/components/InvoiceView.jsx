@@ -134,7 +134,7 @@ const InvoiceView = () => {
           case "Template6PDF":
             return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           case "Template7PDF":
-            return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           case "Template1PDF":
           default:
             return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
@@ -177,7 +177,7 @@ const InvoiceView = () => {
             case "Template4PDF": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
             case "Template5PDF": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
             case "Template6PDF": return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-            case "Template7PDF": return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+            case "Template7PDF": return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
             default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
           }
         };
@@ -306,7 +306,7 @@ const InvoiceView = () => {
         case "Template6PDF":
           return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
         case "Template7PDF":
-          return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
+          return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
         case "Template1PDF":
         default:
           return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;

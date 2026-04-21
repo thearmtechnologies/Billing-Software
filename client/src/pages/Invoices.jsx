@@ -170,7 +170,7 @@ const Invoices = () => {
             pdfDoc = <Template6PDF invoiceData={fullInvoice} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={null} logoBase64={logoBase64} />;
             break;
           case "Template7PDF":
-            pdfDoc = <Template7PDF invoiceData={fullInvoice} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={null} />;
+            pdfDoc = <Template7PDF invoiceData={fullInvoice} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={null} logoBase64={logoBase64} />;
             break;
           case "Template1PDF":
           default:

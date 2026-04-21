@@ -148,8 +148,8 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
         {/* Logo and Business Name Map */}
         <View style={{ flexDirection: "row", paddingHorizontal: 15, marginVertical: 8, alignItems: "center" }} wrap={false}>
           {(logoBase64 && invoiceData.includeLogo !== false) ? (
-            <View style={{ width: 85, justifyContent: "center", alignItems: "flex-start" }}>
-              <Image src={logoBase64} style={{ width: 80, height: 80, objectFit: "contain" }} />
+            <View style={{ width: 85, height: 80, flexShrink: 0, justifyContent: "center", alignItems: "flex-start" }}>
+              <Image src={logoBase64} style={{ maxWidth: 80, maxHeight: 80 }} />
             </View>
           ) : (
              <View style={{ width: 85 }} /> 
@@ -383,7 +383,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             
             <View style={{ height: 60, justifyContent: "center", alignItems: "center", marginVertical: 6 }}>
               {signatureBase64 ? (
-                <Image src={signatureBase64} style={{ maxWidth: 140, maxHeight: 55, objectFit: "contain" }} />
+                <Image src={signatureBase64} style={{ maxWidth: 140, maxHeight: 55 }} />
               ) : (
                 <View style={{ height: 30 }}></View>
               )}
