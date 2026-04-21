@@ -171,16 +171,15 @@ const s = StyleSheet.create({
   bankBox: { flex: 1, borderWidth: 1, borderColor: "#000", padding: 10 },
   bankTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, marginBottom: 6 },
   bankLine: { fontSize: 10, marginBottom: 2 },
-  sigBox: { flex: 1, textAlign: "right" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 10, marginBottom: 60 },
+  sigBox: { flex: 1, alignItems: "flex-end", justifyContent: "flex-end" },
+  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 10, marginBottom: 60, textAlign: "center" },
   sigLine: {
     borderTopWidth: 1,
     borderTopColor: "#000",
     paddingTop: 6,
     fontSize: 10,
     textAlign: "center",
-    minWidth: 150,
-    alignSelf: "flex-end",
+    width: "100%",
   },
 
   /* ── Footer ────────────────────────────────────── */
@@ -672,17 +671,19 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           )}
 
           <View style={s.sigBox}>
-            <Text style={[s.sigLabel, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
-              for {currentUser?.businessName || ""}
-            </Text>
-            {signatureBase64 && invoiceData.includeSignature !== false && (
-              <Image 
-                src={signatureBase64} 
-                style={{ width: 160, height: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
-              />
-            )}
-            <View style={s.sigLine}>
-              <Text>Authorised Signatory</Text>
+            <View style={{ width: 220, alignItems: "center" }}>
+              <Text style={[s.sigLabel, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+                for {currentUser?.businessName || ""}
+              </Text>
+              {signatureBase64 && invoiceData.includeSignature !== false && (
+                <Image 
+                  src={signatureBase64} 
+                  style={{ width: 160, height: 60, objectFit: "contain", marginBottom: 10 }} 
+                />
+              )}
+              <View style={s.sigLine}>
+                <Text>Authorised Signatory</Text>
+              </View>
             </View>
           </View>
         </View>

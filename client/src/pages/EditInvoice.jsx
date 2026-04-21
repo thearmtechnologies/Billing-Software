@@ -209,7 +209,7 @@ const EditInvoice = () => {
       setFormData({
         invoiceNumber: editableInvoiceNumber,
         invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split("T")[0] : "",
-        client: invoice.client || "",
+        client: invoice.client?._id || invoice.client || "",
         shippingAddress: shippingAddress,
         items: (invoice.items || []).map((item) => item),
         discount: invoice.discount || "",

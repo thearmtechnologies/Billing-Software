@@ -8,91 +8,110 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 
-// ── Styles ──────────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 40,
+    padding: 15,
     color: "#000",
     backgroundColor: "#fff",
   },
-  // Main Border Container
-  mainContainer: {
+  bold: {
+    fontFamily: "Helvetica-Bold",
+  },
+  topSmallText: {
+    fontSize: 8,
+    color: "#333",
+    fontFamily: "Helvetica-Bold",
+  },
+  blueBar: {
+    backgroundColor: "#1976D2",
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+  },
+  blueBarText: {
+    color: "#FFF",
+    fontSize: 9.5,
+    textAlign: "center",
+  },
+  mainBox: {
     borderWidth: 1,
     borderColor: "#000",
-    margin: "auto auto",
-    width: "100%",
-  },
-  // Header Section
-  headerTop: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    padding: 5,
-  },
-  headerLeft: { flex: 1 },
-  headerCenter: { flex: 1, alignItems: "center" },
-  headerRight: { flex: 1, textAlign: "right" },
-  
-  title: { fontSize: 14, fontFamily: "Helvetica-Bold", textDecoration: "underline" },
-  bold: { fontFamily: "Helvetica-Bold" },
-
-  // Work Order / Reference Bar
-  infoBar: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    padding: 4,
-  },
-
-  // Party Table (Bill To / Ship To)
-  partyTable: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#000",
-  },
-  partyCol: {
     flex: 1,
-    padding: 5,
   },
-  partyLabel: {
-    fontFamily: "Helvetica-Bold",
-    textDecoration: "underline",
-    marginBottom: 4,
-    fontSize: 10,
+  leftRow: {
+    borderTopWidth: 1,
+    borderColor: "#000",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
   },
-
-  // Items Table
+  leftRowCentered: {
+    borderTopWidth: 1,
+    borderColor: "#000",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    alignItems: "center",
+  },
+  recipientRow: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderColor: "#000",
+  },
+  recipientLabel: {
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    width: "30%",
+    borderRightWidth: 1,
+    borderColor: "#000",
+  },
+  recipientValue: {
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    width: "70%",
+    justifyContent: "center",
+  },
+  rightMetaRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#000",
+  },
+  rightMetaLabel: {
+    width: "45%",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    borderRightWidth: 1,
+    borderColor: "#000",
+    justifyContent: "center",
+  },
+  rightMetaValue: {
+    width: "55%",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#000",
-    backgroundColor: "#f9f9f9",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    minHeight: 25,
+    backgroundColor: "#F4F4F4",
   },
   th: {
-    padding: 3,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
     borderRightWidth: 1,
     borderColor: "#000",
-    fontSize: 9,
+    fontSize: 8.5,
   },
   td: {
-    padding: 3,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     borderRightWidth: 1,
     borderColor: "#000",
-    fontSize: 9,
-    lineHeight: 1.2,
+    fontSize: 8.5,
   },
-  
-  // Footer Sections
   footerRow: {
     flexDirection: "row",
   },
@@ -102,232 +121,251 @@ const s = StyleSheet.create({
     borderColor: "#000",
     padding: 5,
   },
-  footerRight: {
-    width: "35%",
-  },
-  financialRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    padding: 4,
-  },
   bankTitle: {
     fontFamily: "Helvetica-Bold",
     textDecoration: "underline",
     marginTop: 10,
     marginBottom: 4,
   },
-  grandTotal: {
-    backgroundColor: "#f0f0f0",
-    fontFamily: "Helvetica-Bold",
-    fontSize: 11,
-  },
-  // Signature section styles
-  signatureSection: {
-    padding: 5,
-    alignItems: "center",
-    marginTop: "auto",
-    width: "100%",
-  },
-  signatureLine: {
-    borderTopWidth: 1,
-    borderColor: "#000",
-    width: "80%",
-    marginTop: 5,
-    marginBottom: 5,
-  },
-  signatureText: {
-    fontSize: 8,
-    marginTop: 4,
-  }
 });
 
-// Column Widths
-const COL = { sr: "6%", desc: "44%", hsn: "15%", time: "15%", amt: "20%" };
+const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64, logoBase64 }) => {
+  const items = invoiceData.items || [];
 
-const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64 }) => {
-  console.log("TEMPLATE7 invoiceData:", invoiceData);
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
-  const rawShipping =
-    invoiceData.shippingAddress ||
-    invoiceData.shipping_address ||
-    invoiceData.client?.shippingAddress ||
-    "";
+  const formatAmt = (num) => (num != null ? Number(num).toFixed(2) : "0.00");
+  const subtotal = invoiceData.subtotal || 0;
 
-  let shipStr = "";
+  const colDims = { sr: "6%", desc: "40%", hsn: "11%", qty: "7%", unit: "7%", rate: "14%", total: "15%" };
+  const leftOffset = 100 - parseInt(colDims.total);
 
-  if (typeof rawShipping === "string") {
-    shipStr = rawShipping.trim();
-  } else if (typeof rawShipping === "object" && rawShipping !== null) {
-    const parts = [
-      rawShipping.street,
-      [rawShipping.city, rawShipping.state, rawShipping.zipCode].filter(Boolean).join(", "),
-      rawShipping.country,
-    ];
-    shipStr = parts.filter(Boolean).join("\n").trim();
-  }
-
-  const hasShipping = shipStr.length > 0;
-
-  console.log("Shipping extracted:", shipStr, hasShipping);
+  const numToWordsStr = numberToWords ? numberToWords(Math.round(invoiceData.totalAmount || 0)) : "";
+  const wordsFormatted = numToWordsStr.toLowerCase().split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        <View style={s.mainContainer}>
-          
-          {/* Header */}
-          <View style={s.headerTop}>
-            <View style={s.headerLeft}>
-              <Text>GSTIN NO: {currentUser?.taxId || "-"}</Text>
-              <Text>UDHYAM NO: {currentUser?.udyamNo || "-"}
-                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+        {/* HEADER Section */}
+        {(logoBase64 && invoiceData.includeLogo !== false) ? (
+          <View style={{ flexDirection: "row", paddingHorizontal: 15, marginBottom: 12, marginTop: 5 }}>
+            <View style={{ width: 85, justifyContent: "center", alignItems: "flex-start" }}>
+              <Image src={logoBase64} style={{ width: 80, height: 80, objectFit: "contain" }} />
+            </View>
+            <View style={{ flex: 1, paddingLeft: 10, justifyContent: "center" }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: -2 }}>
+                <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>GSTIN : 24JWWPS0589B1ZV</Text>
+                <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>UDYAM NO : GJ-06-0011080</Text>
+              </View>
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 36, color: "#E04F3D", letterSpacing: 1.5, marginTop: 5 }}>
+                  R C MECHANICALS
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={{ flexDirection: "column", paddingHorizontal: 15, marginBottom: 12, marginTop: 5, justifyContent: "center" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: -2 }}>
+              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>GSTIN : 24JWWPS0589B1ZV</Text>
+              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>UDYAM NO : GJ-06-0011080</Text>
+            </View>
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 36, color: "#E04F3D", letterSpacing: 1.5, marginTop: 5 }}>
+                R C MECHANICALS
               </Text>
             </View>
-            <View style={s.headerCenter}>
-              <Text style={s.title}>TAX INVOICE</Text>
-              {invoiceData?.reverseCharge && <Text style={{ fontSize: 8 }}>REVERSE CHARGE</Text>}
+          </View>
+        )}
+
+        {/* BLUE ADDRESS BAR */}
+        <View style={{ backgroundColor: "#1D70B8", marginHorizontal: 15, paddingVertical: 4, borderRadius: 2 }}>
+          <Text style={{ color: "#FFF", fontSize: 9.5, textAlign: "center" }}>
+            Third Floor, T-7, Golden Square Mall, Beside D-Mart, Near ABC Circle, Bholav, Bharuch, Gujarat 392001, India.
+          </Text>
+        </View>
+
+        {/* CONTACT STRIP */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingHorizontal: 15 }}>
+          <Text style={{ color: "#E04F3D", fontSize: 9, fontFamily: "Helvetica-Bold" }}>E-mail: rcmechanicals21@gmail.com</Text>
+          <Text style={{ color: "#E04F3D", fontSize: 9, fontFamily: "Helvetica-Bold" }}>Mob.: 8601941900, 9458760060</Text>
+        </View>
+        <View style={{ height: 1, backgroundColor: "#E04F3D", marginHorizontal: 15, marginBottom: 10 }} />
+
+        {/* MAIN BORDERED BOX */}
+        <View style={s.mainBox}>
+          {/* TITLE & ORIGINAL TAB */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000", position: "relative", backgroundColor: "#F9F9F9" }}>
+            <View style={{ flex: 1, paddingVertical: 6, alignItems: "center", justifyContent: "center" }}>
+              <Text style={[s.bold, { fontSize: 11, letterSpacing: 1 }]}>TAX INVOICE</Text>
             </View>
-            <View style={s.headerRight}>
-              <Text style={s.bold}>INVOICE NO: {invoiceData?.invoiceNumber}</Text>
-              <Text style={s.bold}>DATE: {invoiceData?.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}</Text>
+            <View style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 80, borderLeftWidth: 1, borderColor: "#000", justifyContent: "center", backgroundColor: "#FFF" }}>
+              <Text style={{ textAlign: "center", fontSize: 9 }}>Original</Text>
             </View>
           </View>
 
-          {/* Info Bar */}
-          <View style={s.infoBar}>
-            <Text style={{ flex: 1 }}>WORK ORDER NO: {invoiceData?.workOrderNo || "-"}</Text>
-            <Text style={{ flex: 1 }}>REFERENCE: {invoiceData?.reference || "-"}</Text>
+          {/* SPLIT GRID: LEFT | RIGHT */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000" }}>
+            {/* LEFT HALF */}
+            <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
+              <View style={{ paddingVertical: 6, paddingHorizontal: 8 }}>
+                <Text style={[s.bold, { fontSize: 13, marginBottom: 4 }]}>{currentUser?.businessName || "R C MECHANICALS"}</Text>
+                <Text style={{ lineHeight: 1.3 }}>{currentUser?.address?.street || "Third Floor, T-7, Golden Square Mall, Beside D-Mart"}</Text>
+                <Text style={{ lineHeight: 1.3, marginTop: 2 }}>{currentUser?.address?.city || "Near ABC Circle, Bholav, Bharuch"}, {currentUser?.address?.state || "Gujarat"} {currentUser?.address?.postalCode || "392001"}</Text>
+              </View>
+              <View style={s.leftRow}><Text style={s.bold}>GSTIN : {currentUser?.taxId || "-"}</Text></View>
+              <View style={s.leftRow}><Text style={s.bold}>Acc.No.-: {invoiceData?.bankDetails?.accountNumber || "-"}</Text></View>
+              <View style={s.leftRow}><Text style={s.bold}>IFSC Code-: {invoiceData?.bankDetails?.ifscCode || "-"}</Text></View>
+              <View style={s.leftRowCentered}>
+                <Text style={[s.bold, { textDecoration: "underline" }]}>Details of Recipient of Service</Text>
+              </View>
+              <View style={s.recipientRow}>
+                <View style={s.recipientLabel}><Text>Name</Text></View>
+                <View style={s.recipientValue}><Text style={s.bold}>{invoiceData.client?.companyName || "-"}</Text></View>
+              </View>
+              <View style={s.recipientRow}>
+                <View style={s.recipientLabel}><Text>Address</Text></View>
+                <View style={s.recipientValue}>
+                  <Text style={{ lineHeight: 1.3 }}>{invoiceData.client?.address?.street || "-"}</Text>
+                  {invoiceData.client?.address?.city && <Text style={{ marginTop: 2 }}>{invoiceData.client?.address?.city}</Text>}
+                </View>
+              </View>
+              <View style={s.recipientRow}>
+                <View style={s.recipientLabel}><Text>State</Text></View>
+                <View style={s.recipientValue}><Text>{invoiceData.client?.address?.state || "Gujarat"}</Text></View>
+              </View>
+              <View style={s.recipientRow}>
+                <View style={s.recipientLabel}><Text>State code</Text></View>
+                <View style={s.recipientValue}><Text>{invoiceData.client?.address?.stateCode || "24"}</Text></View>
+              </View>
+              <View style={s.recipientRow}>
+                <View style={s.recipientLabel}><Text>GSTIN</Text></View>
+                <View style={s.recipientValue}><Text style={s.bold}>{invoiceData.client?.gstNumber || "-"}</Text></View>
+              </View>
+            </View>
+
+            {/* RIGHT HALF */}
+            <View style={{ width: "50%" }}>
+              <View style={s.rightMetaRow}>
+                <View style={s.rightMetaLabel}><Text>Serial No. of Invoice</Text></View>
+                <View style={s.rightMetaValue}><Text>{invoiceData.invoiceNumber || "-"}</Text></View>
+              </View>
+              <View style={s.rightMetaRow}>
+                <View style={s.rightMetaLabel}><Text>Date of Invoice</Text></View>
+                <View style={s.rightMetaValue}><Text>{formatDate(invoiceData.invoiceDate)}</Text></View>
+              </View>
+              <View style={s.rightMetaRow}>
+                <View style={s.rightMetaLabel}><Text>Place of Supply</Text></View>
+                <View style={s.rightMetaValue}><Text>{invoiceData.client?.address?.city || "-"}</Text></View>
+              </View>
+              <View style={s.rightMetaRow}>
+                <View style={s.rightMetaLabel}><Text>Work Order No.</Text></View>
+                <View style={s.rightMetaValue}><Text>{invoiceData.workOrderNo || "-"}</Text></View>
+              </View>
+              <View style={s.rightMetaRow}>
+                <View style={s.rightMetaLabel}><Text>Work Order Date</Text></View>
+                <View style={s.rightMetaValue}><Text>{formatDate(invoiceData.workOrderDate)}</Text></View>
+              </View>
+            </View>
           </View>
 
-          {/* Party Details (Bill To / Ship To) */}
-          <View style={s.partyTable}>
-            {/* Bill To */}
-            <View style={[s.partyCol, { borderRightWidth: 1, borderColor: "#000" }]}>
-              <Text style={s.partyLabel}>BILL TO PARTY</Text>
-              <Text style={s.bold}>NAME: {invoiceData.client?.companyName}</Text>
-              <Text>ADDRESS: {invoiceData.client?.address?.street}</Text>
-              <Text>{invoiceData.client?.address?.city}, {invoiceData.client?.address?.state} - {invoiceData.client?.address?.zipCode}</Text>
-              <Text style={s.bold}>GSTIN: {invoiceData.client?.gstNumber}</Text>
-              <Text>PAN NO: {invoiceData.client?.panNumber || invoiceData.client?.panNo || "-"}</Text>
-              <Text>PLACE OF SUPPLY: {invoiceData.client?.address?.state || "-"}</Text>
-            </View>
-            
-            {/* Ship To */}
-            <View style={s.partyCol}>
-              <Text style={s.partyLabel}>SHIP TO PARTY</Text>
-              {hasShipping ? (
-                <>
-                  <Text style={s.bold}>NAME: {invoiceData.shippingAddress?.name || invoiceData.client?.companyName}</Text>
-                  <Text>ADDRESS: {shipStr}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={s.bold}>NAME: {invoiceData.client?.companyName || "-"}</Text>
-                  <Text>ADDRESS: -</Text>
-                </>
-              )}
-              <Text style={[s.bold, { marginTop: 4 }]}>SAC CODE: {invoiceData.items?.[0]?.hsnCode || "-"}</Text>
-            </View>
-          </View>
-
-          {/* Items Table Header */}
+          {/* ITEM TABLE HEADER */}
           <View style={s.tableHeader}>
-            <Text style={[s.th, { width: COL.sr }]}>Sr. No.</Text>
-            <Text style={[s.th, { width: COL.desc }]}>Description of Work</Text>
-            <Text style={[s.th, { width: COL.hsn }]}>HSN/SAC</Text>
-            <Text style={[s.th, { width: COL.time }]}>Time/Unit</Text>
-            <Text style={[s.th, { width: COL.amt, borderRightWidth: 0 }]}>Amount</Text>
+            <Text style={[s.th, { width: colDims.sr }]}>Sr.No</Text>
+            <Text style={[s.th, { width: colDims.desc }]}>Description of Services</Text>
+            <Text style={[s.th, { width: colDims.hsn }]}>HSN / SAC</Text>
+            <Text style={[s.th, { width: colDims.qty }]}>Qty.</Text>
+            <Text style={[s.th, { width: colDims.unit }]}>Unit</Text>
+            <Text style={[s.th, { width: colDims.rate }]}>Unit Rate</Text>
+            <Text style={[s.th, { width: colDims.total, borderRightWidth: 0 }]}>Total Amount</Text>
           </View>
 
-          {/* Items Table Body */}
-          {invoiceData.items?.map((item, index) => (
-            <View key={index} style={s.tableRow} wrap={false}>
-              <View style={[s.td, { width: COL.sr, textAlign: "center" }]}>
-                <Text>{index + 1}</Text>
+          {/* ITEM ROWS */}
+          {items.map((item, index) => (
+            <View key={index} style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000" }}>
+              <View style={[s.td, { width: colDims.sr }]}><Text style={{ textAlign: "center" }}>{index + 1}</Text></View>
+              <View style={[s.td, { width: colDims.desc }]}>
+                <Text style={{ lineHeight: 1.3 }}>{item.description}</Text>
+                {item.notes && <Text style={{ marginTop: 4, fontSize: 8 }}>{item.notes}</Text>}
               </View>
-              <View style={[s.td, { width: COL.desc }]}>
-                <Text style={s.bold}>{item.description}</Text>
-                {item.notes && <Text style={{ fontSize: 7, marginTop: 2 }}>{item.notes}</Text>}
+              <View style={[s.td, { width: colDims.hsn }]}><Text style={{ textAlign: "center" }}>{item.hsnCode || "-"}</Text></View>
+              <View style={[s.td, { width: colDims.qty }]}><Text style={{ textAlign: "center" }}>{item.quantity != null ? Number(item.quantity).toFixed(3) : "0.000"}</Text></View>
+              <View style={[s.td, { width: colDims.unit }]}><Text style={{ textAlign: "center" }}>{item.unitType || "UOM"}</Text></View>
+              <View style={[s.td, { width: colDims.rate }]}><Text style={{ textAlign: "right" }}>{item.baseRate != null ? Number(item.baseRate).toFixed(2) : "0.00"}</Text></View>
+              <View style={[s.td, { width: colDims.total, borderRightWidth: 0 }]}><Text style={{ textAlign: "right" }}>{item.subtotal != null ? Number(item.subtotal).toFixed(2) : "0.00"}</Text></View>
+            </View>
+          ))}
+
+          {/* TOTALS SECTIONS */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000", backgroundColor: "#FAFAFA" }}>
+            <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 5, paddingHorizontal: 6, justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "right" }]}>Total Taxable Value ====&gt;</Text>
+            </View>
+            <View style={{ width: colDims.total, paddingVertical: 5, paddingHorizontal: 4, justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "right" }]}>{formatAmt(subtotal)}</Text>
+            </View>
+          </View>
+
+          {invoiceData.taxes && invoiceData.taxes.map((tax, i) => (
+            <View key={`tax-${i}`} style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000", backgroundColor: "#FAFAFA" }}>
+              <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 5, paddingHorizontal: 6, justifyContent: "center" }}>
+                <Text style={[s.bold, { textAlign: "right" }]}>{tax.name} : {tax.rate}% ==========&gt;</Text>
               </View>
-              <View style={[s.td, { width: COL.hsn, textAlign: "center" }]}>
-                <Text>{item.hsnCode || "-"}</Text>
-              </View>
-              <View style={[s.td, { width: COL.time, textAlign: "center" }]}>
-                <Text>{item.quantity} {item.unitType || item.unit || ""}</Text>
-              </View>
-              <View style={[s.td, { width: COL.amt, textAlign: "right", borderRightWidth: 0 }]}>
-                <Text>Rs. {item.subtotal?.toFixed(2)}</Text>
+              <View style={{ width: colDims.total, paddingVertical: 5, paddingHorizontal: 4, justifyContent: "center" }}>
+                <Text style={{ textAlign: "right" }}>{formatAmt(tax.amount)}</Text>
               </View>
             </View>
           ))}
 
-          {/* Financials & Footer */}
-          <View style={s.footerRow}>
-            {/* Left Column: Bank & Amount in Words */}
-            <View style={s.footerLeft}>
-              <Text style={s.bold}>AMOUNT IN WORDS:</Text>
-              <Text style={{ marginBottom: 10 }}>{numberToWords(invoiceData.totalAmount || 0)}</Text>
-              
-              {invoiceData?.bankDetails && (
-                <>
-                  <Text style={s.bankTitle}>BANK DETAILS FOR PAYMENT</Text>
-                  <Text>BANK NAME: {invoiceData.bankDetails.bankName || "-"}</Text>
-                  <Text>AC NAME: {invoiceData.bankDetails.accountHolderName || "-"}</Text>
-                  <Text>AC NO: {invoiceData.bankDetails.accountNumber || "-"}</Text>
-                  <Text>IFSC CODE: {invoiceData.bankDetails.ifscCode || "-"}</Text>
-                  <Text>BRANCH: {invoiceData.bankDetails.branchName || "-"}</Text>
-                </>
-              )}
-              
-              <View style={{ marginTop: 20 }}>
-                <Text style={s.bold}>CUSTOMER RECEIVING</Text>
-                <View style={{ borderBottomWidth: 1, width: 150, marginTop: 20 }} />
-              </View>
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderColor: "#000", backgroundColor: "#F5F5F5" }}>
+            <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 5, paddingHorizontal: 6, justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "right" }]}>TOTAL BILL VALUE (IN FIGURE)</Text>
             </View>
+            <View style={{ width: colDims.total, paddingVertical: 5, paddingHorizontal: 4, justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "right" }]}>
+                {invoiceData.totalAmount != null ? Math.round(invoiceData.totalAmount).toLocaleString("en-IN") : "0"}
+              </Text>
+            </View>
+          </View>
 
-            {/* Right Column: Totals */}
-            <View style={s.footerRight}>
-              <View style={s.financialRow}>
-                <Text style={{ flex: 1 }}>BASIC AMOUNT:</Text>
-                <Text>{invoiceData.subtotal?.toFixed(2)}</Text>
-              </View>
-              
-              {invoiceData.taxes?.map((tax, i) => (
-                <View key={i} style={s.financialRow}>
-                  <Text style={{ flex: 1 }}>TAX ({tax.name}) {tax.rate}%:</Text>
-                  <Text>{tax.amount?.toFixed(2)}</Text>
-                </View>
-              ))}
-
-              <View style={s.financialRow}>
-                <Text style={{ flex: 1 }}>ADMIN CHARGE:</Text>
-                <Text>{invoiceData.adminCharge || "0.00"}</Text>
-              </View>
-
-              <View style={s.financialRow}>
-                <Text style={{ flex: 1 }}>ROUND OFF:</Text>
-                <Text>{invoiceData.roundOff || "0.00"}</Text>
-              </View>
-
-              <View style={[s.financialRow, s.grandTotal, { borderBottomWidth: 0 }]}>
-                <Text style={{ flex: 1 }}>GRAND TOTAL:</Text>
-                <Text>Rs. {invoiceData.totalAmount?.toFixed(2)}</Text>
-              </View>
-              
-              {/* Signature Area - Always shows line even without signature */}
-              <View style={s.signatureSection}>
-                {signatureBase64 && invoiceData.includeSignature !== false && (
-                  <Image src={signatureBase64} style={{ width: 100, height: 40, marginBottom: 4 }} />
-                )}
-                <View style={s.signatureLine} />
-                <Text style={s.signatureText}>Authorized Signatory</Text>
-              </View>
+          {/* AMOUNT IN WORDS */}
+          <View style={{ flexDirection: "row", backgroundColor: "#FAFAFA", borderBottomWidth: 1, borderColor: "#000" }}>
+            <View style={{ width: "46%", paddingVertical: 6, paddingHorizontal: 6, borderRightWidth: 1, borderColor: "#000", justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "center", fontSize: 8.5 }]}>TOTAL BILL VALUE (IN WORDS)</Text>
+            </View>
+            <View style={{ width: "54%", paddingVertical: 6, paddingHorizontal: 8, justifyContent: "center" }}>
+              <Text style={s.bold}>{wordsFormatted ? `${wordsFormatted} Rupees Only.` : "-"}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={{ textAlign: "center", fontSize: 8, marginTop: 10 }}>
+        {/* FOOTER SIGNATURE AREA */}
+        <View style={{ flexDirection: "row", paddingHorizontal: 10, paddingVertical: 12, marginTop: 5 }}>
+          <View style={{ flex: 1 }} />
+          <View style={{ width: "45%", alignItems: "center" }}>
+            <Text style={s.bold}>For {currentUser?.businessName || "R C MECHANICALS"}</Text>
+            <View style={{ height: 65, justifyContent: "center", alignItems: "center", marginVertical: 8 }}>
+              {signatureBase64 && invoiceData.includeSignature !== false ? (
+                <Image src={signatureBase64} style={{ maxWidth: 140, maxHeight: 60, objectFit: "contain" }} />
+              ) : (
+                <View style={{ width: 60, height: 60, borderRadius: 30, borderWidth: 1, borderColor: "#1565C0", justifyContent: "center", alignItems: "center" }}>
+                  <Text style={{ fontSize: 6, color: "#1565C0", textAlign: "center" }}>{currentUser?.businessName || "STAMP"}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={s.bold}>Authorised signatory</Text>
+          </View>
+        </View>
+
+        <Text style={{ textAlign: "center", fontSize: 8, marginTop: 5 }}>
           This is a Computer Generated Invoice
         </Text>
       </Page>

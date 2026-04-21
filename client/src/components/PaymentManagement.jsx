@@ -508,7 +508,7 @@ const PaymentManagement = () => {
         borderRadius: "8px",
         border: "1px solid #e5e7eb"
       }}>
-        <div style={{ padding: "24px", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
           <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
         </div>
 
@@ -520,53 +520,53 @@ const PaymentManagement = () => {
         ) : (
           <div className="divide-y divide-gray-200">
             {paymentHistory.map((payment) => (
-              <div key={payment._id} style={{ padding: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        Rs. {payment.amountPaid?.toFixed(2)}
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                        <Calendar style={{ width: "16px", height: "16px", color: "#6b7280" }} />
-                        <span className="text-sm text-gray-600">
-                          {format(new Date(payment.paymentDate), "MMM dd, yyyy")}
-                        </span>
-                        <span className="text-sm text-gray-500 capitalize">
-                          • {payment.paymentMode}
-                        </span>
-                        {payment.recordedBy && (
-                          <span className="text-sm text-gray-500">
-                            • By {payment.recordedBy}
-                          </span>
-                        )}
+              <div key={payment._id} className="border-b border-gray-100 last:border-0" style={{ padding: "16px" }}>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full" style={{ gap: "12px" }}>
+                  <div className="flex flex-col items-start w-full sm:w-auto" style={{ gap: "4px" }}>
+                    <p className="font-semibold text-gray-900 text-lg sm:text-base">
+                      Rs. {payment.amountPaid?.toFixed(2)}
+                    </p>
+                    <div className="flex flex-wrap items-center text-sm text-gray-600" style={{ gap: "4px 8px" }}>
+                      <div className="flex items-center" style={{ gap: "6px" }}>
+                        <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span>{format(new Date(payment.paymentDate), "MMM dd, yyyy")}</span>
                       </div>
-                      {payment.notes && (
-                        <p className="text-sm text-gray-600" style={{ marginTop: "4px" }}>
-                          {payment.notes}
-                        </p>
+                      <span className="text-gray-400 hidden sm:inline">•</span>
+                      <span className="capitalize">{payment.paymentMode}</span>
+                      {payment.recordedBy && (
+                        <>
+                          <span className="text-gray-400 hidden sm:inline">•</span>
+                          <span>By {payment.recordedBy}</span>
+                        </>
                       )}
                     </div>
+                    {payment.notes && (
+                      <p className="text-sm text-gray-500 break-words" style={{ marginTop: "4px" }}>
+                        {payment.notes}
+                      </p>
+                    )}
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <p className="text-sm text-gray-600">
+                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto" style={{ gap: "12px" }}>
+                    <p className="text-sm font-medium text-gray-800 sm:text-gray-600">
                       Balance Due: Rs. {payment.balanceDueAfter?.toFixed(2)}
                     </p>
-                    <button
-                      onClick={() => startEditPayment(payment)}
-                      style={{ padding: "4px", color: "#6b7280" }}
-                      className="hover:bg-gray-100 rounded cursor-pointer"
-                    >
-                      <Edit style={{ width: "16px", height: "16px" }} />
-                    </button>
-                    <button
-                      onClick={() => handleDeletePayment(payment._id)}
-                      style={{ padding: "4px", color: "#6b7280" }}
-                      className="hover:bg-gray-100 rounded cursor-pointer"
-                    >
-                      <Trash2 style={{ width: "16px", height: "16px" }} />
-                    </button>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => startEditPayment(payment)}
+                        style={{ padding: "4px", color: "#6b7280" }}
+                        className="hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <Edit style={{ width: "16px", height: "16px" }} />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePayment(payment._id)}
+                        style={{ padding: "4px", color: "#6b7280" }}
+                        className="hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <Trash2 style={{ width: "16px", height: "16px" }} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

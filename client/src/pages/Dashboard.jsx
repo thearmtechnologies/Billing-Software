@@ -50,7 +50,7 @@ const calculateSparklineData = (invoices, metricType) => {
       else if (metricType === 'draftInvoices' && inv.status === 'draft') bucket.value += 1;
     }
   });
-  
+
   return result;
 };
 
@@ -294,7 +294,7 @@ const Dashboard = () => {
   return (
     <div style={{ backgroundColor: tokens.colors.bgCanvas, minHeight: "100vh", padding: `${tokens.spacing.xl} 0`, fontFamily: "'Inter', 'SF Pro Text', sans-serif" }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between" style={{ marginBottom: tokens.spacing.lg }}>
           <div>
@@ -468,7 +468,7 @@ const Dashboard = () => {
                   <p style={{ color: tokens.colors.textSecondary, fontSize: "14px" }}>No recent activity</p>
                 </div>
               )}
-              
+
               <Link
                 to="/invoices"
                 style={{
