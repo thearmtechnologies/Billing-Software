@@ -134,32 +134,33 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
     <Document>
       <Page size="A4" style={s.page} wrap={true}>
         
-        {/* HEADER */}
-        {/* Top GSTIN / UDYAM */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 15, marginTop: 5 }} wrap={false}>
-          <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
-            GSTIN : {currentUser?.taxId || "-"}
-          </Text>
-          <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
-            UDYAM NO : {currentUser?.udyamNo || "-"}
-          </Text>
-        </View>
-
-        {/* Logo and Business Name Map */}
-        <View style={{ flexDirection: "row", paddingHorizontal: 15, marginVertical: 8, alignItems: "center" }} wrap={false}>
-          {(logoBase64 && invoiceData.includeLogo !== false) ? (
-            <View style={{ width: 85, height: 80, flexShrink: 0, justifyContent: "center", alignItems: "flex-start" }}>
-              <Image src={logoBase64} style={{ maxWidth: 80, maxHeight: 80 }} />
+        {/* HEADER — matches reference image exactly */}
+        <View style={{ flexDirection: "row", paddingHorizontal: 15, marginTop: 6, marginBottom: 4, alignItems: "center" }} wrap={false}>
+          
+          {/* LEFT: Logo */}
+          {(logoBase64 && invoiceData.includeLogo !== false) && (
+            <View style={{ width: 65, height: 65, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 10 }}>
+              <Image src={logoBase64} style={{ maxWidth: 62, maxHeight: 62 }} />
             </View>
-          ) : (
-             <View style={{ width: 85 }} /> 
           )}
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 32, color: "#E04F3D", letterSpacing: 1.5, textAlign: "center" }}>
+
+          {/* RIGHT: GSTIN/UDYAM row + Business Name */}
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            {/* GSTIN and UDYAM on same line */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+              <Text style={{ fontSize: 8.5, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+                GSTIN : {currentUser?.taxId || "-"}
+              </Text>
+              <Text style={{ fontSize: 8.5, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+                UDYAM NO : {currentUser?.udyamNo || "-"}
+              </Text>
+            </View>
+            {/* Large Red Business Name */}
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 30, color: "#E04F3D", letterSpacing: 1.5 }}>
               {currentUser?.businessName || "BUSINESS NAME"}
             </Text>
           </View>
-          <View style={{ width: 85 }} /> {/* Balance space */}
+
         </View>
 
         {/* Blue Address Bar */}
@@ -169,12 +170,12 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           </Text>
         </View>
 
-        {/* Emails and Phones */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingHorizontal: 15 }} wrap={false}>
-          <Text style={{ color: "#E04F3D", fontSize: 9, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
-          <Text style={{ color: "#E04F3D", fontSize: 9, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
+        {/* Email and Mobile */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 15 }} wrap={false}>
+          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
+          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
         </View>
-        <View style={{ height: 1, backgroundColor: "#E04F3D", marginHorizontal: 15, marginBottom: 10 }} wrap={false} />
+        <View style={{ height: 1, backgroundColor: "#E04F3D", marginHorizontal: 15, marginBottom: 8 }} wrap={false} />
 
         {/* TITLE ROW */}
         <View style={[s.headerGridRow, { backgroundColor: "#F9F9F9" }]} wrap={false}>
