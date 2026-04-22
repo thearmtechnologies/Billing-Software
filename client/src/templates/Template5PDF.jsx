@@ -146,25 +146,33 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   // Dynamic Tax Components
   const appliedTaxes = Array.isArray(invoiceData.taxes) && invoiceData.taxes.length > 0
     ? invoiceData.taxes
-    : [{ name: "CGST" }, { name: "SGST" }]; // Fallback
+    : [];
   const numTaxes = appliedTaxes.length || 1;
 
-  // Aggregate Tax Summary by HSN / Tax Rate
+  // Aggregate Tax Summary by HSN
   const taxSummary = invoiceData.items.reduce((acc, item) => {
     const hsn = item.hsnCode || "None";
     const taxable = item.subtotal;
-    const taxRate = item.taxRate || 0;
-    const taxAmt = (taxable * taxRate) / 100;
 
-    const key = `${hsn}-${taxRate}`;
+    const key = hsn;
     if (!acc[key]) {
-      acc[key] = { hsn, taxable: 0, taxRate, totalTax: 0, taxes: appliedTaxes.map(t => ({ name: t.name, rate: taxRate / numTaxes, amount: 0 })) };
+      acc[key] = { 
+        hsn, 
+        taxable: 0, 
+        totalTax: 0, 
+        taxes: appliedTaxes.map(t => ({ name: t.name, rate: t.rate, amount: 0 })) 
+      };
     }
     acc[key].taxable += taxable;
-    acc[key].totalTax += taxAmt;
+    
+    let itemTotalTax = 0;
     acc[key].taxes.forEach(t => {
-      t.amount += taxAmt / numTaxes;
+      const amt = (taxable * t.rate) / 100;
+      t.amount += amt;
+      itemTotalTax += amt;
     });
+
+    acc[key].totalTax += itemTotalTax;
 
     return acc;
   }, {});
@@ -316,7 +324,16 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 </View>
                 <Text style={[s.colCell, s.wHsn, s.textCenter]}>{item.hsnCode || "-"}</Text>
                 <Text style={[s.colCell, s.wQty, s.textRight]}>{item.quantity}</Text>
-                <Text style={[s.colCell, s.wPrice, s.textRight]}>{item.baseRate.toFixed(2)}</Text>
+                <Text style={[s.colCell, s.wPrice, s.textRight]}>
+                  {item.pricingType === "tiered"
+                    ? item.pricingTiers
+                        ?.map(
+                          (t) =>
+                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)}`
+                        )
+                        .join("\n")
+                    : `${Number(item.baseRate || 0).toFixed(2)}`}
+                </Text>
                 {/* <Text style={[s.colCell, s.wGst, s.textRight]}>
                   {taxAmt.toFixed(2)}{"\n"}
                   <Text style={{ fontSize: 6, color: "#666" }}>({item.taxRate || 0}%)</Text>
@@ -444,10 +461,19 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <Text style={s.totalValue}>- Rs. {invoiceData.discount.toFixed(2)}</Text>
               </View>
             )}
-            <View style={s.totalRow}>
-              <Text style={s.totalLabel}>Total Tax</Text>
-              <Text style={s.totalValue}>Rs. {invoiceData.totalTax.toFixed(2)}</Text>
-            </View>
+            {appliedTaxes.length > 0 ? (
+              appliedTaxes.map((tax, idx) => (
+                <View key={`tax-tot-${idx}`} style={s.totalRow}>
+                  <Text style={s.totalLabel}>{tax.name} @{tax.rate}%</Text>
+                  <Text style={s.totalValue}>Rs. {tax.amount.toFixed(2)}</Text>
+                </View>
+              ))
+            ) : (
+              <View style={s.totalRow}>
+                <Text style={s.totalLabel}>Total Tax</Text>
+                <Text style={s.totalValue}>Rs. {invoiceData.totalTax.toFixed(2)}</Text>
+              </View>
+            )}
             <View style={s.totalRow}>
               <Text style={[s.totalLabel, { fontSize: 11 }]}>Total</Text>
               <Text style={s.totalValBold}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>

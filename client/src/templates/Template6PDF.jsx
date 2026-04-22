@@ -299,7 +299,16 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={[s.tableCell, s.wBatch]}>{safeText(item.batch)}</Text>
               <Text style={[s.tableCell, s.wExp]}>{safeText(item.exp)}</Text>
               <Text style={[s.tableCell, s.wHsn, s.textCenter]}>{safeText(item.hsnCode)}</Text>
-              <Text style={[s.tableCell, s.wRate, s.textRight]}>{Number(item.baseRate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+              <Text style={[s.tableCell, s.wRate, s.textRight]}>
+                {item.pricingType === "tiered"
+                  ? item.pricingTiers
+                      ?.map(
+                        (t) =>
+                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)}`
+                      )
+                      .join("\n")
+                  : Number(item.baseRate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </Text>
               <Text style={[s.tableCell, s.wDisc, s.textCenter]}>{Number(item.discountPercent || 0).toFixed(2)}</Text>
               <Text style={[s.tableCell, s.wAmt, s.textRight]}>{Number(item.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
