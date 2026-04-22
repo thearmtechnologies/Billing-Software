@@ -53,7 +53,7 @@ const TemplateSidebar = ({
           >
             <h3
               className="font-semibold text-white text-lg md:text-xl"
-              style={{ marginBottom: 0 }}
+              style={{ marginBottom: 0, color: "white" }}
             >
               Choose Template
             </h3>

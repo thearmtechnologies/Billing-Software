@@ -256,7 +256,7 @@ const ClientLedger = () => {
   const currentBalance = ledgerData.length > 0 ? ledgerData[ledgerData.length - 1].balance : 0;
 
   return (
-    <div className="max-w-7xl mx-auto print-container" style={{ padding: "32px 24px" }}>
+    <div className="max-w-7xl print-container" style={{ padding: "32px 24px" }}>
       {/* Header */}
       <div 
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between print-hidden"
