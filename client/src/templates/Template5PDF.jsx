@@ -81,9 +81,9 @@ const s = StyleSheet.create({
   wItem: { width: "32%" },
   wHsn: { width: "12%" },
   wQty: { width: "10%" },
-  wPrice: { width: "14%" },
+  wPrice: { width: "28%" },
   wGst: { width: "12%" },
-  wAmt: { width: "15%" },
+  wAmt: { width: "13%" },
 
   tableTotalRow: { 
     flexDirection: "row", 

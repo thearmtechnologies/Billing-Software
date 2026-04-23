@@ -119,7 +119,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
   const formatAmt = (num) => (num != null ? Number(num).toFixed(2) : "0.00");
   const subtotal = invoiceData.subtotal || 0;
   
-  const colDims = { sr: "6%", desc: "40%", hsn: "11%", qty: "7%", unit: "7%", rate: "14%", total: "15%" };
+  const colDims = { sr: "6%", desc: "32%", hsn: "11%", qty: "7%", unit: "7%", rate: "22%", total: "15%" };
   const leftOffset = 100 - parseInt(colDims.total); 
 
   const numToWordsStr = numberToWords ? numberToWords(Math.round(invoiceData.totalAmount || 0)) : "";

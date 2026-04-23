@@ -116,9 +116,8 @@ const s = StyleSheet.create({
   wBatch: { width: "8%" },
   wExp: { width: "8%" },
   wHsn: { width: "12%" },
-  wRate: { width: "12%" },
-  wDisc: { width: "7%" },
-  wAmt: { width: "15%", borderRightWidth: 0 },
+  wRate: { width: "22%" },
+  wAmt: { width: "12%", borderRightWidth: 0 },
 
   // Watermark (Centered Background Text)
   watermark: {
@@ -286,7 +285,6 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <Text style={[s.tableCell, s.wExp, s.textCenter]}>Exp</Text>
             <Text style={[s.tableCell, s.wHsn, s.textCenter]}>HSN</Text>
             <Text style={[s.tableCell, s.wRate, s.textRight]}>Rate</Text>
-            <Text style={[s.tableCell, s.wDisc, s.textCenter]}>Dis. %</Text>
             <Text style={[s.tableCell, s.wAmt, s.textRight]}>Amount</Text>
           </View>
 
@@ -309,7 +307,6 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                       .join("\n")
                   : Number(item.baseRate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </Text>
-              <Text style={[s.tableCell, s.wDisc, s.textCenter]}>{Number(item.discountPercent || 0).toFixed(2)}</Text>
               <Text style={[s.tableCell, s.wAmt, s.textRight]}>{Number(item.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
           ))}
