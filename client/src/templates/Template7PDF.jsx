@@ -226,14 +226,14 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                <View style={s.metaLabel}><Text>Place of Supply</Text></View>
                <View style={s.metaValue}><Text>{invoiceData.placeOfSupply || clientAddr.state || clientAddr.city || "-"}</Text></View>
              </View>
-             <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
+             {/* <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                <View style={s.metaLabel}><Text>Work Order No.</Text></View>
                <View style={s.metaValue}><Text>{invoiceData.workOrderNo || "-"}</Text></View>
              </View>
              <View style={s.row}>
                <View style={s.metaLabel}><Text>Work Order Date</Text></View>
                <View style={s.metaValue}><Text>{formatDate(invoiceData.workOrderDate)}</Text></View>
-             </View>
+             </View> */}
           </View>
         </View>
 
@@ -266,7 +266,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
              </View>
              <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                <View style={s.metaLabel}><Text>State code</Text></View>
-               <View style={s.metaValue}><Text>{clientAddr.stateCode || "-"}</Text></View>
+               <View style={s.metaValue}><Text>{clientAddr.zipCode || clientAddr.stateCode || client.stateCode || (client.gstin || client.gstNumber ? String(client.gstin || client.gstNumber).substring(0, 2) : "-")}</Text></View>
              </View>
              <View style={s.row}>
                <View style={s.metaLabel}><Text>GSTIN</Text></View>
@@ -283,15 +283,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
            </View>
         </View>
 
-        {/* DESCRIPTION NOTE */}
-        <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 6, paddingHorizontal: 6, flex: 1 }}>
-              <Text style={{ lineHeight: 1.3 }}>
-                <Text style={s.bold}>Terms & Conditions : </Text>
-                {invoiceData.notes || ""}
-              </Text>
-           </View>
-        </View>
+
 
         {/* ITEM TABLE HEADER */}
         {/* We use gridRow to naturally append to the existing borders safely without spanning limits */}
@@ -373,6 +365,18 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             <Text style={s.bold}>{wordsFormatted ? `${wordsFormatted} Rupees Only.` : "-"}</Text>
           </View>
         </View>
+
+        {/* DESCRIPTION NOTE / TERMS & CONDITIONS */}
+        {invoiceData.notes && invoiceData.notes.trim() !== "" && (
+          <View style={s.gridRow} wrap={false}>
+             <View style={{ paddingVertical: 6, paddingHorizontal: 6, flex: 1 }}>
+                <Text style={{ lineHeight: 1.3 }}>
+                  <Text style={s.bold}>Terms & Conditions : </Text>
+                  {invoiceData.notes}
+                </Text>
+             </View>
+          </View>
+        )}
 
         {/* BANK DETAILS & SIGNATURE (Unbordered block at bottom) */}
         <View style={{ flexDirection: "row", paddingVertical: 12, marginTop: 5 }} wrap={false}>
