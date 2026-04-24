@@ -310,11 +310,11 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
               <Text style={[s.td, { width: col.qty, textAlign: "center" }]}>
                 {item.quantity} {item.unitType || ""}
               </Text>
-              <Text style={[s.td, { width: col.rate, textAlign: "center" }]}>
+              <Text style={[s.td, { width: col.rate, textAlign: "center", fontSize: item.pricingType === "tiered" ? 8 : 9 }]}>
                 {item.pricingType === "tiered"
                   ? item.pricingTiers?.map(
                       (t) =>
-                        `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType}: Rs. ${t.rate}`
+                        `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
                     ).join("\n")
                   : `Rs. ${(item.baseRate || 0).toFixed(2)}`}
               </Text>

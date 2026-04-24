@@ -12,7 +12,10 @@ const s = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 15,
+    paddingTop: 20,
+    paddingBottom: 25,
+    paddingLeft: 35,
+    paddingRight: 35,
     color: "#000",
     backgroundColor: "#fff",
   },
@@ -34,7 +37,6 @@ const s = StyleSheet.create({
   // specific sections
   blueBar: {
     backgroundColor: "#1D70B8",
-    marginHorizontal: 15,
     paddingVertical: 4,
     borderRadius: 2,
   },
@@ -46,7 +48,7 @@ const s = StyleSheet.create({
 
   // Tables
   th: {
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 4,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
@@ -55,7 +57,7 @@ const s = StyleSheet.create({
     fontSize: 8.5,
   },
   td: {
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 4,
     borderRightWidth: 1,
     borderColor: "#000",
@@ -79,14 +81,14 @@ const s = StyleSheet.create({
   // Labels
   metaLabel: {
     width: "40%",
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 6,
     borderRightWidth: 1,
     borderColor: "#000",
   },
   metaValue: {
     width: "60%",
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 6,
     justifyContent: "center",
   },
@@ -119,7 +121,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
   const formatAmt = (num) => (num != null ? Number(num).toFixed(2) : "0.00");
   const subtotal = invoiceData.subtotal || 0;
   
-  const colDims = { sr: "6%", desc: "40%", hsn: "11%", qty: "7%", unit: "7%", rate: "14%", total: "15%" };
+  const colDims = { sr: "6%", desc: "32%", hsn: "11%", qty: "7%", unit: "7%", rate: "22%", total: "15%" };
   const leftOffset = 100 - parseInt(colDims.total); 
 
   const numToWordsStr = numberToWords ? numberToWords(Math.round(invoiceData.totalAmount || 0)) : "";
@@ -135,12 +137,12 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
       <Page size="A4" style={s.page} wrap={true}>
         
         {/* HEADER — matches reference image exactly */}
-        <View style={{ flexDirection: "row", paddingHorizontal: 15, marginTop: 6, marginBottom: 4, alignItems: "center" }} wrap={false}>
+        <View style={{ flexDirection: "row", marginTop: 2, marginBottom: 4, alignItems: "center" }} wrap={false}>
           
           {/* LEFT: Logo */}
           {(logoBase64 && invoiceData.includeLogo !== false) && (
-            <View style={{ width: 65, height: 65, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 10 }}>
-              <Image src={logoBase64} style={{ maxWidth: 62, maxHeight: 62 }} />
+            <View style={{ width: 60, height: 60, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 10 }}>
+              <Image src={logoBase64} style={{ maxWidth: 58, maxHeight: 58 }} />
             </View>
           )}
 
@@ -156,7 +158,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
               </Text>
             </View>
             {/* Large Red Business Name */}
-            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 30, color: "#E04F3D", letterSpacing: 1.5 }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 24, color: "#E04F3D", letterSpacing: 1.2 }}>
               {currentUser?.businessName || "BUSINESS NAME"}
             </Text>
           </View>
@@ -171,19 +173,19 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
         </View>
 
         {/* Email and Mobile */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 15 }} wrap={false}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }} wrap={false}>
           <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
           <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
         </View>
-        <View style={{ height: 1, backgroundColor: "#E04F3D", marginHorizontal: 15, marginBottom: 8 }} wrap={false} />
+        <View style={{ height: 1, backgroundColor: "#E04F3D", marginBottom: 6 }} wrap={false} />
 
         {/* TITLE ROW */}
         <View style={[s.headerGridRow, { backgroundColor: "#F9F9F9" }]} wrap={false}>
-          <View style={{ flex: 1, paddingVertical: 6, alignItems: "center", justifyContent: "center" }}>
+          <View style={{ flex: 1, paddingVertical: 4, alignItems: "center", justifyContent: "center" }}>
             <Text style={[s.bold, { fontSize: 11, letterSpacing: 1 }]}>TAX INVOICE</Text>
           </View>
           <View style={{ width: 80, borderLeftWidth: 1, borderColor: "#000", justifyContent: "center", backgroundColor: "#FFF" }}>
-            <Text style={{ textAlign: "center", fontSize: 9 }}>Original</Text>
+            <Text style={{ textAlign: "center", fontSize: 8.5 }}>Original</Text>
           </View>
         </View>
 
@@ -191,8 +193,8 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
         <View style={s.gridRow} wrap={false}>
           {/* LEFT SIDE: Supplier Details */}
           <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
-             <View style={{ padding: 6, borderBottomWidth: 1, borderColor: "#000" }}>
-               <Text style={[s.bold, { fontSize: 13, marginBottom: 4 }]}>{currentUser?.businessName || "Supplier Name"}</Text>
+             <View style={{ padding: 5, borderBottomWidth: 1, borderColor: "#000" }}>
+               <Text style={[s.bold, { fontSize: 12, marginBottom: 3 }]}>{currentUser?.businessName || "Supplier Name"}</Text>
                <Text style={{ lineHeight: 1.3 }}>{userAddr.street || ""}</Text>
                <Text style={{ lineHeight: 1.3, marginTop: 2 }}>{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}</Text>
              </View>
@@ -315,12 +317,12 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             <View style={[s.td, { width: colDims.qty, justifyContent: "center" }]}><Text style={{ textAlign: "center" }}>{item.quantity != null ? Number(item.quantity).toFixed(3) : "0.000"}</Text></View>
             <View style={[s.td, { width: colDims.unit, justifyContent: "center" }]}><Text style={{ textAlign: "center" }}>{item.unitType || "UOM"}</Text></View>
             <View style={[s.td, { width: colDims.rate, justifyContent: "center" }]}>
-              <Text style={{ textAlign: "right" }}>
+              <Text style={{ textAlign: "right", fontSize: item.pricingType === "tiered" ? 7.5 : 8.5 }}>
                 {item.pricingType === "tiered"
                   ? item.pricingTiers
                       ?.map(
                         (t) =>
-                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)}`
+                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
                       )
                       .join("\n")
                   : item.baseRate != null ? Number(item.baseRate).toFixed(2) : "0.00"}

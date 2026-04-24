@@ -15,7 +15,7 @@ import {
 import { UserContext } from "../context/userContext";
 import logoSrc from "../assets/logo.jpeg";
 
-const Layout = () => {
+const Layout = () => { 
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);

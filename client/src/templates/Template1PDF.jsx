@@ -447,12 +447,12 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
                 {item.quantity} {item.unitType || ""}
               </Text>
-              <Text style={[s.td, s.tdRight, { width: col.rate }]}>
+              <Text style={[s.td, s.tdRight, { width: col.rate, fontSize: item.pricingType === "tiered" ? 7.5 : 10, paddingHorizontal: item.pricingType === "tiered" ? 2 : 5 }]}>
                 {item.pricingType === "tiered"
                   ? item.pricingTiers
                       ?.map(
                         (t) =>
-                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${t.rate.toFixed(2)}`
+                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)} ${t.rateType === "unitRate" ? "/ " + (item.unitType || "") : "(slab)"}`.replace(/ /g, "\u00A0")
                       )
                       .join("\n")
                   : `Rs. ${(item.baseRate || 0).toFixed(2)}`}

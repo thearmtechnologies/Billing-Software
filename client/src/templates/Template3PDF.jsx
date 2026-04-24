@@ -396,11 +396,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                       {item.pricingType === "tiered"
                         ? item.pricingTiers?.map(
                             (t, i) => (
-                              <Text key={i} style={{ marginBottom: 2 }}>
-                                {t.minValue} – {t.maxValue !== null ? t.maxValue : "Above"}{" "}
-                                {item.unitType}: Rs. {t.rate}{" "}
-                                {t.rateType === "unitRate" ? `/ ${item.unitType}` : "(slab)"}
-                              </Text>
+                              <Text key={i} style={{ marginBottom: 2, fontSize: 8 }}>{`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`}</Text>
                             )
                           )
                         : <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>}

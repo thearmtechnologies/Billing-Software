@@ -315,13 +315,11 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={[s.td, { width: col.qty, textAlign: "center", borderLeftWidth: 0 }]}>
                 {item.quantity} {item.unitType || ""}
               </Text>
-              <View style={[s.td, { width: col.rate, borderLeftWidth: 0 }]}>
+              <View style={[s.td, { width: col.rate, borderLeftWidth: 0, paddingHorizontal: item.pricingType === "tiered" ? 2 : 8 }]}>
                 {item.pricingType === "tiered"
                   ? item.pricingTiers?.map(
                       (t, i) => (
-                        <Text key={i} style={{ marginBottom: 2 }}>
-                          {t.minValue} – {t.maxValue !== null ? t.maxValue : "Above"} {item.unitType}: Rs. {t.rate} {t.rateType === "unitRate" ? `/ ${item.unitType}` : "(slab)"}
-                        </Text>
+                        <Text key={i} style={{ marginBottom: 2, fontSize: 7.5 }}>{`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)} ${t.rateType === "unitRate" ? "/ " + (item.unitType || "") : "(slab)"}`.replace(/ /g, "\u00A0")}</Text>
                       )
                     )
                   : <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>}

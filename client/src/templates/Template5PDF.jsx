@@ -81,9 +81,9 @@ const s = StyleSheet.create({
   wItem: { width: "32%" },
   wHsn: { width: "12%" },
   wQty: { width: "10%" },
-  wPrice: { width: "14%" },
+  wPrice: { width: "28%" },
   wGst: { width: "12%" },
-  wAmt: { width: "15%" },
+  wAmt: { width: "13%" },
 
   tableTotalRow: { 
     flexDirection: "row", 
@@ -324,12 +324,12 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 </View>
                 <Text style={[s.colCell, s.wHsn, s.textCenter]}>{item.hsnCode || "-"}</Text>
                 <Text style={[s.colCell, s.wQty, s.textRight]}>{item.quantity}</Text>
-                <Text style={[s.colCell, s.wPrice, s.textRight]}>
+                <Text style={[s.colCell, s.wPrice, s.textRight, { fontSize: item.pricingType === "tiered" ? 7.5 : 8 }]}>
                   {item.pricingType === "tiered"
                     ? item.pricingTiers
                         ?.map(
                           (t) =>
-                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)}`
+                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
                         )
                         .join("\n")
                     : `${Number(item.baseRate || 0).toFixed(2)}`}
