@@ -8,7 +8,8 @@ import {
   Save, 
   X,
   Calendar,
-  IndianRupee
+  IndianRupee,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
@@ -25,6 +26,10 @@ const PaymentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
+  
+  // Loading states for actions
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingPaymentId, setDeletingPaymentId] = useState(null);
   
   const [paymentData, setPaymentData] = useState({
     amount: "",
@@ -82,6 +87,8 @@ const PaymentManagement = () => {
   const handleAddPayment = async (e) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+    
     const amount = parseFloat(paymentData.amount);
     if (isNaN(amount) || amount <= 0) {
       toast.error("Please enter a valid amount");
@@ -105,6 +112,7 @@ const PaymentManagement = () => {
     };
 
     try {
+      setIsSubmitting(true);
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/invoices/${id}/payments`,
         paymentPayload
@@ -119,15 +127,19 @@ const PaymentManagement = () => {
         notes: "",
         recordedBy: ""
       });
-      fetchInvoiceAndPayments();
+      await fetchInvoiceAndPayments();
     } catch (error) {
       console.error("Payment error:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to add payment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleUpdatePayment = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
 
     const amount = parseFloat(paymentData.amount);
     if (isNaN(amount) || amount <= 0) {
@@ -154,6 +166,7 @@ const PaymentManagement = () => {
     };
 
     try {
+      setIsSubmitting(true);
       await axios.patch(
         `${import.meta.env.VITE_BASE_URL}/invoices/${id}/payments/${editingPayment._id}`,
         paymentPayload
@@ -168,29 +181,37 @@ const PaymentManagement = () => {
         notes: "",
         recordedBy: ""
       });
-      fetchInvoiceAndPayments();
+      await fetchInvoiceAndPayments();
     } catch (error) {
       console.error("Update payment error:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to update payment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeletePayment = async (paymentId) => {
+    if (deletingPaymentId) return;
+    
     if (window.confirm("Are you sure you want to delete this payment?")) {
       try {
+        setDeletingPaymentId(paymentId);
         await axios.delete(
           `${import.meta.env.VITE_BASE_URL}/invoices/${id}/payments/${paymentId}`
         );
         
         toast.success("Payment deleted successfully");
-        fetchInvoiceAndPayments();
+        await fetchInvoiceAndPayments();
       } catch (error) {
         toast.error("Failed to delete payment");
+      } finally {
+        setDeletingPaymentId(null);
       }
     }
   };
 
   const startEditPayment = (payment) => {
+    if (isSubmitting) return;
     setEditingPayment(payment);
     setPaymentData({
       amount: payment.amountPaid.toString(), 
@@ -238,19 +259,30 @@ const PaymentManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center" style={{ height: "16rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "16rem" }}>
         <div
-          className="animate-spin rounded-full border-b-2 border-blue-600"
-          style={{ height: "3rem", width: "3rem" }}
+          style={{ 
+            width: "3rem", 
+            height: "3rem", 
+            border: "3px solid #e5e7eb", 
+            borderTopColor: "#2563eb", 
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite"
+          }}
         ></div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (!invoice) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Invoice not found</p>
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <p style={{ color: "#6b7280" }}>Invoice not found</p>
       </div>
     );
   }
@@ -274,14 +306,15 @@ const PaymentManagement = () => {
               borderRadius: "8px"
             }}
             className="cursor-pointer hover:bg-gray-100"
+            disabled={isSubmitting}
           >
             <ArrowLeft style={{ width: "20px", height: "20px" }} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#111827", margin: 0 }}>
               Payment Management
             </h1>
-            <p className="text-gray-600">
+            <p style={{ color: "#6b7280", marginTop: "4px" }}>
               Invoice #{invoice.invoiceNumber} - {invoice.client?.companyName}
             </p>
           </div>
@@ -300,8 +333,8 @@ const PaymentManagement = () => {
             borderRadius: "8px",
             border: "1px solid #e5e7eb"
           }}>
-            <p className="text-sm text-gray-600">Total Amount</p>
-            <p className="text-lg font-semibold text-gray-900">
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Total Amount</p>
+            <p style={{ fontSize: "18px", fontWeight: "600", color: "#111827", marginTop: "4px" }}>
               Rs. {toPrecision(invoice.totalAmount).toFixed(2)}
             </p>
           </div>
@@ -311,8 +344,8 @@ const PaymentManagement = () => {
             borderRadius: "8px",
             border: "1px solid #e5e7eb"
           }}>
-            <p className="text-sm text-gray-600">Amount Paid</p>
-            <p className="text-lg font-semibold text-green-600">
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Amount Paid</p>
+            <p style={{ fontSize: "18px", fontWeight: "600", color: "#16a34a", marginTop: "4px" }}>
               Rs. {toPrecision(invoice.amountPaid).toFixed(2)}
             </p>
           </div>
@@ -322,8 +355,8 @@ const PaymentManagement = () => {
             borderRadius: "8px",
             border: "1px solid #e5e7eb"
           }}>
-            <p className="text-sm text-gray-600">Amount Due</p>
-            <p className="text-lg font-semibold text-orange-600">
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Amount Due</p>
+            <p style={{ fontSize: "18px", fontWeight: "600", color: "#ea580c", marginTop: "4px" }}>
               Rs. {toPrecision(invoice.amountDue).toFixed(2)}
             </p>
           </div>
@@ -333,12 +366,13 @@ const PaymentManagement = () => {
             borderRadius: "8px",
             border: "1px solid #e5e7eb"
           }}>
-            <p className="text-sm text-gray-600">Status</p>
-            <p className={`text-lg font-semibold ${
-              invoice.status === "paid" ? "text-green-600" :
-              invoice.status === "partial" ? "text-orange-600" :
-              "text-gray-600"
-            }`}>
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Status</p>
+            <p style={{ 
+              fontSize: "18px", 
+              fontWeight: "600", 
+              marginTop: "4px",
+              color: invoice.status === "paid" ? "#16a34a" : invoice.status === "partial" ? "#ea580c" : "#6b7280"
+            }}>
               {invoice.status?.charAt(0).toUpperCase() + invoice.status?.slice(1)}
             </p>
           </div>
@@ -349,16 +383,19 @@ const PaymentManagement = () => {
       <div style={{ marginBottom: "24px" }}>
         <button
           onClick={() => setShowAddPayment(true)}
-          disabled={invoice.amountPaid >= invoice.totalAmount - 0.009}
+          disabled={invoice.amountPaid >= invoice.totalAmount - 0.009 || isSubmitting}
           style={{ 
             display: "flex", 
             alignItems: "center", 
             padding: "8px 16px", 
             backgroundColor: "#2563eb", 
             color: "white", 
-            borderRadius: "8px"
+            borderRadius: "8px",
+            border: "none",
+            cursor: (invoice.amountPaid >= invoice.totalAmount - 0.009 || isSubmitting) ? "not-allowed" : "pointer",
+            opacity: (invoice.amountPaid >= invoice.totalAmount - 0.009 || isSubmitting) ? 0.5 : 1
           }}
-          className="cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="hover:bg-blue-700"
         >
           <Plus style={{ width: "20px", height: "20px", marginRight: "8px" }} />
           Add Payment
@@ -375,13 +412,14 @@ const PaymentManagement = () => {
           marginBottom: "24px"
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 className="text-lg font-semibold">
+            <h3 style={{ fontSize: "18px", fontWeight: "600", margin: 0 }}>
               {editingPayment ? "Edit Payment" : "Add New Payment"}
             </h3>
             <button
               onClick={cancelEdit}
-              style={{ padding: "4px", color: "#6b7280" }}
+              style={{ padding: "4px", color: "#6b7280", background: "transparent", border: "none", cursor: "pointer" }}
               className="hover:bg-gray-100 rounded"
+              disabled={isSubmitting}
             >
               <X style={{ width: "20px", height: "20px" }} />
             </button>
@@ -390,9 +428,9 @@ const PaymentManagement = () => {
           <form onSubmit={editingPayment ? handleUpdatePayment : handleAddPayment}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }} className="md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#374151", marginBottom: "8px" }}>
                   Amount *
-                  <span className="ml-2 text-sm text-gray-500">
+                  <span style={{ fontSize: "12px", color: "#6b7280", marginLeft: "8px" }}>
                     (Max: Rs. {remainingBalance.toFixed(2)})
                   </span>
                 </label>
@@ -403,6 +441,7 @@ const PaymentManagement = () => {
                   value={paymentData.amount}
                   onChange={handleAmountChange}
                   onWheel={handleWheel}
+                  disabled={isSubmitting}
                   style={{ 
                     width: "100%", 
                     padding: "8px 12px", 
@@ -411,30 +450,34 @@ const PaymentManagement = () => {
                         ? '#ef4444' 
                         : '#d1d5db'
                     }`,
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    boxSizing: "border-box"
                   }}
                   placeholder="Enter amount (e.g., 1000.50)"
                 />
                 {paymentData.amount && !isAmountValid && (
-                  <p className="text-red-600 text-sm mt-1">
+                  <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
                     Amount exceeds remaining balance of Rs. {remainingBalance.toFixed(2)}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#374151", marginBottom: "8px" }}>
                   Payment Mode *
                 </label>
                 <select
                   required
                   value={paymentData.paymentMode}
                   onChange={(e) => setPaymentData({ ...paymentData, paymentMode: e.target.value })}
+                  disabled={isSubmitting}
                   style={{ 
                     width: "100%", 
                     padding: "8px 12px", 
                     border: "1px solid #d1d5db",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    backgroundColor: "white",
+                    boxSizing: "border-box"
                   }}
                 >
                   <option value="bank-transfer">Bank Transfer</option>
@@ -446,7 +489,7 @@ const PaymentManagement = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#374151", marginBottom: "8px" }}>
                   Payment Date *
                 </label>
                 <input
@@ -454,46 +497,52 @@ const PaymentManagement = () => {
                   required
                   value={paymentData.paymentDate}
                   onChange={(e) => setPaymentData({ ...paymentData, paymentDate: e.target.value })}
+                  disabled={isSubmitting}
                   style={{ 
                     width: "100%", 
                     padding: "8px 12px", 
                     border: "1px solid #d1d5db",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    boxSizing: "border-box"
                   }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#374151", marginBottom: "8px" }}>
                   Recorded By
                 </label>
                 <input
                   type="text"
                   value={paymentData.recordedBy}
                   onChange={(e) => setPaymentData({ ...paymentData, recordedBy: e.target.value })}
+                  disabled={isSubmitting}
                   style={{ 
                     width: "100%", 
                     padding: "8px 12px", 
                     border: "1px solid #d1d5db",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    boxSizing: "border-box"
                   }}
                   placeholder="Your name"
                 />
               </div>
 
               <div style={{ gridColumn: "span 1" }} className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700" style={{ marginBottom: "8px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#374151", marginBottom: "8px" }}>
                   Notes
                 </label>
                 <textarea
                   value={paymentData.notes}
                   onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
                   rows="3"
+                  disabled={isSubmitting}
                   style={{ 
                     width: "100%", 
                     padding: "8px 12px", 
                     border: "1px solid #d1d5db",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    boxSizing: "border-box"
                   }}
                   placeholder="Additional notes about this payment"
                 />
@@ -503,7 +552,7 @@ const PaymentManagement = () => {
             <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
               <button
                 type="submit"
-                disabled={!paymentData.amount || !isAmountValid}
+                disabled={!paymentData.amount || !isAmountValid || isSubmitting}
                 style={{ 
                   display: "flex", 
                   alignItems: "center", 
@@ -511,23 +560,38 @@ const PaymentManagement = () => {
                   backgroundColor: "#2563eb", 
                   color: "white", 
                   borderRadius: "8px",
-                  opacity: (!paymentData.amount || !isAmountValid) ? 0.5 : 1
+                  border: "none",
+                  cursor: (!paymentData.amount || !isAmountValid || isSubmitting) ? "not-allowed" : "pointer",
+                  opacity: (!paymentData.amount || !isAmountValid || isSubmitting) ? 0.5 : 1
                 }}
-                className="cursor-pointer hover:bg-blue-700 disabled:cursor-not-allowed"
+                className="hover:bg-blue-700"
               >
-                <Save style={{ width: "16px", height: "16px", marginRight: "8px" }} />
-                {editingPayment ? "Update Payment" : "Add Payment"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 style={{ width: "16px", height: "16px", marginRight: "8px", animation: "spin 1s linear infinite" }} />
+                    {editingPayment ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  <>
+                    <Save style={{ width: "16px", height: "16px", marginRight: "8px" }} />
+                    {editingPayment ? "Update Payment" : "Add Payment"}
+                  </>
+                )}
               </button>
               <button
                 type="button"
                 onClick={cancelEdit}
+                disabled={isSubmitting}
                 style={{ 
                   padding: "8px 16px", 
                   border: "1px solid #d1d5db",
                   color: "#374151",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
+                  backgroundColor: "white",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
+                  opacity: isSubmitting ? 0.5 : 1
                 }}
-                className="cursor-pointer hover:bg-gray-50"
+                className="hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -543,62 +607,84 @@ const PaymentManagement = () => {
         border: "1px solid #e5e7eb"
       }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
-          <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
+          <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#111827", margin: 0 }}>Payment History</h3>
         </div>
 
         {paymentHistory.length === 0 ? (
           <div style={{ padding: "48px", textAlign: "center" }}>
             <IndianRupee style={{ width: "48px", height: "48px", color: "#9ca3af", margin: "0 auto 16px" }} />
-            <p className="text-gray-500">No payments recorded yet</p>
+            <p style={{ color: "#6b7280" }}>No payments recorded yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div>
             {paymentHistory.map((payment) => (
-              <div key={payment._id} className="border-b border-gray-100 last:border-0" style={{ padding: "16px" }}>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full" style={{ gap: "12px" }}>
-                  <div className="flex flex-col items-start w-full sm:w-auto" style={{ gap: "4px" }}>
-                    <p className="font-semibold text-gray-900 text-lg sm:text-base">
+              <div key={payment._id} style={{ borderBottom: "1px solid #f3f4f6", padding: "16px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }} className="sm:flex-row sm:justify-between sm:items-center">
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", width: "100%" }} className="sm:w-auto">
+                    <p style={{ fontWeight: "600", color: "#111827", fontSize: "18px", margin: 0 }} className="sm:text-base">
                       Rs. {toPrecision(payment.amountPaid).toFixed(2)}
                     </p>
-                    <div className="flex flex-wrap items-center text-sm text-gray-600" style={{ gap: "4px 8px" }}>
-                      <div className="flex items-center" style={{ gap: "6px" }}>
-                        <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", fontSize: "14px", color: "#6b7280", gap: "4px 8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <Calendar style={{ width: "16px", height: "16px", color: "#6b7280", flexShrink: 0 }} />
                         <span>{format(new Date(payment.paymentDate), "MMM dd, yyyy")}</span>
                       </div>
-                      <span className="text-gray-400 hidden sm:inline">•</span>
-                      <span className="capitalize">{payment.paymentMode}</span>
+                      <span style={{ display: "none" }} className="sm:inline">•</span>
+                      <span style={{ textTransform: "capitalize" }}>{payment.paymentMode}</span>
                       {payment.recordedBy && (
                         <>
-                          <span className="text-gray-400 hidden sm:inline">•</span>
+                          <span style={{ display: "none" }} className="sm:inline">•</span>
                           <span>By {payment.recordedBy}</span>
                         </>
                       )}
                     </div>
                     {payment.notes && (
-                      <p className="text-sm text-gray-500 break-words" style={{ marginTop: "4px" }}>
+                      <p style={{ fontSize: "14px", color: "#6b7280", wordBreak: "break-word", marginTop: "4px" }}>
                         {payment.notes}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto" style={{ gap: "12px" }}>
-                    <p className="text-sm font-medium text-gray-800 sm:text-gray-600">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", width: "100%" }} className="sm:w-auto">
+                    <p style={{ fontSize: "14px", fontWeight: "500", color: "#1f2937", margin: 0 }} className="sm:text-gray-600">
                       Balance Due: Rs. {toPrecision(payment.balanceDueAfter).toFixed(2)}
                     </p>
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
                       <button
                         onClick={() => startEditPayment(payment)}
-                        style={{ padding: "4px", color: "#6b7280" }}
-                        className="hover:bg-gray-100 rounded cursor-pointer"
+                        disabled={isSubmitting || deletingPaymentId === payment._id}
+                        style={{ 
+                          padding: "4px", 
+                          color: "#6b7280", 
+                          background: "transparent", 
+                          border: "none", 
+                          cursor: (isSubmitting || deletingPaymentId === payment._id) ? "not-allowed" : "pointer",
+                          opacity: (isSubmitting || deletingPaymentId === payment._id) ? 0.5 : 1
+                        }}
+                        className="hover:bg-gray-100 rounded"
                       >
                         <Edit style={{ width: "16px", height: "16px" }} />
                       </button>
                       <button
                         onClick={() => handleDeletePayment(payment._id)}
-                        style={{ padding: "4px", color: "#6b7280" }}
-                        className="hover:bg-gray-100 rounded cursor-pointer"
+                        disabled={isSubmitting || deletingPaymentId === payment._id}
+                        style={{ 
+                          padding: "4px", 
+                          color: "#6b7280", 
+                          background: "transparent", 
+                          border: "none", 
+                          cursor: (isSubmitting || deletingPaymentId === payment._id) ? "not-allowed" : "pointer",
+                          opacity: (isSubmitting || deletingPaymentId === payment._id) ? 0.5 : 1,
+                          display: "flex",
+                          alignItems: "center"
+                        }}
+                        className="hover:bg-gray-100 rounded"
                       >
-                        <Trash2 style={{ width: "16px", height: "16px" }} />
+                        {deletingPaymentId === payment._id ? (
+                          <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} />
+                        ) : (
+                          <Trash2 style={{ width: "16px", height: "16px" }} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -608,6 +694,13 @@ const PaymentManagement = () => {
           </div>
         )}
       </div>
+      
+      {/* Add spin animation style */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

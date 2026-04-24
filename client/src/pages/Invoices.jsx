@@ -67,6 +67,29 @@ const statusColors = {
   },
 };
 
+// Add global spin animation styles
+const spinAnimationStyle = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .spin-animation {
+    animation: spin 0.8s linear infinite;
+  }
+`;
+
+// Inject styles if not already present
+if (typeof document !== 'undefined') {
+  const styleId = 'spin-animation-styles';
+  if (!document.getElementById(styleId)) {
+    const styleElement = document.createElement('style');
+    styleElement.id = styleId;
+    styleElement.textContent = spinAnimationStyle;
+    document.head.appendChild(styleElement);
+  }
+}
+
 const Invoices = () => {
   const { currentUser } = useContext(UserContext);
   const [invoices, setInvoices] = useState([]);
@@ -374,7 +397,7 @@ const Invoices = () => {
         { status: newStatus }
       );
       toast.success(`Status updated to ${newStatus}`);
-      fetchInvoices();
+      await fetchInvoices(); // Wait for fetch to complete
     } catch (error) {
       toast.error("Failed to update status");
     } finally {
@@ -717,46 +740,6 @@ const Invoices = () => {
         </span>
       ),
     },
-    /* {
-      key: 'notify',
-      label: 'Notify',
-      width: '7%',
-      align: 'center',
-      render: (row) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        let isOverdueOrDueToday = false;
-        if (row.dueDate) {
-          const due = new Date(row.dueDate);
-          due.setHours(0, 0, 0, 0);
-          isOverdueOrDueToday = due <= today;
-        }
-        const isPending = row.status !== "paid" && row.status !== "cancelled";
-
-        return (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenEmailModal(row);
-            }}
-            disabled={!isPending}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: isPending ? 'pointer' : 'not-allowed',
-              display: 'flex',
-              alignItems: '',
-              justifyContent: 'flex-end',
-              width: '100%',
-              opacity: isPending ? 1 : 0.4
-            }}
-            title={isOverdueOrDueToday && isPending ? "Invoice Overdue/Due - Send Reminder" : "Send Reminder"}
-          >
-            <Bell size={18} color={isOverdueOrDueToday && isPending ? "#DC2626" : "#86868B"} />
-          </button>
-        );
-      }
-    }, */
     {
       key: 'actions',
       label: '',
@@ -1111,13 +1094,6 @@ const Invoices = () => {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };
