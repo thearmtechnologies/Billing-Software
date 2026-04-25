@@ -33,6 +33,7 @@ const CreateInvoice = () => {
   const [newUnitShortCode, setNewUnitShortCode] = useState("");
   const [addingUnit, setAddingUnit] = useState(false);
   const [isShippingDifferent, setIsShippingDifferent] = useState(false);
+  const [allowedTemplates, setAllowedTemplates] = useState([]);
   
   const toggleCollapse = (index) => {
     setCollapsedItems((prev) =>
@@ -67,6 +68,7 @@ const CreateInvoice = () => {
     bankDetails: null,
     includeLogo: true,
     includeSignature: true,
+    customFields: [],
   });
 
   useEffect(() => {
@@ -128,6 +130,9 @@ const CreateInvoice = () => {
           suffix: res.data.invoicePreferences.suffix || "",
           addressBehavior: res.data.invoicePreferences.addressBehavior || "billing_and_shipping",
         });
+      }
+      if (res.data.allowedTemplates) {
+        setAllowedTemplates(res.data.allowedTemplates);
       }
     } catch {
       console.error("Failed to fetch profile");
@@ -540,6 +545,7 @@ const CreateInvoice = () => {
         if (!cleanedItem.service) delete cleanedItem.service;
         return cleanedItem;
       }),
+      customFields: (payload.customFields || []).filter(f => f.label?.trim() && f.value?.trim()),
     };
   };
 
@@ -1298,6 +1304,66 @@ const CreateInvoice = () => {
               />
             </div>
           </div>
+
+          {/* Custom Fields for Template7PDF */}
+          {(allowedTemplates.length === 0 || allowedTemplates.includes("Template7PDF")) && (
+            <div style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                <h3 style={{ fontSize: "clamp(14px, 3.5vw, 16px)", fontWeight: 600, margin: 0, color: "var(--text-primary, #1D1D1F)" }}>
+                  Custom Fields <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--text-secondary, #6E6E73)" }}>(Template 7)</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, customFields: [...prev.customFields, { label: "", value: "" }] }))}
+                  style={{ background: "transparent", border: "none", color: "var(--accent, #0071E3)", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "4px 0" }}
+                >
+                  + Add Field
+                </button>
+              </div>
+              {formData.customFields.length === 0 && (
+                <p style={{ fontSize: "13px", color: "var(--text-tertiary, #86868B)", margin: 0 }}>No custom fields added. Click "+ Add Field" to add transport, vehicle, PO details etc.</p>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {formData.customFields.map((cf, cfIdx) => (
+                  <div key={cfIdx} style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                    <input
+                      type="text"
+                      placeholder="Label (e.g. Vehicle No.)"
+                      value={cf.label}
+                      onChange={(e) => {
+                        const updated = [...formData.customFields];
+                        updated[cfIdx] = { ...updated[cfIdx], label: e.target.value };
+                        setFormData(prev => ({ ...prev, customFields: updated }));
+                      }}
+                      style={{ ...inputStyle, marginTop: 0, flex: "1", minWidth: "120px" }}
+                      {...focusProps}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Value (e.g. GJ06AB1234)"
+                      value={cf.value}
+                      onChange={(e) => {
+                        const updated = [...formData.customFields];
+                        updated[cfIdx] = { ...updated[cfIdx], value: e.target.value };
+                        setFormData(prev => ({ ...prev, customFields: updated }));
+                      }}
+                      style={{ ...inputStyle, marginTop: 0, flex: "1.5", minWidth: "140px" }}
+                      {...focusProps}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, customFields: prev.customFields.filter((_, i) => i !== cfIdx) }));
+                      }}
+                      style={{ background: "transparent", border: "none", color: "#DC2626", padding: "8px", cursor: "pointer", flexShrink: 0 }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={cardStyle}>
             <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Display Preferences</h3>

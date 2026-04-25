@@ -140,6 +140,14 @@ const invoiceSchema = new mongoose.Schema(
     totalTax: { type: Number, default: 0, min: 0 },
     totalAmount: { type: Number, required: true, min: 0 },
 
+    // Custom fields for Template7PDF (label-value pairs)
+    customFields: [
+      {
+        label: { type: String, trim: true },
+        value: { type: String, trim: true },
+      },
+    ],
+
     status: {
       type: String,
       enum: ["draft", "sent", "paid", "overdue", "cancelled", "partial"],

@@ -226,14 +226,15 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                <View style={s.metaLabel}><Text>Place of Supply</Text></View>
                <View style={s.metaValue}><Text>{invoiceData.placeOfSupply || clientAddr.state || clientAddr.city || "-"}</Text></View>
              </View>
-             {/* <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
-               <View style={s.metaLabel}><Text>Work Order No.</Text></View>
-               <View style={s.metaValue}><Text>{invoiceData.workOrderNo || "-"}</Text></View>
-             </View>
-             <View style={s.row}>
-               <View style={s.metaLabel}><Text>Work Order Date</Text></View>
-               <View style={s.metaValue}><Text>{formatDate(invoiceData.workOrderDate)}</Text></View>
-             </View> */}
+             {/* CUSTOM FIELDS — rendered dynamically from invoiceData.customFields */}
+             {invoiceData.customFields && invoiceData.customFields.length > 0 && (
+               invoiceData.customFields.map((cf, cfIdx) => (
+                 <View key={`cf-${cfIdx}`} style={[s.row, { borderBottomWidth: cfIdx < invoiceData.customFields.length - 1 ? 1 : 0, borderColor: "#000" }]}>
+                   <View style={s.metaLabel}><Text>{cf.label || ""}</Text></View>
+                   <View style={s.metaValue}><Text>{cf.value || ""}</Text></View>
+                 </View>
+               ))
+             )}
           </View>
         </View>
 
