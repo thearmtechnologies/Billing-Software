@@ -15,7 +15,8 @@ import {
   Plus,
   Trash2,
   Edit2,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context/userContext";
@@ -170,41 +171,41 @@ const BankDetailsForm = () => {
     setIsFormOpen(true);
   };
 
-  const maskAcountNumber = (accNo) => {
+  const maskAccountNumber = (accNo) => {
     if(!accNo) return "";
     return `**** ${accNo.slice(-4)}`;
   };
 
+  // Full-page loader component
+  if (loading && bankAccounts.length === 0 && !isFormOpen) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#F9FAFB" }}>
+        <div style={{ textAlign: "center" }}>
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p style={{ color: "#6B7280", fontWeight: "500" }}>Loading your bank accounts...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: "20px 16px 60px 16px", maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
+    <div style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "24px", paddingBottom: "80px", maxWidth: "896px", margin: "0 auto" }} className="md:px-6 md:py-8">
+      {/* Header Section - Responsive */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }} className="sm:flex-row sm:items-center sm:justify-between md:mb-8">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }} className="md:gap-4 w-full">
           <button 
             onClick={() => navigate("/profile")} 
-            style={{ 
-              padding: "8px", 
-              marginRight: "16px", 
-              background: "transparent", 
-              border: "1px solid #E5E5E7", 
-              borderRadius: "50%", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center", 
-              width: "40px", 
-              height: "40px",
-              cursor: "pointer",
-              transition: "all 150ms ease",
-              flexShrink: 0
-            }} 
+            style={{ padding: "8px", marginLeft: "-8px", borderRadius: "9999px", flexShrink: 0 }}
             className="hover:bg-gray-100 transition-colors"
+            aria-label="Go back"
           >
-            <ArrowLeft style={{ width: "20px", height: "20px", color: "#1D1D1F" }} />
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 text-gray-900" />
           </button>
-          <div style={{ minWidth: 0 }}>
-            <h2 style={{ fontSize: "clamp(24px, 5vw, 28px)", fontWeight: "700", color: "#1D1D1F", letterSpacing: "-0.03em", margin: 0 }}>
+          <div>
+            <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#111827", letterSpacing: "-0.025em", margin: 0 }} className="md:text-3xl">
               Bank Accounts
-            </h2>
-            <p style={{ color: "#6E6E73", fontSize: "14px", marginTop: "4px" }}>
+            </h1>
+            <p style={{ fontSize: "14px", color: "#6B7280", marginTop: "2px", display: "none" }} className="sm:block">
               Manage your banking information for invoices
             </p>
           </div>
@@ -215,455 +216,583 @@ const BankDetailsForm = () => {
             style={{ 
               display: "flex", 
               alignItems: "center", 
-              padding: "10px 20px", 
-              backgroundColor: "#0071E3", 
-              color: "white", 
+              justifyContent: "center", 
+              paddingLeft: "16px", 
+              paddingRight: "16px", 
+              paddingTop: "10px", 
+              paddingBottom: "10px", 
+              backgroundColor: "#2563EB", 
               borderRadius: "12px", 
-              border: "none", 
               fontWeight: "600", 
               fontSize: "14px", 
-              cursor: "pointer", 
-              transition: "all 0.2s",
-              whiteSpace: "nowrap"
-            }} 
-            className="hover:bg-blue-600"
+              transition: "all 150ms ease", 
+              boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+              whiteSpace: "nowrap",
+              border: "none",
+              cursor: "pointer",
+              color: "white"
+            }}
+            className="hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
           >
-            <Plus style={{ width: "18px", height: "18px", marginRight: "6px" }} />
+            <Plus style={{ width: "16px", height: "16px", marginRight: "6px" }} />
             Add Account
           </button>
         )}
       </div>
 
       {!isFormOpen ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        // List View - Responsive Grid
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }} className="md:gap-6">
           {bankAccounts.length === 0 && !loading && (
-            <div style={{ textAlign: "center", padding: "60px 20px", backgroundColor: "#FBFBFD", borderRadius: "20px", border: "1px dashed #E5E5E7" }}>
-              <Landmark style={{ width: "48px", height: "48px", color: "#86868B", margin: "0 auto 16px" }} />
-              <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1D1D1F", marginBottom: "8px" }}>No bank accounts added</h3>
-              <p style={{ color: "#6E6E73", fontSize: "15px", marginBottom: "24px" }}>Add your bank details so clients know where to send payments.</p>
-              <button onClick={openAddForm} style={{ display: "inline-flex", alignItems: "center", padding: "10px 20px", backgroundColor: "#1D1D1F", color: "white", borderRadius: "12px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer" }}>
+            <div style={{ textAlign: "center", paddingTop: "48px", paddingBottom: "48px", backgroundColor: "#F9FAFB", borderRadius: "16px", border: "1px dashed #E5E7EB" }} className="md:py-20">
+              <Landmark style={{ width: "48px", height: "48px", color: "#9CA3AF", margin: "0 auto 16px" }} />
+              <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#111827", marginBottom: "8px" }}>No bank accounts added</h3>
+              <p style={{ color: "#6B7280", fontSize: "14px", marginBottom: "24px", maxWidth: "320px", margin: "0 auto 24px" }}>
+                Add your bank details so clients know where to send payments.
+              </p>
+              <button 
+                onClick={openAddForm} 
+                style={{ 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  paddingLeft: "20px", 
+                  paddingRight: "20px", 
+                  paddingTop: "10px", 
+                  paddingBottom: "10px", 
+                  backgroundColor: "#111827", 
+                  color: "white", 
+                  borderRadius: "12px", 
+                  fontWeight: "500", 
+                  fontSize: "14px", 
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 150ms ease"
+                }}
+                className="hover:bg-gray-800"
+              >
                 Add Bank Account
               </button>
             </div>
           )}
           
-          {bankAccounts.map((acc) => (
-            <div 
-              key={acc._id} 
-              style={{ 
-                display: "flex", 
-                flexDirection: "column", 
-                backgroundColor: "#FFFFFF", 
-                borderRadius: "20px", 
-                border: acc.isPrimary ? "2px solid #0071E3" : "1px solid #E5E5E7", 
-                padding: "20px", 
-                boxShadow: "0 4px 20px rgba(0,0,0,0.03)", 
-                transition: "all 0.2s", 
-                position: "relative" 
-              }}
-            >
-              {acc.isPrimary && (
-                <div style={{ 
-                  position: "absolute", 
-                  top: "16px", 
-                  right: "16px", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  backgroundColor: "#E8F2FF", 
-                  color: "#0071E3", 
-                  padding: "4px 10px", 
-                  borderRadius: "20px", 
-                  fontSize: "11px", 
-                  fontWeight: "600" 
-                }}>
-                  <Star style={{ width: "12px", height: "12px", marginRight: "4px", fill: "#0071E3" }} />
-                  Primary
-                </div>
-              )}
-              
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
-                <div style={{ 
-                  width: "48px", 
-                  height: "48px", 
-                  backgroundColor: "#F5F5F7", 
-                  borderRadius: "12px", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  marginRight: "16px",
-                  flexShrink: 0
-                }}>
-                  <Landmark style={{ width: "24px", height: "24px", color: "#1D1D1F" }} />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1D1D1F", margin: 0, wordBreak: "break-word" }}>{acc.bankName}</h3>
-                  <p style={{ color: "#6E6E73", fontSize: "14px", margin: "4px 0 0 0", wordBreak: "break-word" }}>{acc.accountHolderName}</p>
-                </div>
-              </div>
-              
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", 
-                gap: "16px", 
-                marginBottom: "20px" 
-              }}>
-                <div>
-                  <p style={{ fontSize: "11px", color: "#86868B", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Account Number</p>
-                  <p style={{ fontSize: "14px", color: "#1D1D1F", fontWeight: "500", fontVariantNumeric: "tabular-nums", wordBreak: "break-word" }}>{maskAcountNumber(acc.accountNumber)}</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: "11px", color: "#86868B", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>IFSC Code</p>
-                  <p style={{ fontSize: "14px", color: "#1D1D1F", fontWeight: "500", wordBreak: "break-word" }}>{acc.ifscCode}</p>
-                </div>
-                {acc.branchName && (
-                  <div>
-                    <p style={{ fontSize: "11px", color: "#86868B", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Branch</p>
-                    <p style={{ fontSize: "14px", color: "#1D1D1F", fontWeight: "500", wordBreak: "break-word" }}>{acc.branchName}</p>
-                  </div>
-                )}
-                {acc.upiId && (
-                  <div>
-                    <p style={{ fontSize: "11px", color: "#86868B", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>UPI ID</p>
-                    <p style={{ fontSize: "14px", color: "#1D1D1F", fontWeight: "500", wordBreak: "break-word" }}>{acc.upiId}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "12px", 
-                borderTop: "1px solid #F0F0F2", 
-                paddingTop: "16px",
-                flexWrap: "wrap"
-              }}>
-                <button 
-                  onClick={() => openEditForm(acc)} 
-                  style={{ 
+          {/* Bank Cards Grid - Responsive */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(1, minmax(0, 1fr))", gap: "16px" }} className="md:grid-cols-2 md:gap-6">
+            {bankAccounts.map((acc) => (
+              <div 
+                key={acc._id} 
+                style={{ 
+                  position: "relative", 
+                  backgroundColor: "white", 
+                  borderRadius: "16px", 
+                  border: `1px solid ${acc.isPrimary ? "#3B82F6" : "#E5E7EB"}`,
+                  padding: "16px",
+                  transition: "all 150ms ease",
+                  boxShadow: acc.isPrimary ? "0 4px 6px -1px rgba(59, 130, 246, 0.1)" : "none"
+                }}
+                className="md:p-5 hover:shadow-lg"
+              >
+                {/* Primary Badge - Mobile adjusted position */}
+                {acc.isPrimary && (
+                  <div style={{ 
+                    position: "absolute", 
+                    top: "12px", 
+                    right: "12px", 
                     display: "flex", 
                     alignItems: "center", 
-                    padding: "8px 16px", 
-                    background: "transparent", 
-                    border: "1px solid #E5E5E7", 
-                    borderRadius: "10px", 
-                    fontSize: "13px", 
+                    gap: "4px", 
+                    backgroundColor: "#EFF6FF", 
+                    color: "#2563EB", 
+                    paddingLeft: "8px", 
+                    paddingRight: "8px", 
+                    paddingTop: "4px", 
+                    paddingBottom: "4px", 
+                    borderRadius: "9999px", 
+                    fontSize: "11px", 
                     fontWeight: "600", 
-                    color: "#1D1D1F", 
-                    cursor: "pointer", 
-                    transition: "all 0.2s" 
-                  }} 
-                  className="hover:bg-gray-50"
-                >
-                  <Edit2 style={{ width: "16px", height: "16px", marginRight: "6px" }} /> Edit
-                </button>
-                <button 
-                  onClick={() => handleDelete(acc._id)} 
-                  style={{ 
+                    zIndex: 10 
+                  }}>
+                    <Star style={{ width: "12px", height: "12px", fill: "currentColor" }} />
+                    Primary
+                  </div>
+                )}
+                
+                {/* Bank Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }} className="md:gap-4">
+                  <div style={{ 
+                    width: "40px", 
+                    height: "40px", 
+                    backgroundColor: "#F3F4F6", 
+                    borderRadius: "12px", 
                     display: "flex", 
                     alignItems: "center", 
-                    padding: "8px 16px", 
-                    background: "transparent", 
-                    border: "1px solid #FCA5A5", 
-                    borderRadius: "10px", 
-                    fontSize: "13px", 
-                    fontWeight: "600", 
-                    color: "#DC2626", 
-                    cursor: "pointer", 
-                    transition: "all 0.2s" 
-                  }} 
-                  className="hover:bg-red-50"
-                >
-                  <Trash2 style={{ width: "16px", height: "16px", marginRight: "6px" }} /> Delete
-                </button>
-                <div style={{ flex: 1 }}></div>
-                {!acc.isPrimary && (
+                    justifyContent: "center", 
+                    flexShrink: 0 
+                  }} className="md:w-12 md:h-12">
+                    <Landmark style={{ width: "20px", height: "20px", color: "#374151" }} className="md:w-6 md:h-6" />
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h3 style={{ 
+                      fontWeight: "700", 
+                      color: "#111827", 
+                      fontSize: "16px", 
+                      margin: 0, 
+                      overflow: "hidden", 
+                      textOverflow: "ellipsis", 
+                      whiteSpace: "nowrap", 
+                      paddingRight: "48px" 
+                    }} className="md:text-lg">
+                      {acc.bankName}
+                    </h3>
+                    <p style={{ 
+                      color: "#6B7280", 
+                      fontSize: "12px", 
+                      margin: 0, 
+                      overflow: "hidden", 
+                      textOverflow: "ellipsis", 
+                      whiteSpace: "nowrap" 
+                    }} className="md:text-sm">
+                      {acc.accountHolderName}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Account Details - Responsive grid */}
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))", 
+                  gap: "12px", 
+                  marginBottom: "16px", 
+                  backgroundColor: "#F9FAFB", 
+                  padding: "12px", 
+                  borderRadius: "12px" 
+                }}>
+                  <div>
+                    <p style={{ fontSize: "10px", fontWeight: "600", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                      Account Number
+                    </p>
+                    <p style={{ fontSize: "14px", fontWeight: "500", color: "#1F2937", fontFamily: "monospace", marginTop: "2px" }}>
+                      {maskAccountNumber(acc.accountNumber)}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "10px", fontWeight: "600", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                      IFSC Code
+                    </p>
+                    <p style={{ fontSize: "14px", fontWeight: "500", color: "#1F2937", fontFamily: "monospace", marginTop: "2px" }}>
+                      {acc.ifscCode}
+                    </p>
+                  </div>
+                  {acc.branchName && (
+                    <div style={{ gridColumn: "span 2 / span 2" }} className="md:col-span-1">
+                      <p style={{ fontSize: "10px", fontWeight: "600", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                        Branch
+                      </p>
+                      <p style={{ fontSize: "14px", fontWeight: "500", color: "#1F2937", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "2px" }}>
+                        {acc.branchName}
+                      </p>
+                    </div>
+                  )}
+                  {acc.upiId && (
+                    <div style={{ gridColumn: "span 2 / span 2" }} className="md:col-span-1">
+                      <p style={{ fontSize: "10px", fontWeight: "600", color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                        UPI ID
+                      </p>
+                      <p style={{ fontSize: "14px", fontWeight: "500", color: "#1F2937", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "2px" }}>
+                        {acc.upiId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons - Responsive layout */}
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", paddingTop: "8px", borderTop: "1px solid #F3F4F6" }}>
                   <button 
-                    onClick={() => handleSetPrimary(acc._id)} 
+                    onClick={() => openEditForm(acc)} 
                     style={{ 
-                      padding: "8px 16px", 
-                      background: "transparent", 
-                      border: "none", 
-                      fontSize: "13px", 
-                      fontWeight: "600", 
-                      color: "#0071E3", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "6px", 
+                      paddingLeft: "12px", 
+                      paddingRight: "12px", 
+                      paddingTop: "6px", 
+                      paddingBottom: "6px", 
+                      backgroundColor: "white", 
+                      border: "1px solid #D1D5DB", 
+                      borderRadius: "8px", 
+                      color: "#374151", 
+                      fontSize: "14px", 
+                      fontWeight: "500", 
                       cursor: "pointer",
-                      whiteSpace: "nowrap"
-                    }} 
-                    className="hover:underline"
+                      transition: "all 150ms ease"
+                    }}
+                    className="hover:bg-gray-50"
                   >
-                    Set as Primary
+                    <Edit2 style={{ width: "14px", height: "14px" }} /> Edit
                   </button>
-                )}
+                  <button 
+                    onClick={() => handleDelete(acc._id)} 
+                    style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "6px", 
+                      paddingLeft: "12px", 
+                      paddingRight: "12px", 
+                      paddingTop: "6px", 
+                      paddingBottom: "6px", 
+                      backgroundColor: "white", 
+                      border: "1px solid #FECACA", 
+                      borderRadius: "8px", 
+                      color: "#DC2626", 
+                      fontSize: "14px", 
+                      fontWeight: "500", 
+                      cursor: "pointer",
+                      transition: "all 150ms ease"
+                    }}
+                    className="hover:bg-red-50"
+                  >
+                    <Trash2 style={{ width: "14px", height: "14px" }} /> Delete
+                  </button>
+                  <div style={{ flex: 1, display: "none" }} className="md:block"></div>
+                  {!acc.isPrimary && (
+                    <button 
+                      onClick={() => handleSetPrimary(acc._id)} 
+                      style={{ 
+                        paddingLeft: "12px", 
+                        paddingRight: "12px", 
+                        paddingTop: "6px", 
+                        paddingBottom: "6px", 
+                        color: "#2563EB", 
+                        fontSize: "14px", 
+                        fontWeight: "500", 
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        marginLeft: "auto"
+                      }}
+                      className="md:ml-0 hover:underline"
+                    >
+                      Set as Primary
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ) : (
-        <div style={{ backgroundColor: "white", borderRadius: "24px", border: "1px solid #E5E5E7", padding: "24px 20px", boxShadow: "0 4px 24px rgba(0,0,0,0.04)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
-            <h3 style={{ fontSize: "clamp(18px, 4vw, 20px)", fontWeight: "600", color: "#1D1D1F", margin: 0 }}>{editingId ? "Edit Bank Account" : "Add Bank Account"}</h3>
+        // Form View - Fully Responsive
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "16px", 
+          border: "1px solid #E5E7EB", 
+          padding: "20px", 
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
+        }} className="md:p-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }} className="sm:flex-row sm:items-center sm:justify-between">
+            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#111827", margin: 0 }} className="md:text-2xl">
+              {editingId ? "Edit Bank Account" : "Add Bank Account"}
+            </h2>
             <button 
               onClick={() => setIsFormOpen(false)} 
               style={{ 
-                background: "transparent", 
-                border: "none", 
-                color: "#6E6E73", 
+                color: "#6B7280", 
                 fontSize: "14px", 
                 fontWeight: "600", 
+                background: "transparent",
+                border: "none",
                 cursor: "pointer",
-                padding: "8px 12px",
-                borderRadius: "8px"
-              }} 
-              className="hover:text-gray-900 hover:bg-gray-100"
+                alignSelf: "flex-start"
+              }}
+              className="sm:self-auto hover:text-gray-700"
             >
               Cancel
             </button>
           </div>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>Account Holder Name *</label>
-              <input 
-                type="text" 
-                name="accountHolderName" 
-                value={formData.accountHolderName} 
-                onChange={handleChange} 
-                style={{ 
-                  width: "100%", 
-                  padding: "12px 16px", 
-                  border: `1px solid ${errors.accountHolderName ? "#DC2626" : "#E5E5E7"}`, 
-                  borderRadius: "12px", 
-                  outline: "none", 
-                  transition: "all 0.2s", 
-                  fontSize: "15px",
-                  boxSizing: "border-box"
-                }} 
-                className="focus:border-blue-500 focus:ring-2 focus:ring-blue-100" 
-              />
-              {errors.accountHolderName && <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{errors.accountHolderName}</p>}
-            </div>
-            
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>Bank Name *</label>
-              <input 
-                type="text" 
-                name="bankName" 
-                value={formData.bankName} 
-                onChange={handleChange} 
-                style={{ 
-                  width: "100%", 
-                  padding: "12px 16px", 
-                  border: `1px solid ${errors.bankName ? "#DC2626" : "#E5E5E7"}`, 
-                  borderRadius: "12px", 
-                  outline: "none", 
-                  fontSize: "15px",
-                  boxSizing: "border-box"
-                }} 
-                className="focus:border-blue-500 focus:ring-2 focus:ring-blue-100" 
-              />
-              {errors.bankName && <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{errors.bankName}</p>}
-            </div>
-            
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>Branch Name</label>
-              <input 
-                type="text" 
-                name="branchName" 
-                value={formData.branchName} 
-                onChange={handleChange} 
-                style={{ 
-                  width: "100%", 
-                  padding: "12px 16px", 
-                  border: "1px solid #E5E5E7", 
-                  borderRadius: "12px", 
-                  outline: "none", 
-                  fontSize: "15px",
-                  boxSizing: "border-box"
-                }} 
-                className="focus:border-blue-500 focus:ring-2 focus:ring-blue-100" 
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>Account Number *</label>
-              <div style={{ position: "relative" }}>
+            {/* 2-column grid for larger screens */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(1, minmax(0, 1fr))", gap: "16px" }} className="md:grid-cols-2">
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Account Holder Name *</label>
                 <input 
-                  type={showSensitiveData.accountNumber ? "text" : "password"} 
-                  name="accountNumber" 
-                  value={formData.accountNumber} 
+                  type="text" 
+                  name="accountHolderName" 
+                  value={formData.accountHolderName} 
                   onChange={handleChange} 
                   style={{ 
                     width: "100%", 
-                    padding: "12px 40px 12px 16px", 
-                    border: `1px solid ${errors.accountNumber ? "#DC2626" : "#E5E5E7"}`, 
-                    borderRadius: "12px", 
-                    outline: "none", 
-                    fontSize: "15px",
+                    paddingLeft: "16px", 
+                    paddingRight: "16px", 
+                    paddingTop: "10px", 
+                    paddingBottom: "10px", 
+                    border: `1px solid ${errors.accountHolderName ? "#EF4444" : "#D1D5DB"}`,
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "16px",
+                    transition: "all 150ms ease",
                     boxSizing: "border-box"
-                  }} 
-                  className="focus:border-blue-500 focus:ring-2 focus:ring-blue-100" 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => toggleSensitiveData("accountNumber")} 
-                  style={{ 
-                    position: "absolute", 
-                    right: "12px", 
-                    top: "50%", 
-                    transform: "translateY(-50%)", 
-                    background: "transparent", 
-                    border: "none", 
-                    color: "#86868B", 
-                    cursor: "pointer",
-                    padding: "4px"
                   }}
-                >
-                  {showSensitiveData.accountNumber ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                {errors.accountHolderName && <p style={{ color: "#EF4444", fontSize: "12px", marginTop: "4px" }}>{errors.accountHolderName}</p>}
               </div>
-              {errors.accountNumber && <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{errors.accountNumber}</p>}
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>IFSC Code *</label>
-              <div style={{ position: "relative" }}>
+              
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Bank Name *</label>
                 <input 
-                  type={showSensitiveData.ifscCode ? "text" : "password"} 
-                  name="ifscCode" 
-                  value={formData.ifscCode} 
+                  type="text" 
+                  name="bankName" 
+                  value={formData.bankName} 
                   onChange={handleChange} 
                   style={{ 
                     width: "100%", 
-                    padding: "12px 40px 12px 16px", 
-                    border: `1px solid ${errors.ifscCode ? "#DC2626" : "#E5E5E7"}`, 
-                    borderRadius: "12px", 
-                    outline: "none", 
-                    fontSize: "15px", 
-                    textTransform: "uppercase",
+                    paddingLeft: "16px", 
+                    paddingRight: "16px", 
+                    paddingTop: "10px", 
+                    paddingBottom: "10px", 
+                    border: `1px solid ${errors.bankName ? "#EF4444" : "#D1D5DB"}`,
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "16px",
+                    transition: "all 150ms ease",
                     boxSizing: "border-box"
-                  }} 
-                  className="focus:border-blue-500 focus:ring-2 focus:ring-blue-100" 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => toggleSensitiveData("ifscCode")} 
-                  style={{ 
-                    position: "absolute", 
-                    right: "12px", 
-                    top: "50%", 
-                    transform: "translateY(-50%)", 
-                    background: "transparent", 
-                    border: "none", 
-                    color: "#86868B", 
-                    cursor: "pointer",
-                    padding: "4px"
                   }}
-                >
-                  {showSensitiveData.ifscCode ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                {errors.bankName && <p style={{ color: "#EF4444", fontSize: "12px", marginTop: "4px" }}>{errors.bankName}</p>}
               </div>
-              {errors.ifscCode && <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{errors.ifscCode}</p>}
-            </div>
+              
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Branch Name</label>
+                <input 
+                  type="text" 
+                  name="branchName" 
+                  value={formData.branchName} 
+                  onChange={handleChange} 
+                  style={{ 
+                    width: "100%", 
+                    paddingLeft: "16px", 
+                    paddingRight: "16px", 
+                    paddingTop: "10px", 
+                    paddingBottom: "10px", 
+                    border: "1px solid #D1D5DB",
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "16px",
+                    transition: "all 150ms ease",
+                    boxSizing: "border-box"
+                  }}
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>Account Type</label>
-              <select 
-                name="accountType" 
-                value={formData.accountType} 
-                onChange={handleChange} 
-                style={{ 
-                  width: "100%", 
-                  padding: "12px 16px", 
-                  border: "1px solid #E5E5E7", 
-                  borderRadius: "12px", 
-                  outline: "none", 
-                  fontSize: "15px", 
-                  backgroundColor: "white",
-                  boxSizing: "border-box"
-                }}
-              >
-                <option value="savings">Savings</option>
-                <option value="current">Current</option>
-                <option value="salary">Salary</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Account Number *</label>
+                <div style={{ position: "relative" }}>
+                  <input 
+                    type={showSensitiveData.accountNumber ? "text" : "password"} 
+                    name="accountNumber" 
+                    value={formData.accountNumber} 
+                    onChange={handleChange} 
+                    style={{ 
+                      width: "100%", 
+                      paddingLeft: "16px", 
+                      paddingRight: "40px", 
+                      paddingTop: "10px", 
+                      paddingBottom: "10px", 
+                      border: `1px solid ${errors.accountNumber ? "#EF4444" : "#D1D5DB"}`,
+                      borderRadius: "12px",
+                      outline: "none",
+                      fontSize: "16px",
+                      transition: "all 150ms ease",
+                      boxSizing: "border-box"
+                    }}
+                    className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => toggleSensitiveData("accountNumber")} 
+                    style={{ 
+                      position: "absolute", 
+                      right: "12px", 
+                      top: "50%", 
+                      transform: "translateY(-50%)", 
+                      color: "#9CA3AF", 
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                    className="hover:text-gray-600"
+                  >
+                    {showSensitiveData.accountNumber ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.accountNumber && <p style={{ color: "#EF4444", fontSize: "12px", marginTop: "4px" }}>{errors.accountNumber}</p>}
+              </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#1D1D1F", marginBottom: "6px" }}>UPI ID (Optional)</label>
-              <input 
-                type="text" 
-                name="upiId" 
-                value={formData.upiId} 
-                onChange={handleChange} 
-                style={{ 
-                  width: "100%", 
-                  padding: "12px 16px", 
-                  border: "1px solid #E5E5E7", 
-                  borderRadius: "12px", 
-                  outline: "none", 
-                  fontSize: "15px",
-                  boxSizing: "border-box"
-                }} 
-              />
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>IFSC Code *</label>
+                <div style={{ position: "relative" }}>
+                  <input 
+                    type={showSensitiveData.ifscCode ? "text" : "password"} 
+                    name="ifscCode" 
+                    value={formData.ifscCode} 
+                    onChange={handleChange} 
+                    style={{ 
+                      width: "100%", 
+                      paddingLeft: "16px", 
+                      paddingRight: "40px", 
+                      paddingTop: "10px", 
+                      paddingBottom: "10px", 
+                      border: `1px solid ${errors.ifscCode ? "#EF4444" : "#D1D5DB"}`,
+                      borderRadius: "12px",
+                      outline: "none",
+                      fontSize: "16px",
+                      textTransform: "uppercase",
+                      transition: "all 150ms ease",
+                      boxSizing: "border-box"
+                    }}
+                    className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => toggleSensitiveData("ifscCode")} 
+                    style={{ 
+                      position: "absolute", 
+                      right: "12px", 
+                      top: "50%", 
+                      transform: "translateY(-50%)", 
+                      color: "#9CA3AF", 
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                    className="hover:text-gray-600"
+                  >
+                    {showSensitiveData.ifscCode ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.ifscCode && <p style={{ color: "#EF4444", fontSize: "12px", marginTop: "4px" }}>{errors.ifscCode}</p>}
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Account Type</label>
+                <select 
+                  name="accountType" 
+                  value={formData.accountType} 
+                  onChange={handleChange} 
+                  style={{ 
+                    width: "100%", 
+                    paddingLeft: "16px", 
+                    paddingRight: "16px", 
+                    paddingTop: "10px", 
+                    paddingBottom: "10px", 
+                    border: "1px solid #D1D5DB",
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "16px",
+                    backgroundColor: "white",
+                    boxSizing: "border-box"
+                  }}
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="savings">Savings</option>
+                  <option value="current">Current</option>
+                  <option value="salary">Salary</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div style={{ gridColumn: "span 1" }} className="md:col-span-2">
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>UPI ID (Optional)</label>
+                <input 
+                  type="text" 
+                  name="upiId" 
+                  value={formData.upiId} 
+                  onChange={handleChange} 
+                  style={{ 
+                    width: "100%", 
+                    paddingLeft: "16px", 
+                    paddingRight: "16px", 
+                    paddingTop: "10px", 
+                    paddingBottom: "10px", 
+                    border: "1px solid #D1D5DB",
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "16px",
+                    transition: "all 150ms ease",
+                    boxSizing: "border-box"
+                  }}
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
             </div>
 
             {!editingId && bankAccounts.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", marginTop: "4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
                 <input 
                   type="checkbox" 
                   id="isPrimary" 
                   name="isPrimary" 
                   checked={formData.isPrimary} 
                   onChange={handleChange} 
-                  style={{ width: "18px", height: "18px", marginRight: "10px", accentColor: "#0071E3" }} 
+                  style={{ width: "16px", height: "16px", borderRadius: "4px" }}
+                  className="border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="isPrimary" style={{ fontSize: "14px", color: "#1D1D1F", userSelect: "none", cursor: "pointer" }}>
+                <label htmlFor="isPrimary" style={{ fontSize: "14px", color: "#374151", fontWeight: "500", cursor: "pointer", userSelect: "none" }}>
                   Set as primary bank account
                 </label>
               </div>
             )}
 
-            <div style={{ marginTop: "8px", display: "flex", justifyContent: "flex-end", gap: "12px", flexWrap: "wrap" }}>
-              <button 
-                onClick={() => setIsFormOpen(false)} 
-                style={{ 
-                  padding: "12px 24px", 
-                  background: "#F2F2F7", 
-                  color: "#1D1D1F", 
-                  border: "none", 
-                  borderRadius: "12px", 
-                  fontSize: "15px", 
-                  fontWeight: "600", 
-                  cursor: "pointer",
-                  flex: "1",
-                  minWidth: "100px"
-                }}
-              >
-                Cancel
-              </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "16px" }} className="sm:flex-row-reverse">
               <button 
                 onClick={handleSave} 
                 disabled={loading} 
                 style={{ 
                   display: "flex", 
                   alignItems: "center", 
-                  justifyContent: "center",
-                  padding: "12px 24px", 
-                  background: "#0071E3", 
+                  justifyContent: "center", 
+                  gap: "8px", 
+                  paddingLeft: "24px", 
+                  paddingRight: "24px", 
+                  paddingTop: "10px", 
+                  paddingBottom: "10px", 
+                  backgroundColor: "#2563EB", 
                   color: "white", 
-                  border: "none", 
                   borderRadius: "12px", 
-                  fontSize: "15px", 
                   fontWeight: "600", 
-                  cursor: "pointer", 
+                  fontSize: "14px", 
+                  border: "none",
+                  cursor: "pointer",
                   opacity: loading ? 0.7 : 1,
-                  flex: "1",
-                  minWidth: "100px"
+                  transition: "all 150ms ease",
+                  boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
                 }}
+                className="hover:bg-blue-700"
               >
-                <Save style={{ width: "18px", height: "18px", marginRight: "8px" }} />
+                {loading ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
                 {loading ? "Saving..." : "Save Account"}
+              </button>
+              <button 
+                onClick={() => setIsFormOpen(false)} 
+                style={{ 
+                  paddingLeft: "24px", 
+                  paddingRight: "24px", 
+                  paddingTop: "10px", 
+                  paddingBottom: "10px", 
+                  backgroundColor: "#F3F4F6", 
+                  color: "#1F2937", 
+                  borderRadius: "12px", 
+                  fontWeight: "600", 
+                  fontSize: "14px", 
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 150ms ease"
+                }}
+                className="hover:bg-gray-200"
+              >
+                Cancel
               </button>
             </div>
           </div>

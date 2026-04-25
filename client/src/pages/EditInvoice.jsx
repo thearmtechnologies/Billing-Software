@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  ChevronUp,
+  ChevronDown,
+  X,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import ItemLabel from "../components/ItemLabel";
@@ -10,7 +17,16 @@ axios.defaults.withCredentials = true;
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const DEFAULT_UNITS = [
-  "km", "hour", "day", "month", "item", "kg", "piece", "service", "ton", "shift",
+  "km",
+  "hour",
+  "day",
+  "month",
+  "item",
+  "kg",
+  "piece",
+  "service",
+  "ton",
+  "shift",
 ];
 const pricingTypes = ["fixed", "flat", "tiered"];
 
@@ -21,11 +37,16 @@ const EditInvoice = () => {
   const [services, setServices] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [Itemtotals, setItemTotals] = useState([]);
   const [totals, setTotals] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
   const [collapsedItems, setCollapsedItems] = useState([]);
-  const [invoicePreferences, setInvoicePreferences] = useState({ prefix: "", suffix: "", addressBehavior: "billing_and_shipping" });
+  const [invoicePreferences, setInvoicePreferences] = useState({
+    prefix: "",
+    suffix: "",
+    addressBehavior: "billing_and_shipping",
+  });
   const [customUnits, setCustomUnits] = useState([]);
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [addUnitForIndex, setAddUnitForIndex] = useState(null);
@@ -37,7 +58,7 @@ const EditInvoice = () => {
   
   const toggleCollapse = (index) => {
     setCollapsedItems((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
 
@@ -61,12 +82,16 @@ const EditInvoice = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const clientsData = await fetchClients();
-      fetchServices();
-      fetchBankAccounts();
-      fetchCustomUnits();
-      const prefs = await fetchProfile();
-      fetchInvoice(prefs, clientsData);
+      try {
+        const clientsData = await fetchClients();
+        await fetchServices();
+        await fetchBankAccounts();
+        await fetchCustomUnits();
+        const prefs = await fetchProfile();
+        await fetchInvoice(prefs, clientsData);
+      } finally {
+        setPageLoading(false);
+      }
     };
     loadData();
   }, []);
@@ -117,7 +142,9 @@ const EditInvoice = () => {
         const prefs = {
           prefix: res.data.invoicePreferences.prefix || "",
           suffix: res.data.invoicePreferences.suffix || "",
-          addressBehavior: res.data.invoicePreferences.addressBehavior || "billing_and_shipping",
+          addressBehavior:
+            res.data.invoicePreferences.addressBehavior ||
+            "billing_and_shipping",
         };
         setInvoicePreferences(prefs);
         return prefs;
@@ -185,7 +212,7 @@ const EditInvoice = () => {
       const currentPrefix = prefs?.prefix || invoicePreferences.prefix;
       const currentSuffix = prefs?.suffix || invoicePreferences.suffix;
       const currentAddressBehavior = prefs?.addressBehavior || invoicePreferences.addressBehavior;
-      
+
       if (currentPrefix && editableInvoiceNumber.startsWith(currentPrefix)) {
         editableInvoiceNumber = editableInvoiceNumber.slice(currentPrefix.length);
       }
@@ -211,6 +238,35 @@ const EditInvoice = () => {
         }
       }
 
+      let bankAccountsList = bankAccounts;
+      if (bankAccountsList.length === 0) {
+        try {
+          const bankRes = await axios.get(`${BASE_URL}/users/bank-accounts`);
+          bankAccountsList = bankRes.data.bankAccounts || [];
+          setBankAccounts(bankAccountsList);
+        } catch (err) {
+          console.error("Failed to fetch bank accounts:", err);
+        }
+      }
+
+      let matchedBankDetails = invoice.bankDetails || null;
+      if (matchedBankDetails && bankAccountsList.length > 0) {
+        if (matchedBankDetails._id) {
+          const found = bankAccountsList.find(b => b._id === matchedBankDetails._id);
+          if (found) matchedBankDetails = found;
+        }
+        else if (matchedBankDetails.accountNumber) {
+          const found = bankAccountsList.find(b =>
+            b.accountNumber === matchedBankDetails.accountNumber ||
+            b.accountNumber?.slice(-4) === matchedBankDetails.accountNumber?.slice(-4)
+          );
+          if (found) matchedBankDetails = found;
+        }
+        else if (!matchedBankDetails._id) {
+          matchedBankDetails = { ...matchedBankDetails, _id: null };
+        }
+      }
+
       setFormData({
         invoiceNumber: editableInvoiceNumber,
         invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split("T")[0] : "",
@@ -223,7 +279,7 @@ const EditInvoice = () => {
         notes: invoice.notes || "",
         dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split("T")[0] : "",
         status: invoice.status || "draft",
-        bankDetails: invoice.bankDetails || null,
+        bankDetails: matchedBankDetails,
         includeLogo: invoice.includeLogo !== false,
         includeSignature: invoice.includeSignature !== false,
         customFields: invoice.customFields || [],
@@ -234,6 +290,7 @@ const EditInvoice = () => {
       }
     } catch (error) {
       toast.error("Failed to fetch invoice details");
+      console.error(error);
     }
   };
 
@@ -241,7 +298,11 @@ const EditInvoice = () => {
     const { name, value } = e.target;
     if (name === "client") {
       const selectedClient = clients.find((c) => c._id === value);
-      if (selectedClient && invoicePreferences.addressBehavior === "always_both" && !formData.shippingAddress) {
+      if (
+        selectedClient &&
+        invoicePreferences.addressBehavior === "always_both" &&
+        !formData.shippingAddress
+      ) {
         const addr = selectedClient.address;
         const formattedAddress = [
           addr.street,
@@ -267,7 +328,7 @@ const EditInvoice = () => {
     setFormData((prev) => ({
       ...prev,
       items: prev.items.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
+        i === index ? { ...item, [field]: value } : item,
       ),
     }));
   };
@@ -286,14 +347,15 @@ const EditInvoice = () => {
             ? {
                 ...item,
                 service: serviceId,
-                description: selectedService.description || selectedService.name,
+                description:
+                  selectedService.description || selectedService.name,
                 hsnCode: selectedService.hsnCode,
                 unitType: selectedService.unitType,
                 pricingType: selectedService.pricingType,
                 baseRate: selectedService.baseRate || 0,
                 pricingTiers: selectedService.pricingTiers || [],
               }
-            : item
+            : item,
         ),
       }));
     }
@@ -316,7 +378,9 @@ const EditInvoice = () => {
         },
       ],
     }));
-    setCollapsedItems((prev) => prev.filter((i) => i !== formData.items.length));
+    setCollapsedItems((prev) =>
+      prev.filter((i) => i !== formData.items.length),
+    );
   };
 
   const removeItem = (index) => {
@@ -325,8 +389,8 @@ const EditInvoice = () => {
         ...prev,
         items: prev.items.filter((_, i) => i !== index),
       }));
-      setCollapsedItems((prev) => 
-        prev.filter((i) => i !== index).map((i) => i > index ? i - 1 : i)
+      setCollapsedItems((prev) =>
+        prev.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)),
       );
     }
   };
@@ -365,7 +429,7 @@ const EditInvoice = () => {
               ...item,
               pricingTiers: item.pricingTiers.filter((_, t) => t !== tierIndex),
             }
-          : item
+          : item,
       ),
     }));
   };
@@ -442,7 +506,9 @@ const EditInvoice = () => {
         ...t,
         minValue: Number(t.minValue ?? 0),
         maxValue:
-          t.maxValue === "" || t.maxValue == null ? Infinity : Number(t.maxValue),
+          t.maxValue === "" || t.maxValue == null
+            ? Infinity
+            : Number(t.maxValue),
         rate: Number(t.rate ?? 0),
         rateType: t.rateType || "slabRate",
       }))
@@ -474,14 +540,22 @@ const EditInvoice = () => {
     return total;
   };
 
-  const calculateTotals = (items, discount = 0, discountType = "fixed", taxes = []) => {
+  const calculateTotals = (
+    items,
+    discount = 0,
+    discountType = "fixed",
+    taxes = [],
+  ) => {
     let subtotal = 0;
 
     const updatedItems = items.map((item) => {
       let baseAmount = 0;
       if (item.pricingType === "flat") {
         baseAmount = item.baseRate || 0;
-      } else if (item.pricingType === "tiered" && item.pricingTiers?.length > 0) {
+      } else if (
+        item.pricingType === "tiered" &&
+        item.pricingTiers?.length > 0
+      ) {
         baseAmount = calcTieredAmount(item);
       } else {
         baseAmount = (item.quantity || 0) * (item.baseRate || 0);
@@ -509,7 +583,16 @@ const EditInvoice = () => {
 
     const totalAmount = afterDiscount + totalTax;
 
-    return { updatedItems, subtotal, discount, discountType, discountAmount, taxes: updatedTaxes, totalTax, totalAmount };
+    return {
+      updatedItems,
+      subtotal,
+      discount,
+      discountType,
+      discountAmount,
+      taxes: updatedTaxes,
+      totalTax,
+      totalAmount,
+    };
   };
 
   useEffect(() => {
@@ -517,11 +600,16 @@ const EditInvoice = () => {
       formData.items,
       Number(formData.discount || 0),
       formData.discountType,
-      formData.taxes
+      formData.taxes,
     );
     setItemTotals(updatedItems);
     setTotals(newTotals);
-  }, [formData.items, formData.discount, formData.discountType, formData.taxes]);
+  }, [
+    formData.items,
+    formData.discount,
+    formData.discountType,
+    formData.taxes,
+  ]);
 
   const validateForm = () => {
     let errors = {};
@@ -557,7 +645,10 @@ const EditInvoice = () => {
           errors[`item_${index}_quantity`] = "Quantity is required";
           isValid = false;
         }
-        if (item.pricingType !== "tiered" && (item.baseRate === null || item.baseRate < 0 || item.baseRate === "")) {
+        if (
+          item.pricingType !== "tiered" &&
+          (item.baseRate === null || item.baseRate < 0 || item.baseRate === "")
+        ) {
           errors[`item_${index}_baseRate`] = "Base Rate is required";
           isValid = false;
         }
@@ -572,7 +663,8 @@ const EditInvoice = () => {
     let finalShippingAddress = payload.shippingAddress;
     if (
       invoicePreferences.addressBehavior === "billing_only" ||
-      (invoicePreferences.addressBehavior === "billing_and_shipping" && !isShippingDifferent)
+      (invoicePreferences.addressBehavior === "billing_and_shipping" &&
+        !isShippingDifferent)
     ) {
       finalShippingAddress = "";
     }
@@ -603,9 +695,9 @@ const EditInvoice = () => {
     try {
       const payload = cleanPayload(formData);
       await axios.patch(`${BASE_URL}/invoices/update-invoice/${id}`, payload);
-      toast.success("Invoice updated successfully!")
+      toast.success("Invoice updated successfully!");
       navigate("/invoices");
-    } catch(error) {
+    } catch (error) {
       toast.error("Failed to update invoice");
     } finally {
       setLoading(false);
@@ -676,7 +768,7 @@ const EditInvoice = () => {
     onBlur: (e) => {
       e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
       e.currentTarget.style.boxShadow = "none";
-    }
+    },
   };
 
   const errorFocusProps = (hasError) => ({
@@ -689,15 +781,61 @@ const EditInvoice = () => {
       }
     },
     onBlur: (e) => {
-      e.currentTarget.style.borderColor = hasError ? "#DC2626" : "var(--border, #E5E5E7)";
+      e.currentTarget.style.borderColor = hasError
+        ? "#DC2626"
+        : "var(--border, #E5E5E7)";
       e.currentTarget.style.boxShadow = "none";
-    }
+    },
   });
 
+  if (pageLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+          padding: "40px",
+        }}
+      >
+        <div
+          style={{
+            width: "48px",
+            height: "48px",
+            border: "4px solid rgba(0, 113, 227, 0.15)",
+            borderTopColor: "var(--accent, #0071E3)",
+            borderRadius: "50%",
+            animation: "spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+          }}
+        />
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px 16px 60px 16px" }}>
+    <div
+      style={{
+        maxWidth: "1000px",
+        margin: "0 auto",
+        padding: "20px 16px 60px 16px",
+      }}
+    >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "24px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
         <button
           onClick={() => navigate("/invoices")}
           style={{
@@ -727,37 +865,72 @@ const EditInvoice = () => {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 style={{ fontSize: "clamp(24px, 5vw, 28px)", fontWeight: 700, color: "var(--text-primary, #1D1D1F)", letterSpacing: "-0.03em", margin: 0 }}>
+          <h1
+            style={{
+              fontSize: "clamp(24px, 5vw, 28px)",
+              fontWeight: 700,
+              color: "var(--text-primary, #1D1D1F)",
+              letterSpacing: "-0.03em",
+              margin: 0,
+            }}
+          >
             Edit Invoice
           </h1>
-          <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "14px", marginTop: "4px" }}>
+          <p
+            style={{
+              color: "var(--text-secondary, #6E6E73)",
+              fontSize: "14px",
+              marginTop: "4px",
+            }}
+          >
             Update the details of this invoice
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+      >
         {/* Invoice Details Card */}
         <div style={cardStyle}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+              gap: "16px",
+            }}
+          >
             <div>
               <label style={labelStyle}>
                 Invoice Number <span style={{ color: "red" }}>*</span>
               </label>
-              <div 
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  ...inputStyle, 
-                  padding: 0, 
-                  overflow: "hidden", 
-                  borderColor: validationErrors.invoiceNumber ? "#DC2626" : "var(--border, #E5E5E7)" 
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  ...inputStyle,
+                  padding: 0,
+                  overflow: "hidden",
+                  borderColor: validationErrors.invoiceNumber
+                    ? "#DC2626"
+                    : "var(--border, #E5E5E7)",
                 }}
                 {...errorFocusProps(validationErrors.invoiceNumber)}
               >
                 {invoicePreferences.prefix && (
-                  <span style={{ padding: "12px 12px", background: "var(--surface-secondary, #FBFBFD)", borderRight: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span
+                    style={{
+                      padding: "12px 12px",
+                      background: "var(--surface-secondary, #FBFBFD)",
+                      borderRight: "1px solid var(--border, #E5E5E7)",
+                      color: "var(--text-secondary)",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                    }}
+                  >
                     {invoicePreferences.prefix}
                   </span>
                 )}
@@ -778,16 +951,35 @@ const EditInvoice = () => {
                   }}
                 />
                 {invoicePreferences.suffix && (
-                  <span style={{ padding: "12px 12px", background: "var(--surface-secondary, #FBFBFD)", borderLeft: "1px solid var(--border, #E5E5E7)", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span
+                    style={{
+                      padding: "12px 12px",
+                      background: "var(--surface-secondary, #FBFBFD)",
+                      borderLeft: "1px solid var(--border, #E5E5E7)",
+                      color: "var(--text-secondary)",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                    }}
+                  >
                     {invoicePreferences.suffix}
                   </span>
                 )}
               </div>
               {validationErrors.invoiceNumber && (
-                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.invoiceNumber}</p>
+                <p
+                  style={{
+                    color: "#DC2626",
+                    fontSize: "12px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {validationErrors.invoiceNumber}
+                </p>
               )}
             </div>
-            
+
             <div>
               <label style={labelStyle}>
                 Invoice Date <span style={{ color: "red" }}>*</span>
@@ -799,12 +991,22 @@ const EditInvoice = () => {
                 onChange={handleInputChange}
                 style={{
                   ...inputStyle,
-                  borderColor: validationErrors.invoiceDate ? "#DC2626" : "var(--border, #E5E5E7)",
+                  borderColor: validationErrors.invoiceDate
+                    ? "#DC2626"
+                    : "var(--border, #E5E5E7)",
                 }}
                 {...errorFocusProps(validationErrors.invoiceDate)}
               />
               {validationErrors.invoiceDate && (
-                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.invoiceDate}</p>
+                <p
+                  style={{
+                    color: "#DC2626",
+                    fontSize: "12px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {validationErrors.invoiceDate}
+                </p>
               )}
             </div>
 
@@ -819,12 +1021,22 @@ const EditInvoice = () => {
                 onChange={handleInputChange}
                 style={{
                   ...inputStyle,
-                  borderColor: validationErrors.dueDate ? "#DC2626" : "var(--border, #E5E5E7)",
+                  borderColor: validationErrors.dueDate
+                    ? "#DC2626"
+                    : "var(--border, #E5E5E7)",
                 }}
                 {...errorFocusProps(validationErrors.dueDate)}
               />
               {validationErrors.dueDate && (
-                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.dueDate}</p>
+                <p
+                  style={{
+                    color: "#DC2626",
+                    fontSize: "12px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {validationErrors.dueDate}
+                </p>
               )}
             </div>
 
@@ -838,7 +1050,9 @@ const EditInvoice = () => {
                 onChange={handleInputChange}
                 style={{
                   ...inputStyle,
-                  borderColor: validationErrors.client ? "#DC2626" : "var(--border, #E5E5E7)",
+                  borderColor: validationErrors.client
+                    ? "#DC2626"
+                    : "var(--border, #E5E5E7)",
                 }}
                 {...errorFocusProps(validationErrors.client)}
               >
@@ -850,25 +1064,55 @@ const EditInvoice = () => {
                 ))}
               </select>
               {validationErrors.client && (
-                <p style={{ color: "#DC2626", fontSize: "12px", marginTop: "6px" }}>{validationErrors.client}</p>
+                <p
+                  style={{
+                    color: "#DC2626",
+                    fontSize: "12px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {validationErrors.client}
+                </p>
               )}
             </div>
 
             {invoicePreferences.addressBehavior !== "billing_only" && (
               <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
-                {invoicePreferences.addressBehavior === "billing_and_shipping" && (
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "12px" }}>
+                {invoicePreferences.addressBehavior ===
+                  "billing_and_shipping" && (
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      marginBottom: "12px",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={isShippingDifferent}
                       onChange={(e) => setIsShippingDifferent(e.target.checked)}
-                      style={{ width: "18px", height: "18px", marginRight: "10px", cursor: "pointer" }}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "10px",
+                        cursor: "pointer",
+                      }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-primary, #1D1D1F)" }}>Shipping address is different</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "var(--text-primary, #1D1D1F)",
+                      }}
+                    >
+                      Shipping address is different
+                    </span>
                   </label>
                 )}
-                
-                {(invoicePreferences.addressBehavior === "always_both" || isShippingDifferent) && (
+
+                {(invoicePreferences.addressBehavior === "always_both" ||
+                  isShippingDifferent) && (
                   <div>
                     <label style={labelStyle}>
                       Shipping Address (Optional)
@@ -877,7 +1121,11 @@ const EditInvoice = () => {
                       name="shippingAddress"
                       value={formData.shippingAddress}
                       onChange={handleInputChange}
-                      style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+                      style={{
+                        ...inputStyle,
+                        minHeight: "80px",
+                        resize: "vertical",
+                      }}
                       placeholder="Enter separate shipping address (if different from client address)..."
                       {...focusProps}
                     />
@@ -887,9 +1135,7 @@ const EditInvoice = () => {
             )}
 
             <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>
-                Bank Account
-              </label>
+              <label style={labelStyle}>Bank Account</label>
               {bankAccounts.length > 0 ? (
                 <select
                   name="bankAccount"
@@ -901,14 +1147,38 @@ const EditInvoice = () => {
                   <option value="">Select Bank Account</option>
                   {bankAccounts.map((b) => (
                     <option key={b._id} value={b._id}>
-                      {b.bankName} - **** {b.accountNumber?.slice(-4)} {b.isPrimary ? "(Primary)" : ""}
+                      {b.bankName} - **** {b.accountNumber?.slice(-4)}{" "}
+                      {b.isPrimary ? "(Primary)" : ""}
                     </option>
                   ))}
                 </select>
               ) : (
-                <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "14px", color: "#6E6E73" }}>No bank accounts found.</span>
-                  <button type="button" onClick={() => navigate("/profile")} style={{ padding: "8px 16px", borderRadius: "10px", background: "#F5F5F7", border: "none", color: "#0071E3", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
+                <div
+                  style={{
+                    marginTop: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ fontSize: "14px", color: "#6E6E73" }}>
+                    No bank accounts found.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/profile")}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "10px",
+                      background: "#F5F5F7",
+                      border: "none",
+                      color: "#0071E3",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                    }}
+                  >
                     Add Account
                   </button>
                 </div>
@@ -919,27 +1189,42 @@ const EditInvoice = () => {
 
         {/* Items Section */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <h2 style={{ fontSize: "clamp(18px, 4vw, 20px)", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.02em", marginTop: "4px" }}>
+          <h2
+            style={{
+              fontSize: "clamp(18px, 4vw, 20px)",
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.02em",
+              marginTop: "4px",
+            }}
+          >
             Invoice Items
           </h2>
-          
+
           {formData.items.map((item, index) => {
             const isCollapsed = collapsedItems.includes(index);
             return (
-              <div key={index} style={{
-                ...cardStyle, 
-                padding: "0",
-                border: "1px solid var(--border-light, #F0F0F2)",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                transition: "all 200ms ease"
-              }}>
+              <div
+                key={index}
+                style={{
+                  ...cardStyle,
+                  padding: "0",
+                  border: "1px solid var(--border-light, #F0F0F2)",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                  transition: "all 200ms ease",
+                }}
+              >
                 {/* Header Toggle */}
                 <div
                   onClick={() => toggleCollapse(index)}
-                  style={{ 
+                  style={{
                     padding: "14px 16px",
-                    background: isCollapsed ? "transparent" : "var(--bg-page, #F7F7F8)",
-                    borderBottom: isCollapsed ? "none" : "1px solid var(--border-light, #F0F0F2)",
+                    background: isCollapsed
+                      ? "transparent"
+                      : "var(--bg-page, #F7F7F8)",
+                    borderBottom: isCollapsed
+                      ? "none"
+                      : "1px solid var(--border-light, #F0F0F2)",
                     borderRadius: isCollapsed ? "20px" : "20px 20px 0 0",
                     transition: "all 200ms ease",
                     cursor: "pointer",
@@ -950,14 +1235,28 @@ const EditInvoice = () => {
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-tertiary, #86868B)", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        minWidth: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "var(--text-tertiary, #86868B)",
+                          flexShrink: 0,
+                        }}
+                      >
                         {index + 1}.
                       </span>
-                      <span 
-                        style={{ 
-                          fontSize: "14px", 
-                          fontWeight: 600, 
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
                           color: "var(--text-primary, #1D1D1F)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -967,183 +1266,414 @@ const EditInvoice = () => {
                         }}
                         title={item.description || "New Item"}
                       >
-                        {item.description || <span style={{ color: "var(--text-tertiary, #86868B)", fontStyle: "italic" }}>New Item</span>}
+                        {item.description || (
+                          <span
+                            style={{
+                              color: "var(--text-tertiary, #86868B)",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            New Item
+                          </span>
+                        )}
                       </span>
                     </div>
                     {isCollapsed && item.quantity > 0 && (
-                      <div style={{ fontSize: "12px", color: "var(--text-secondary, #6E6E73)", marginTop: "4px" }}>
-                        Qty: {item.quantity} {item.unitType !== "item" ? item.unitType : ""}
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--text-secondary, #6E6E73)",
+                          marginTop: "4px",
+                        }}
+                      >
+                        Qty: {item.quantity}{" "}
+                        {item.unitType !== "item" ? item.unitType : ""}
                       </div>
                     )}
                   </div>
-                  
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                    <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                     </span>
-                    <div style={{
-                      width: "28px", height: "28px", borderRadius: "50%", background: "var(--surface, #FFFFFF)",
-                      border: "1px solid var(--border, #E5E5E7)", display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "transform 200ms ease"
-                    }}>
-                      {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                    <div
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "50%",
+                        background: "var(--surface, #FFFFFF)",
+                        border: "1px solid var(--border, #E5E5E7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "transform 200ms ease",
+                      }}
+                    >
+                      {isCollapsed ? (
+                        <ChevronDown size={14} />
+                      ) : (
+                        <ChevronUp size={14} />
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Form Content */}
                 {!isCollapsed && (
-                  <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--surface, #FFFFFF)", borderRadius: "0 0 20px 20px" }}>
-                    
+                  <div
+                    style={{
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                      background: "var(--surface, #FFFFFF)",
+                      borderRadius: "0 0 20px 20px",
+                    }}
+                  >
                     {/* Service Type */}
                     <div>
-                      <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Service</label>
+                      <label
+                        style={{
+                          ...labelStyle,
+                          fontSize: "11px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Service
+                      </label>
                       <select
                         value={item.service || ""}
-                        onChange={(e) => handleServiceChange(index, e.target.value)}
-                        style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
+                        onChange={(e) =>
+                          handleServiceChange(index, e.target.value)
+                        }
+                        style={{
+                          ...inputStyle,
+                          marginTop: 0,
+                          padding: "10px 12px",
+                        }}
                         {...focusProps}
                       >
                         <option value="">Custom (Manual)</option>
                         {services.map((s) => (
-                          <option key={s._id} value={s._id}>{s.name}</option>
+                          <option key={s._id} value={s._id}>
+                            {s.name}
+                          </option>
                         ))}
                       </select>
                     </div>
 
                     {/* Description Field */}
                     <div>
-                      <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Item Description <span style={{ color: "#DC2626" }}>*</span></label>
+                      <label
+                        style={{
+                          ...labelStyle,
+                          fontSize: "11px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Item Description{" "}
+                        <span style={{ color: "#DC2626" }}>*</span>
+                      </label>
                       <input
                         placeholder="e.g. Website Design, Server Hosting..."
                         value={item.description}
-                        onChange={(e) => handleItemChange(index, "description", e.target.value)}
+                        onChange={(e) =>
+                          handleItemChange(index, "description", e.target.value)
+                        }
                         style={{
                           ...inputStyle,
                           marginTop: 0,
                           padding: "10px 12px",
-                          borderColor: validationErrors[`item_${index}_description`] ? "#DC2626" : "var(--border, #E5E5E7)",
+                          borderColor: validationErrors[
+                            `item_${index}_description`
+                          ]
+                            ? "#DC2626"
+                            : "var(--border, #E5E5E7)",
                         }}
-                        {...errorFocusProps(validationErrors[`item_${index}_description`])}
+                        {...errorFocusProps(
+                          validationErrors[`item_${index}_description`],
+                        )}
                       />
                     </div>
 
                     {/* Qty & Unit Row */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "12px",
+                      }}
+                    >
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Qty <span style={{ color: "#DC2626" }}>*</span></label>
+                        <label
+                          style={{
+                            ...labelStyle,
+                            fontSize: "11px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          Qty <span style={{ color: "#DC2626" }}>*</span>
+                        </label>
                         <input
                           type="number"
                           placeholder="0"
                           value={item.quantity}
-                          onChange={(e) => handleItemChange(index, "quantity", +e.target.value)}
+                          onChange={(e) =>
+                            handleItemChange(index, "quantity", +e.target.value)
+                          }
                           style={{
                             ...inputStyle,
                             marginTop: 0,
                             padding: "10px 12px",
-                            borderColor: validationErrors[`item_${index}_quantity`] ? "#DC2626" : "var(--border, #E5E5E7)",
+                            borderColor: validationErrors[
+                              `item_${index}_quantity`
+                            ]
+                              ? "#DC2626"
+                              : "var(--border, #E5E5E7)",
                           }}
-                          {...errorFocusProps(validationErrors[`item_${index}_quantity`])}
+                          {...errorFocusProps(
+                            validationErrors[`item_${index}_quantity`],
+                          )}
                         />
                       </div>
 
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Unit</label>
+                        <label
+                          style={{
+                            ...labelStyle,
+                            fontSize: "11px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          Unit
+                        </label>
                         <select
-                          value={DEFAULT_UNITS.includes(item.unitType) || customUnits.some(u => u.name === item.unitType) ? item.unitType : item.unitType}
-                          onChange={(e) => handleUnitChange(index, e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
+                          value={
+                            DEFAULT_UNITS.includes(item.unitType) ||
+                            customUnits.some((u) => u.name === item.unitType)
+                              ? item.unitType
+                              : item.unitType
+                          }
+                          onChange={(e) =>
+                            handleUnitChange(index, e.target.value)
+                          }
+                          style={{
+                            ...inputStyle,
+                            marginTop: 0,
+                            padding: "10px 12px",
+                          }}
                           {...focusProps}
                         >
                           <optgroup label="Default Units">
-                            {DEFAULT_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                            {DEFAULT_UNITS.map((u) => (
+                              <option key={u} value={u}>
+                                {u}
+                              </option>
+                            ))}
                           </optgroup>
                           {customUnits.length > 0 && (
                             <optgroup label="Custom Units">
-                              {customUnits.map((u) => <option key={u._id} value={u.name}>{u.name}{u.shortCode ? ` (${u.shortCode})` : ""}</option>)}
+                              {customUnits.map((u) => (
+                                <option key={u._id} value={u.name}>
+                                  {u.name}
+                                  {u.shortCode ? ` (${u.shortCode})` : ""}
+                                </option>
+                              ))}
                             </optgroup>
                           )}
                           <optgroup label="">
-                            <option value="__add_custom__">+ Add Custom Unit</option>
+                            <option value="__add_custom__">
+                              + Add Custom Unit
+                            </option>
                           </optgroup>
-                          {item.unitType && !DEFAULT_UNITS.includes(item.unitType) && !customUnits.some(u => u.name === item.unitType) && item.unitType !== "__add_custom__" && (
-                            <option value={item.unitType} hidden>{item.unitType}</option>
-                          )}
+                          {item.unitType &&
+                            !DEFAULT_UNITS.includes(item.unitType) &&
+                            !customUnits.some(
+                              (u) => u.name === item.unitType,
+                            ) &&
+                            item.unitType !== "__add_custom__" && (
+                              <option value={item.unitType} hidden>
+                                {item.unitType}
+                              </option>
+                            )}
                         </select>
                       </div>
                     </div>
 
                     {/* Pricing Type & HSN Row */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "12px",
+                      }}
+                    >
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Pricing Type</label>
+                        <label
+                          style={{
+                            ...labelStyle,
+                            fontSize: "11px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          Pricing Type
+                        </label>
                         <select
                           value={item.pricingType}
-                          onChange={(e) => handleItemChange(index, "pricingType", e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "pricingType",
+                              e.target.value,
+                            )
+                          }
+                          style={{
+                            ...inputStyle,
+                            marginTop: 0,
+                            padding: "10px 12px",
+                          }}
                           {...focusProps}
                         >
-                          {pricingTypes.map((p) => <option key={p} value={p}>{p}</option>)}
+                          {pricingTypes.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>HSN/SAC <span style={{ fontWeight: 400 }}>(opt)</span></label>
+                        <label
+                          style={{
+                            ...labelStyle,
+                            fontSize: "11px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          HSN/SAC <span style={{ fontWeight: 400 }}>(opt)</span>
+                        </label>
                         <input
                           placeholder="-"
                           value={item.hsnCode || ""}
-                          onChange={(e) => handleItemChange(index, "hsnCode", e.target.value)}
-                          style={{ ...inputStyle, marginTop: 0, padding: "10px 12px" }}
+                          onChange={(e) =>
+                            handleItemChange(index, "hsnCode", e.target.value)
+                          }
+                          style={{
+                            ...inputStyle,
+                            marginTop: 0,
+                            padding: "10px 12px",
+                          }}
                           {...focusProps}
                         />
                       </div>
                     </div>
 
                     {/* Rate & Item Total */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "12px",
+                      }}
+                    >
                       {item.pricingType !== "tiered" ? (
                         <div>
-                          <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Rate (Rs.) <span style={{ color: "#DC2626" }}>*</span></label>
+                          <label
+                            style={{
+                              ...labelStyle,
+                              fontSize: "11px",
+                              marginBottom: "6px",
+                            }}
+                          >
+                            Rate (Rs.){" "}
+                            <span style={{ color: "#DC2626" }}>*</span>
+                          </label>
                           <input
                             type="number"
                             placeholder="0.00"
                             value={item.baseRate}
-                            onChange={(e) => handleItemChange(index, "baseRate", +e.target.value)}
+                            onChange={(e) =>
+                              handleItemChange(
+                                index,
+                                "baseRate",
+                                +e.target.value,
+                              )
+                            }
                             style={{
                               ...inputStyle,
                               marginTop: 0,
                               padding: "10px 12px",
-                              borderColor: validationErrors[`item_${index}_baseRate`] ? "#DC2626" : "var(--border, #E5E5E7)",
+                              borderColor: validationErrors[
+                                `item_${index}_baseRate`
+                              ]
+                                ? "#DC2626"
+                                : "var(--border, #E5E5E7)",
                             }}
-                            {...errorFocusProps(validationErrors[`item_${index}_baseRate`])}
+                            {...errorFocusProps(
+                              validationErrors[`item_${index}_baseRate`],
+                            )}
                           />
                         </div>
                       ) : (
                         <div>
-                          <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Rate</label>
-                          <div style={{ 
-                            ...inputStyle, 
-                            marginTop: 0, 
-                            padding: "10px 12px", 
-                            background: "var(--bg-page, #F7F7F8)",
-                            color: "var(--text-secondary)",
-                            textAlign: "center"
-                          }}>
+                          <label
+                            style={{
+                              ...labelStyle,
+                              fontSize: "11px",
+                              marginBottom: "6px",
+                            }}
+                          >
+                            Rate
+                          </label>
+                          <div
+                            style={{
+                              ...inputStyle,
+                              marginTop: 0,
+                              padding: "10px 12px",
+                              background: "var(--bg-page, #F7F7F8)",
+                              color: "var(--text-secondary)",
+                              textAlign: "center",
+                            }}
+                          >
                             Tiered Pricing
                           </div>
                         </div>
                       )}
 
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px", marginBottom: "6px" }}>Item Total</label>
-                        <div style={{ 
-                          ...inputStyle, 
-                          marginTop: 0, 
-                          padding: "10px 12px", 
-                          background: "var(--bg-page, #F7F7F8)",
-                          fontWeight: 600,
-                          textAlign: "right"
-                        }}>
+                        <label
+                          style={{
+                            ...labelStyle,
+                            fontSize: "11px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          Item Total
+                        </label>
+                        <div
+                          style={{
+                            ...inputStyle,
+                            marginTop: 0,
+                            padding: "10px 12px",
+                            background: "var(--bg-page, #F7F7F8)",
+                            fontWeight: 600,
+                            textAlign: "right",
+                          }}
+                        >
                           Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                         </div>
                       </div>
@@ -1155,10 +1685,20 @@ const EditInvoice = () => {
                         type="button"
                         onClick={() => removeItem(index)}
                         style={{
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                          color: "#DC2626", background: "#FEF2F2", border: "1px solid #FEE2E2",
-                          cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: "10px",
-                          borderRadius: "12px", transition: "all 150ms ease", width: "100%"
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          color: "#DC2626",
+                          background: "#FEF2F2",
+                          border: "1px solid #FEE2E2",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          padding: "10px",
+                          borderRadius: "12px",
+                          transition: "all 150ms ease",
+                          width: "100%",
                         }}
                       >
                         <Trash2 size={16} /> Remove Item
@@ -1166,64 +1706,218 @@ const EditInvoice = () => {
                     )}
 
                     {/* Validation errors summary */}
-                    {(validationErrors[`item_${index}_description`] || validationErrors[`item_${index}_quantity`] || validationErrors[`item_${index}_baseRate`]) && (
-                      <div style={{ color: "#DC2626", fontSize: "11px", paddingLeft: "4px" }}>
-                        Please ensure description, valid quantity, and rate are provided.
+                    {(validationErrors[`item_${index}_description`] ||
+                      validationErrors[`item_${index}_quantity`] ||
+                      validationErrors[`item_${index}_baseRate`]) && (
+                      <div
+                        style={{
+                          color: "#DC2626",
+                          fontSize: "11px",
+                          paddingLeft: "4px",
+                        }}
+                      >
+                        Please ensure description, valid quantity, and rate are
+                        provided.
                       </div>
                     )}
 
                     {/* Tiered Pricing Config */}
                     {item.pricingType === "tiered" && (
-                      <div style={{ marginTop: "8px", padding: "12px", background: "var(--bg-page, #F7F7F8)", borderRadius: "12px", border: "1px solid var(--border-light, #F0F0F2)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                          <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>Tiered Rates</h4>
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "12px",
+                          background: "var(--bg-page, #F7F7F8)",
+                          borderRadius: "12px",
+                          border: "1px solid var(--border-light, #F0F0F2)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "12px",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            Tiered Rates
+                          </h4>
                           <button
                             type="button"
                             onClick={() => addTier(index)}
-                            style={{ ...btnSecondary, padding: "6px 12px", fontSize: "12px", borderRadius: "8px" }}
+                            style={{
+                              ...btnSecondary,
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              borderRadius: "8px",
+                            }}
                           >
-                            <Plus size={12} style={{ marginRight: "4px" }} /> Add Tier
+                            <Plus size={12} style={{ marginRight: "4px" }} />{" "}
+                            Add Tier
                           </button>
                         </div>
-                        
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                          }}
+                        >
                           {item.pricingTiers.map((tier, tIndex) => (
-                            <div 
-                              key={tIndex} 
-                              style={{ 
-                                background: "#fff", 
-                                padding: "10px", 
-                                borderRadius: "10px", 
+                            <div
+                              key={tIndex}
+                              style={{
+                                background: "#fff",
+                                padding: "10px",
+                                borderRadius: "10px",
                                 border: "1px solid var(--border, #E5E5E7)",
                                 display: "flex",
                                 flexWrap: "wrap",
                                 gap: "10px",
-                                alignItems: "center"
+                                alignItems: "center",
                               }}
                             >
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "2 1 min(200px, 100%)" }}>
-                                <input type="number" placeholder="Min" value={tier.minValue} onChange={(e) => handleTierChange(index, tIndex, "minValue", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
-                                <span style={{ fontWeight: 500, color: "var(--text-secondary)" }}>-</span>
-                                <input type="number" value={tier.maxValue ?? ""} onChange={(e) => handleTierChange(index, tIndex, "maxValue", e.target.value)} placeholder="Max" style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  flex: "2 1 min(200px, 100%)",
+                                }}
+                              >
+                                <input
+                                  type="number"
+                                  placeholder="Min"
+                                  value={tier.minValue}
+                                  onChange={(e) =>
+                                    handleTierChange(
+                                      index,
+                                      tIndex,
+                                      "minValue",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px",
+                                    fontSize: "13px",
+                                    flex: 1,
+                                    minWidth: "60px",
+                                  }}
+                                  {...focusProps}
+                                />
+                                <span
+                                  style={{
+                                    fontWeight: 500,
+                                    color: "var(--text-secondary)",
+                                  }}
+                                >
+                                  -
+                                </span>
+                                <input
+                                  type="number"
+                                  value={tier.maxValue ?? ""}
+                                  onChange={(e) =>
+                                    handleTierChange(
+                                      index,
+                                      tIndex,
+                                      "maxValue",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Max"
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px",
+                                    fontSize: "13px",
+                                    flex: 1,
+                                    minWidth: "60px",
+                                  }}
+                                  {...focusProps}
+                                />
                               </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "2 1 min(200px, 100%)" }}>
-                                <input type="number" placeholder="Rate" value={tier.rate} onChange={(e) => handleTierChange(index, tIndex, "rate", +e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "60px" }} {...focusProps} />
-                                <select value={tier.rateType || "slabRate"} onChange={(e) => handleTierChange(index, tIndex, "rateType", e.target.value)} style={{ ...inputStyle, marginTop: 0, padding: "10px", fontSize: "13px", flex: 1, minWidth: "80px" }} {...focusProps}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  flex: "2 1 min(200px, 100%)",
+                                }}
+                              >
+                                <input
+                                  type="number"
+                                  placeholder="Rate"
+                                  value={tier.rate}
+                                  onChange={(e) =>
+                                    handleTierChange(
+                                      index,
+                                      tIndex,
+                                      "rate",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px",
+                                    fontSize: "13px",
+                                    flex: 1,
+                                    minWidth: "60px",
+                                  }}
+                                  {...focusProps}
+                                />
+                                <select
+                                  value={tier.rateType || "slabRate"}
+                                  onChange={(e) =>
+                                    handleTierChange(
+                                      index,
+                                      tIndex,
+                                      "rateType",
+                                      e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px",
+                                    fontSize: "13px",
+                                    flex: 1,
+                                    minWidth: "80px",
+                                  }}
+                                  {...focusProps}
+                                >
                                   <option value="slabRate">Slab</option>
                                   <option value="unitRate">Unit</option>
                                 </select>
                               </div>
-                              <div style={{ display: "flex", flex: "1 1 min(120px, 100%)" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flex: "1 1 min(120px, 100%)",
+                                }}
+                              >
                                 <button
                                   type="button"
                                   onClick={() => deleteTier(index, tIndex)}
                                   style={{
                                     width: "100%",
-                                    background: "#FEF2F2", 
-                                    border: "1px solid #FEE2E2", 
-                                    color: "#DC2626", 
-                                    borderRadius: "8px", 
-                                    cursor: "pointer", 
+                                    background: "#FEF2F2",
+                                    border: "1px solid #FEE2E2",
+                                    color: "#DC2626",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
                                     padding: "10px",
                                     fontSize: "13px",
                                     fontWeight: 500,
@@ -1231,12 +1925,22 @@ const EditInvoice = () => {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     height: "40px",
-                                    transition: "all 200ms ease"
+                                    transition: "all 200ms ease",
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.background = "#FEE2E2"}
-                                  onMouseLeave={(e) => e.currentTarget.style.background = "#FEF2F2"}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.background =
+                                      "#FEE2E2")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.background =
+                                      "#FEF2F2")
+                                  }
                                 >
-                                  <Trash2 size={14} style={{ marginRight: "6px" }} /> Remove Tier
+                                  <Trash2
+                                    size={14}
+                                    style={{ marginRight: "6px" }}
+                                  />{" "}
+                                  Remove Tier
                                 </button>
                               </div>
                             </div>
@@ -1253,7 +1957,13 @@ const EditInvoice = () => {
           <button
             type="button"
             onClick={addItem}
-            style={{ ...btnSecondary, padding: "14px", width: "100%", borderStyle: "dashed", borderColor: "var(--border, #E5E5E7)" }}
+            style={{
+              ...btnSecondary,
+              padding: "14px",
+              width: "100%",
+              borderStyle: "dashed",
+              borderColor: "var(--border, #E5E5E7)",
+            }}
           >
             <Plus size={16} style={{ marginRight: "8px" }} /> Add Another Item
           </button>
@@ -1261,27 +1971,51 @@ const EditInvoice = () => {
 
         {/* Global Configuration & Totals */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          
           <div style={cardStyle}>
-            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Discounts & Taxes</h3>
-            
+            <h3
+              style={{
+                fontSize: "clamp(16px, 4vw, 18px)",
+                fontWeight: 600,
+                marginBottom: "16px",
+              }}
+            >
+              Discounts & Taxes
+            </h3>
+
             <div style={{ marginBottom: "20px" }}>
               <label style={labelStyle}>Global Discount</label>
-              <div style={{ display: "flex", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  marginTop: "8px",
+                  flexWrap: "wrap",
+                }}
+              >
                 <input
                   type="number"
                   name="discount"
                   value={formData.discount || ""}
                   onChange={handleInputChange}
                   placeholder="0"
-                  style={{ ...inputStyle, marginTop: 0, flex: "2", minWidth: "120px" }}
+                  style={{
+                    ...inputStyle,
+                    marginTop: 0,
+                    flex: "2",
+                    minWidth: "120px",
+                  }}
                   {...focusProps}
                 />
                 <select
                   name="discountType"
                   value={formData.discountType || "fixed"}
                   onChange={handleInputChange}
-                  style={{ ...inputStyle, marginTop: 0, flex: "1", minWidth: "100px" }}
+                  style={{
+                    ...inputStyle,
+                    marginTop: 0,
+                    flex: "1",
+                    minWidth: "100px",
+                  }}
                   {...focusProps}
                 >
                   <option value="fixed">Fixed (Rs.)</option>
@@ -1291,43 +2025,108 @@ const EditInvoice = () => {
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                }}
+              >
                 <label style={labelStyle}>Taxes Applied</label>
                 <button
                   type="button"
                   onClick={addTax}
-                  style={{ background: "transparent", border: "none", color: "var(--accent, #0071E3)", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--accent, #0071E3)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
                 >
                   + Add Tax
                 </button>
               </div>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
                 {formData.taxes?.map((tax, index) => (
-                  <div key={index} style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <input
                       type="text"
                       placeholder="Tax Name"
                       value={tax.name}
-                      onChange={(e) => handleTaxChange(index, "name", e.target.value)}
-                      style={{ ...inputStyle, marginTop: 0, flex: "2", minWidth: "120px" }}
+                      onChange={(e) =>
+                        handleTaxChange(index, "name", e.target.value)
+                      }
+                      style={{
+                        ...inputStyle,
+                        marginTop: 0,
+                        flex: "2",
+                        minWidth: "120px",
+                      }}
                       {...focusProps}
                     />
-                    <div style={{ display: "flex", alignItems: "center", position: "relative", flex: "1", minWidth: "80px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        position: "relative",
+                        flex: "1",
+                        minWidth: "80px",
+                      }}
+                    >
                       <input
                         type="number"
                         placeholder="0"
                         value={tax.rate}
-                        onChange={(e) => handleTaxChange(index, "rate", +e.target.value)}
-                        style={{ ...inputStyle, marginTop: 0, paddingRight: "28px" }}
+                        onChange={(e) =>
+                          handleTaxChange(index, "rate", +e.target.value)
+                        }
+                        style={{
+                          ...inputStyle,
+                          marginTop: 0,
+                          paddingRight: "28px",
+                        }}
                         {...focusProps}
                       />
-                      <span style={{ position: "absolute", right: "12px", color: "var(--text-tertiary)" }}>%</span>
+                      <span
+                        style={{
+                          position: "absolute",
+                          right: "12px",
+                          color: "var(--text-tertiary)",
+                        }}
+                      >
+                        %
+                      </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeTax(index)}
-                      style={{ background: "transparent", border: "none", color: "#DC2626", padding: "8px", cursor: "pointer" }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "#DC2626",
+                        padding: "8px",
+                        cursor: "pointer",
+                      }}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -1410,68 +2209,134 @@ const EditInvoice = () => {
           )}
 
           <div style={cardStyle}>
-            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Display Preferences</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", userSelect: "none" }}>
-                <div style={{
-                  position: "relative",
-                  width: "44px",
-                  height: "24px",
-                  background: formData.includeLogo ? "var(--accent, #34C759)" : "var(--border, #E5E5E7)",
-                  borderRadius: "12px",
-                  transition: "background 0.3s ease",
-                }}>
-                  <div style={{
-                    position: "absolute",
-                    top: "2px",
-                    left: formData.includeLogo ? "22px" : "2px",
-                    width: "20px",
-                    height: "20px",
-                    background: "#fff",
-                    borderRadius: "50%",
-                    transition: "left 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2)",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  }} />
+            <h3
+              style={{
+                fontSize: "clamp(16px, 4vw, 18px)",
+                fontWeight: 600,
+                marginBottom: "16px",
+              }}
+            >
+              Display Preferences
+            </h3>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: "44px",
+                    height: "24px",
+                    background: formData.includeLogo
+                      ? "var(--accent, #34C759)"
+                      : "var(--border, #E5E5E7)",
+                    borderRadius: "12px",
+                    transition: "background 0.3s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                      left: formData.includeLogo ? "22px" : "2px",
+                      width: "20px",
+                      height: "20px",
+                      background: "#fff",
+                      borderRadius: "50%",
+                      transition:
+                        "left 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2)",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    }}
+                  />
                 </div>
                 <input
                   type="checkbox"
                   name="includeLogo"
                   checked={formData.includeLogo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      [e.target.name]: e.target.checked,
+                    }))
+                  }
                   style={{ display: "none" }}
                 />
-                <span style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-primary)" }}>Include Logo</span>
+                <span
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  Include Logo
+                </span>
               </label>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", userSelect: "none" }}>
-                <div style={{
-                  position: "relative",
-                  width: "44px",
-                  height: "24px",
-                  background: formData.includeSignature ? "var(--accent, #34C759)" : "var(--border, #E5E5E7)",
-                  borderRadius: "12px",
-                  transition: "background 0.3s ease",
-                }}>
-                  <div style={{
-                    position: "absolute",
-                    top: "2px",
-                    left: formData.includeSignature ? "22px" : "2px",
-                    width: "20px",
-                    height: "20px",
-                    background: "#fff",
-                    borderRadius: "50%",
-                    transition: "left 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2)",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  }} />
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: "44px",
+                    height: "24px",
+                    background: formData.includeSignature
+                      ? "var(--accent, #34C759)"
+                      : "var(--border, #E5E5E7)",
+                    borderRadius: "12px",
+                    transition: "background 0.3s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                      left: formData.includeSignature ? "22px" : "2px",
+                      width: "20px",
+                      height: "20px",
+                      background: "#fff",
+                      borderRadius: "50%",
+                      transition:
+                        "left 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2)",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    }}
+                  />
                 </div>
                 <input
                   type="checkbox"
                   name="includeSignature"
                   checked={formData.includeSignature}
-                  onChange={(e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      [e.target.name]: e.target.checked,
+                    }))
+                  }
                   style={{ display: "none" }}
                 />
-                <span style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-primary)" }}>Include Signature</span>
+                <span
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  Include Signature
+                </span>
               </label>
             </div>
           </div>
@@ -1479,48 +2344,115 @@ const EditInvoice = () => {
 
         {/* Summary Card */}
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <div style={{ ...cardStyle, background: "var(--surface-secondary, #FBFBFD)", border: "none", width: "100%", maxWidth: "500px" }}>
-            <h3 style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, marginBottom: "16px" }}>Summary</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
+          <div
+            style={{
+              ...cardStyle,
+              background: "var(--surface-secondary, #FBFBFD)",
+              border: "none",
+              width: "100%",
+              maxWidth: "500px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "clamp(16px, 4vw, 18px)",
+                fontWeight: 600,
+                marginBottom: "16px",
+              }}
+            >
+              Summary
+            </h3>
+
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  color: "var(--text-secondary)",
+                }}
+              >
                 <span>Subtotal</span>
                 <span>Rs. {(totals?.subtotal ?? 0).toFixed(2)}</span>
               </div>
-              
-              {(totals?.discountAmount > 0) && (
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#059669" }}>
+
+              {totals?.discountAmount > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "#059669",
+                  }}
+                >
                   <span>Discount</span>
                   <span>- Rs. {(totals?.discountAmount ?? 0).toFixed(2)}</span>
                 </div>
               )}
-              
-              <div style={{ borderTop: "1px solid var(--border, #E5E5E7)", padding: "8px 0", display: "flex", flexDirection: "column", gap: "8px" }}>
+
+              <div
+                style={{
+                  borderTop: "1px solid var(--border, #E5E5E7)",
+                  padding: "8px 0",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
                 {totals?.taxes?.map((tax, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
-                    <span>{tax.name || 'Tax'} ({tax.rate}%)</span>
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    <span>
+                      {tax.name || "Tax"} ({tax.rate}%)
+                    </span>
                     <span>+ Rs. {(tax.amount ?? 0).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border, #E5E5E7)", paddingTop: "16px", marginTop: "4px", gap: "12px" }}>
-                <span style={{ fontSize: "clamp(16px, 4vw, 18px)", fontWeight: 600, flexShrink: 0 }}>Total Amount</span>
-                <span style={{
-                  fontSize: (() => {
-                    const len = (totals?.totalAmount ?? 0).toFixed(2).length;
-                    if (len > 18) return "13px";
-                    if (len > 14) return "16px";
-                    if (len > 10) return "20px";
-                    return "clamp(22px, 5vw, 28px)";
-                  })(),
-                  fontWeight: 700,
-                  color: "var(--text-primary)",
-                  letterSpacing: "-0.02em",
-                  textAlign: "right",
-                  wordBreak: "break-all",
-                  minWidth: 0,
-                }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderTop: "1px solid var(--border, #E5E5E7)",
+                  paddingTop: "16px",
+                  marginTop: "4px",
+                  gap: "12px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "clamp(16px, 4vw, 18px)",
+                    fontWeight: 600,
+                    flexShrink: 0,
+                  }}
+                >
+                  Total Amount
+                </span>
+                <span
+                  style={{
+                    fontSize: (() => {
+                      const len = (totals?.totalAmount ?? 0).toFixed(2).length;
+                      if (len > 18) return "13px";
+                      if (len > 14) return "16px";
+                      if (len > 10) return "20px";
+                      return "clamp(22px, 5vw, 28px)";
+                    })(),
+                    fontWeight: 700,
+                    color: "var(--text-primary)",
+                    letterSpacing: "-0.02em",
+                    textAlign: "right",
+                    wordBreak: "break-all",
+                    minWidth: 0,
+                  }}
+                >
                   Rs. {(totals?.totalAmount ?? 0).toFixed(2)}
                 </span>
               </div>
@@ -1529,47 +2461,96 @@ const EditInvoice = () => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              style={{ ...btnPrimary, width: "100%", marginTop: "24px", padding: "14px 20px", fontSize: "15px" }}
+              style={{
+                ...btnPrimary,
+                width: "100%",
+                marginTop: "24px",
+                padding: "14px 20px",
+                fontSize: "15px",
+              }}
             >
               {loading ? "Updating Invoice..." : "Update Invoice"}
             </button>
           </div>
         </div>
-
       </form>
 
       {/* Add Custom Unit Modal */}
       {showAddUnitModal && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 9999,
-          background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "20px",
-        }}
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.4)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
           onClick={() => setShowAddUnitModal(false)}
         >
           <div
             style={{
-              background: "#fff", borderRadius: "20px",
-              boxShadow: "0 24px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
-              padding: "24px", width: "100%", maxWidth: "400px",
+              background: "#fff",
+              borderRadius: "20px",
+              boxShadow:
+                "0 24px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
+              padding: "24px",
+              width: "100%",
+              maxWidth: "400px",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-primary, #1D1D1F)", letterSpacing: "-0.02em" }}>Add Custom Unit</h3>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: "var(--text-primary, #1D1D1F)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Add Custom Unit
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowAddUnitModal(false)}
-                style={{ background: "var(--surface-secondary, #F5F5F7)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                style={{
+                  background: "var(--surface-secondary, #F5F5F7)",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
               <div>
-                <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    ...labelStyle,
+                    fontSize: "12px",
+                    marginBottom: "6px",
+                  }}
+                >
                   Unit Name <span style={{ color: "#DC2626" }}>*</span>
                 </label>
                 <input
@@ -1582,7 +2563,13 @@ const EditInvoice = () => {
                 />
               </div>
               <div>
-                <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    ...labelStyle,
+                    fontSize: "12px",
+                    marginBottom: "6px",
+                  }}
+                >
                   Short Code <span style={{ fontWeight: 400 }}>(optional)</span>
                 </label>
                 <input
@@ -1607,7 +2594,12 @@ const EditInvoice = () => {
                 type="button"
                 onClick={handleAddCustomUnit}
                 disabled={addingUnit}
-                style={{ ...btnPrimary, flex: 1, padding: "12px", opacity: addingUnit ? 0.6 : 1 }}
+                style={{
+                  ...btnPrimary,
+                  flex: 1,
+                  padding: "12px",
+                  opacity: addingUnit ? 0.6 : 1,
+                }}
               >
                 {addingUnit ? "Saving..." : "Save Unit"}
               </button>

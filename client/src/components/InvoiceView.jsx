@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import React, { useEffect, useState, useRef, useContext, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -26,6 +26,7 @@ const InvoiceView = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState("Template1PDF");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const navigate = useNavigate();
   const { currentUser } = useContext(UserContext);
@@ -33,7 +34,10 @@ const InvoiceView = () => {
   const [signatureBase64, setSignatureBase64] = useState(null);
   const [logoBase64, setLogoBase64] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const fetchInProgress = useRef(false);
+  const sidebarRef = useRef(null);
 
+  // Handle responsive layout
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -43,7 +47,55 @@ const InvoiceView = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Pre-fetch signature image as base64 to avoid CORS issues with @react-pdf/renderer
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleClickOutside = (event) => {
+      if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        // Check if the click is on the toggle button
+        const toggleButton = event.target.closest('.sidebar-toggle');
+        if (!toggleButton) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    // Add event listener with a small delay to avoid immediate trigger
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Close sidebar when template is selected on mobile
+  const handleTemplateSelect = useCallback((template) => {
+    setSelectedTemplate(template);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
+
+  // Set initial template from user preferences once
+  useEffect(() => {
+    if (currentUser?.allowedTemplates?.length > 0 && !isInitialized) {
+      const userTemplate = currentUser.allowedTemplates[0];
+      if (userTemplate && userTemplate !== selectedTemplate) {
+        setSelectedTemplate(userTemplate);
+      }
+      setIsInitialized(true);
+    } else if (currentUser?.allowedTemplates?.length === 0 && !isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [currentUser, isInitialized, selectedTemplate]);
+
+  // Fetch signature as base64
   useEffect(() => {
     const fetchSignatureAsBase64 = async () => {
       const sigUrl = currentUser?.signatureUrl;
@@ -60,12 +112,13 @@ const InvoiceView = () => {
         reader.readAsDataURL(blob);
       } catch (err) {
         console.error("Failed to fetch signature image:", err);
+        setSignatureBase64(null);
       }
     };
     fetchSignatureAsBase64();
   }, [currentUser?.signatureUrl]);
 
-  // Pre-fetch company logo as base64 to avoid CORS issues with @react-pdf/renderer
+  // Fetch logo as base64
   useEffect(() => {
     const fetchLogoAsBase64 = async () => {
       const logoUrl = currentUser?.logoUrl;
@@ -88,8 +141,12 @@ const InvoiceView = () => {
     fetchLogoAsBase64();
   }, [currentUser?.logoUrl]);
 
+  // Fetch invoice data - single execution
   useEffect(() => {
+    if (fetchInProgress.current) return;
+    
     const fetchInvoice = async () => {
+      fetchInProgress.current = true;
       try {
         const { data } = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/invoices/${id}`,
@@ -101,48 +158,57 @@ const InvoiceView = () => {
         toast.error("Failed to load invoice");
       } finally {
         setLoading(false);
+        fetchInProgress.current = false;
       }
     };
+    
     fetchInvoice();
   }, [id]);
 
-  // ── Vector PDF generation via @react-pdf/renderer ──
+  // Memoize the PDF template selection to prevent unnecessary recalculations
+  const getPdfTemplate = useCallback((data, signature, logo, templateName) => {
+    let safeTemplate = templateName;
+    if (currentUser?.allowedTemplates) {
+      if (currentUser.allowedTemplates.length > 0 && !currentUser.allowedTemplates.includes(safeTemplate)) {
+        safeTemplate = currentUser.allowedTemplates[0];
+      } else if (currentUser.allowedTemplates.length === 0) {
+        safeTemplate = "Template1PDF";
+      }
+    }
+    
+    switch (safeTemplate) {
+      case "Template2PDF":
+        return <Template2PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} />;
+      case "Template3PDF":
+        return <Template3PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} />;
+      case "Template4PDF":
+        return <Template4PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} />;
+      case "Template5PDF":
+        return <Template5PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} />;
+      case "Template6PDF":
+        return <Template6PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
+      case "Template7PDF":
+        return <Template7PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
+      case "Template1PDF":
+      default:
+        return <Template1PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
+    }
+  }, [currentUser]);
+
+  // Memoize the PDF document for the viewer
+  const pdfDocument = useMemo(() => {
+    if (!invoiceData || !currentUser) return null;
+    return getPdfTemplate(invoiceData, signatureBase64, logoBase64, selectedTemplate);
+  }, [invoiceData, currentUser, signatureBase64, logoBase64, selectedTemplate, getPdfTemplate]);
+
+  // Handle PDF download
   const handleDownloadPdf = async () => {
     if (!invoiceData || !currentUser) return;
 
     try {
       toast.loading("Generating PDF...", { id: "pdf-gen" });
-
-      const getPdfTemplate = () => {
-        let safeTemplate = selectedTemplate;
-        if (currentUser?.allowedTemplates) {
-          if (currentUser.allowedTemplates.length > 0 && !currentUser.allowedTemplates.includes(safeTemplate)) {
-            safeTemplate = currentUser.allowedTemplates[0];
-          } else if (currentUser.allowedTemplates.length === 0) {
-            safeTemplate = "Template1PDF";
-          }
-        }
-        switch (safeTemplate) {
-          case "Template2PDF":
-            return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-          case "Template3PDF":
-            return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-          case "Template4PDF":
-            return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-          case "Template5PDF":
-            return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-          case "Template6PDF":
-            return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-          case "Template7PDF":
-            return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-          case "Template1PDF":
-          default:
-            return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-        }
-      };
-
-      const blob = await pdf(getPdfTemplate()).toBlob();
-
+      
+      const blob = await pdf(pdfDocument).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -157,113 +223,35 @@ const InvoiceView = () => {
     }
   };
 
+  // Handle print
   const handlePrint = async () => {
-    const isPDFTemplate = ["Template1PDF", "Template2PDF", "Template3PDF", "Template4PDF", "Template5PDF", "Template6PDF", "Template7PDF"].includes(selectedTemplate);
-    if (isPDFTemplate) {
-      try {
-        toast.loading("Preparing print...", { id: "print-pdf" });
-        const getPdfTemplate = () => {
-          let safeTemplate = selectedTemplate;
-          if (currentUser?.allowedTemplates) {
-            if (currentUser.allowedTemplates.length > 0 && !currentUser.allowedTemplates.includes(safeTemplate)) {
-              safeTemplate = currentUser.allowedTemplates[0];
-            } else if (currentUser.allowedTemplates.length === 0) {
-              safeTemplate = "Template1PDF";
-            }
-          }
-          switch (safeTemplate) {
-            case "Template2PDF": return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-            case "Template3PDF": return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-            case "Template4PDF": return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-            case "Template5PDF": return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-            case "Template6PDF": return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-            case "Template7PDF": return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-            default: return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-          }
-        };
+    if (!pdfDocument) return;
+    
+    try {
+      toast.loading("Preparing print...", { id: "print-pdf" });
+      
+      const blob = await pdf(pdfDocument).toBlob();
+      const url = URL.createObjectURL(blob);
 
-        const blob = await pdf(getPdfTemplate()).toBlob();
-        const url = URL.createObjectURL(blob);
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = url;
+      document.body.appendChild(iframe);
 
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = url;
-        document.body.appendChild(iframe);
-
-        iframe.onload = () => {
-          setTimeout(() => {
-            iframe.focus();
-            iframe.contentWindow.print();
-            toast.success("Printing ready", { id: "print-pdf" });
-          }, 100);
-        };
-      } catch (error) {
-        console.error("Print PDF failed:", error);
-        toast.error("Failed to print PDF.", { id: "print-pdf" });
-      }
-      return;
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.focus();
+          iframe.contentWindow.print();
+          toast.dismiss("print-pdf");
+        }, 100);
+      };
+    } catch (error) {
+      console.error("Print PDF failed:", error);
+      toast.error("Failed to print PDF.", { id: "print-pdf" });
     }
-
-    const element = printRef.current;
-    if (!element) return;
-
-    const printWindow = window.open("", "_blank");
-
-    const cssLinks = Array.from(
-      document.querySelectorAll("link[rel='stylesheet'], style")
-    )
-      .map((node) => node.outerHTML)
-      .join("");
-
-    printWindow.document.write(`
-    <html>
-      <head>
-        <title>Invoice Print</title>
-        ${cssLinks}  <!-- ✅ Copies Tailwind + Custom CSS -->
-        <style>
-          @page { size: auto; margin: 10mm; }
-          body { margin: 0; padding: 0; }
-          .print-container {
-            width: 100%;
-            max-width: 210mm;
-            margin: 0 auto;
-            padding: 20px;
-            box-sizing: border-box;
-          }
-          /* Print overrides */
-          @media print {
-            .print-container { padding: 0; }
-            .invoice-root { font-size: 12pt !important; }
-            tr, td, th {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            thead { display: table-header-group; }
-            tfoot { display: table-footer-group; }
-            .print-keep-together {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="print-container">
-          ${element.outerHTML}
-        </div>
-      </body>
-    </html>
-  `);
-
-    printWindow.document.close();
-
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
   };
 
+  // Render loading state
   if (loading) {
     return (
       <div
@@ -282,38 +270,15 @@ const InvoiceView = () => {
     return <p className="text-center text-red-500">Invoice not found</p>;
   }
 
-  // Template Switcher
+  // Render template viewer
   const renderTemplate = () => {
-    let safeTemplate = selectedTemplate;
-    if (currentUser?.allowedTemplates) {
-      if (currentUser.allowedTemplates.length > 0 && !currentUser.allowedTemplates.includes(safeTemplate)) {
-        safeTemplate = currentUser.allowedTemplates[0];
-      } else if (currentUser.allowedTemplates.length === 0) {
-        safeTemplate = "Template1PDF";
-      }
+    if (!pdfDocument) {
+      return (
+        <div className="flex items-center justify-center" style={{ height: "400px" }}>
+          <div className="animate-spin rounded-full border-b-2 border-blue-600" style={{ height: "2rem", width: "2rem" }}></div>
+        </div>
+      );
     }
-    
-    const getDocument = () => {
-      switch (safeTemplate) {
-        case "Template2PDF":
-          return <Template2PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-        case "Template3PDF":
-          return <Template3PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-        case "Template4PDF":
-          return <Template4PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-        case "Template5PDF":
-          return <Template5PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} />;
-        case "Template6PDF":
-          return <Template6PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-        case "Template7PDF":
-          return <Template7PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-        case "Template1PDF":
-        default:
-          return <Template1PDF invoiceData={invoiceData} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signatureBase64} logoBase64={logoBase64} />;
-      }
-    };
-
-    const document = getDocument();
 
     if (isMobile) {
       return (
@@ -325,9 +290,9 @@ const InvoiceView = () => {
           <p className="text-sm text-slate-500 max-w-sm" style={{marginBottom: "24px"}}>
             Mobile browsers do not support inline PDF previews. Please open or download the PDF to view it.
           </p>
-          <BlobProvider document={document}>
-            {({ url, loading, error }) => {
-              if (loading) return <button disabled className="px-6 py-2 bg-blue-600/50 text-white rounded-lg" style={{padding: "8px 24px"}}>Generating PDF...</button>;
+          <BlobProvider document={pdfDocument}>
+            {({ url, loading: pdfLoading, error }) => {
+              if (pdfLoading) return <button disabled className="px-6 py-2 bg-blue-600/50 text-white rounded-lg" style={{padding: "8px 24px"}}>Generating PDF...</button>;
               if (error) return <p className="text-red-500">Failed to generate PDF</p>;
               return (
                 <div className="flex gap-3">
@@ -348,14 +313,14 @@ const InvoiceView = () => {
     return (
       <div style={{ width: '100%', height: '800px', borderRadius: '12px', overflow: 'hidden' }}>
         <PDFViewer width="100%" height="100%" className="border-0">
-          {document}
+          {pdfDocument}
         </PDFViewer>
       </div>
     );
   };
 
   return (
-    <div className="flex ">
+    <div className="flex" style={{ position: 'relative' }}>
       {/* Main Invoice Area */}
       <div className="flex-1" style={{ padding: "1rem" }}>
         {/* Action Buttons */}
@@ -392,7 +357,7 @@ const InvoiceView = () => {
           <div className="relative group inline-block">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="bg-gray-200 text-blue-700 rounded-full hover:bg-gray-300 transition cursor-pointer"
+              className="bg-gray-200 text-blue-700 rounded-full hover:bg-gray-300 transition cursor-pointer sidebar-toggle"
               style={{ padding: "8px" }}
             >
               {sidebarOpen ? (
@@ -417,13 +382,31 @@ const InvoiceView = () => {
       </div>
 
       {/* Sidebar (only visible if open) */}
-
       {sidebarOpen && (
-        <TemplateSidebar
-          selectedTemplate={selectedTemplate}
-          setSelectedTemplate={setSelectedTemplate}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
+        <div ref={sidebarRef}>
+          <TemplateSidebar
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={handleTemplateSelect}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
+        </div>
+      )}
+
+      {/* Mobile overlay when sidebar is open */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 40,
+            transition: 'opacity 0.3s ease',
+          }}
+          onClick={() => setSidebarOpen(false)}
         />
       )}
     </div>

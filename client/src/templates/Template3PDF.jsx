@@ -235,8 +235,8 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             )}
             <View style={{ flex: 1, paddingLeft: ((logoBase64 || currentUser?.logo || currentUser?.logoUrl) && invoiceData.includeLogo !== false) ? 10 : 0 }}>
               <View style={{ textAlign: "center", width: "100%" }}>
-                <Text style={[s.companyName, { marginBottom: 4, textAlign: "center" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
-                <View style={[s.companyDetails, { textAlign: "center" }]}>
+                <Text style={[s.companyName, { marginBottom: 4, textAlign: "left" }]}>{currentUser?.businessName?.toUpperCase() || ""}</Text>
+                <View style={[s.companyDetails, { textAlign: "left" }]}>
                   <Text>
                     Office: {currentUser?.address?.street || ""} {currentUser?.address?.city || ""},{" "}
                     {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}

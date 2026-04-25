@@ -53,6 +53,7 @@ const Profile = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [changePassword, setChangePassword] = useState(false);
   const [passwordFields, setPasswordFields] = useState({
     currentPassword: "",
@@ -68,58 +69,61 @@ const Profile = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data } = await axios.get(`${BASE_URL}/users/profile`);
-
-        setFormData({
-          name: data.name || "",
-          businessName: data.businessName || "",
-          phone: data.phone || "",
-          email: data.email || "",
-          taxId: data.taxId || "",
-          panNumber: data.panNumber || "",
-          udyamNo: data.udyamNo || "",
-          hsnCode: data.hsnCode || "",
-          address: {
-            street: data.address?.street || "",
-            city: data.address?.city || "",
-            state: data.address?.state || "",
-            zipCode: data.address?.zipCode || "",
-            country: data.address?.country || "India",
-          },
-          invoicePreferences: {
-            prefix: data.invoicePreferences?.prefix || "",
-            suffix: data.invoicePreferences?.suffix || "",
-            addressBehavior: data.invoicePreferences?.addressBehavior || "billing_and_shipping",
-          },
-        });
-        setLogoUrl(data.logoUrl || '');
-        setSignatureUrl(data.signatureUrl || '');
-      } catch (err) {
-        toast.error("Failed to fetch profile");
-        console.error(err);
-      }
+    const fetchData = async () => {
+      setPageLoading(true);
+      await Promise.all([fetchProfile(), fetchBankDetails()]);
+      setPageLoading(false);
     };
-
-    const fetchBankDetails = async () => {
-      try {
-        setBankLoading(true);
-        const { data } = await axios.get(`${BASE_URL}/users/bank-accounts`);
-        setBankDetails(data.bankAccounts);
-      } catch (err) {
-        if (err.response?.status !== 404) {
-          console.error("Failed to fetch bank details:", err);
-        }
-      } finally {
-        setBankLoading(false);
-      }
-    };
-
-    fetchProfile();
-    fetchBankDetails();
-
+    fetchData();
   }, [token]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}/users/profile`);
+
+      setFormData({
+        name: data.name || "",
+        businessName: data.businessName || "",
+        phone: data.phone || "",
+        email: data.email || "",
+        taxId: data.taxId || "",
+        panNumber: data.panNumber || "",
+        udyamNo: data.udyamNo || "",
+        hsnCode: data.hsnCode || "",
+        address: {
+          street: data.address?.street || "",
+          city: data.address?.city || "",
+          state: data.address?.state || "",
+          zipCode: data.address?.zipCode || "",
+          country: data.address?.country || "India",
+        },
+        invoicePreferences: {
+          prefix: data.invoicePreferences?.prefix || "",
+          suffix: data.invoicePreferences?.suffix || "",
+          addressBehavior: data.invoicePreferences?.addressBehavior || "billing_and_shipping",
+        },
+      });
+      setLogoUrl(data.logoUrl || '');
+      setSignatureUrl(data.signatureUrl || '');
+    } catch (err) {
+      toast.error("Failed to fetch profile");
+      console.error(err);
+    }
+  };
+
+  const fetchBankDetails = async () => {
+    try {
+      setBankLoading(true);
+      const { data } = await axios.get(`${BASE_URL}/users/bank-accounts`);
+      setBankDetails(data.bankAccounts);
+    } catch (err) {
+      if (err.response?.status !== 404) {
+        console.error("Failed to fetch bank details:", err);
+      }
+    } finally {
+      setBankLoading(false);
+    }
+  };
 
   // Handle top-level field changes
   const handleChange = (e) => {
@@ -207,6 +211,37 @@ const Profile = () => {
       setLoading(false);
     }
   };
+
+  // Loading state
+  if (pageLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+          padding: "40px",
+        }}
+      >
+        <div
+          style={{
+            width: "48px",
+            height: "48px",
+            border: "4px solid rgba(0, 113, 227, 0.15)",
+            borderTopColor: "var(--accent, #0071E3)",
+            borderRadius: "50%",
+            animation: "spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+          }}
+        />
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "0px" }} className="flex flex-col gap-6">
@@ -709,7 +744,12 @@ const Profile = () => {
             <div>
               <h4 className="font-medium text-gray-900">Bank Details</h4>
               <div style={{ display: "flex", alignItems: "center", marginTop: "4px" }}>
-                {isBankDetailsComplete() ? (
+                {bankLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                    <span className="text-sm text-gray-500">Loading...</span>
+                  </div>
+                ) : isBankDetailsComplete() ? (
                   <>
                     <CheckCircle style={{ width: "16px", height: "16px", color: "#10b981", marginRight: "8px" }} />
                     <span className="text-sm text-green-600">Completed</span>

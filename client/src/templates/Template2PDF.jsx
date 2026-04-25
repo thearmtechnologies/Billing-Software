@@ -125,12 +125,44 @@ const s = StyleSheet.create({
   bankRow: { fontSize: 9, marginBottom: 2 },
   sigLabel: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 40 },
   sigLine: { fontSize: 9, color: "#4B5563" },
+
+  /* ── Tiered pricing styles ─────────────────────── */
+  tierContainer: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  tierText: {
+    fontSize: 8,
+    fontFamily: "Helvetica",
+    textAlign: "right",
+  },
 });
 
 // Format account type
 const formatAccountType = (type) => {
   if (!type) return "";
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+};
+
+// Helper: render tiered pricing lines
+const renderTieredLines = (tiers, unitType) => {
+  if (!tiers || tiers.length === 0) return null;
+  
+  return tiers.map((tier, idx) => {
+    let rangeText = "";
+    if (tier.maxValue !== null && tier.maxValue !== undefined && tier.maxValue !== "") {
+      rangeText = `${tier.minValue} – ${tier.maxValue} ${unitType || ""}`;
+    } else {
+      rangeText = `Above ${tier.minValue} ${unitType || ""}`;
+    }
+    const slabText = tier.rateType === "unitRate" ? `/ ${unitType || ""}` : "(slab)";
+    return (
+      <Text key={idx} style={s.tierText}>
+        {rangeText}: Rs. {Number(tier.rate).toFixed(2)} {slabText}
+      </Text>
+    );
+  });
 };
 
 const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signatureBase64 }) => {
@@ -140,10 +172,10 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
 
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
-  // Column Distribution
+  // Column Distribution - increased rate column width for better tier display
   const col = hasHSN
-    ? { sr: "8%", items: "38%", hsn: "12%", qty: "10%", rate: "18%", amt: "14%" }
-    : { sr: "8%", items: "48%", qty: "12%", rate: "18%", amt: "14%" };
+    ? { sr: "6%", items: "35%", hsn: "10%", qty: "10%", rate: "25%", amt: "14%" }
+    : { sr: "6%", items: "44%", qty: "12%", rate: "24%", amt: "14%" };
 
   let displayBankDetails = invoiceData?.bankDetails;
 
@@ -310,14 +342,15 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
               <Text style={[s.td, { width: col.qty, textAlign: "center" }]}>
                 {item.quantity} {item.unitType || ""}
               </Text>
-              <Text style={[s.td, { width: col.rate, textAlign: "center", fontSize: item.pricingType === "tiered" ? 8 : 9 }]}>
-                {item.pricingType === "tiered"
-                  ? item.pricingTiers?.map(
-                      (t) =>
-                        `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
-                    ).join("\n")
-                  : `Rs. ${(item.baseRate || 0).toFixed(2)}`}
-              </Text>
+              <View style={[s.td, { width: col.rate, textAlign: "right", paddingHorizontal: 4, justifyContent: "center" }]}>
+                {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
+                  <View style={s.tierContainer}>
+                    {renderTieredLines(item.pricingTiers, item.unitType)}
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 9, textAlign: "center" }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                )}
+              </View>
               <Text style={[s.td, { width: col.amt, textAlign: "center" }]}>
                 Rs. {item.subtotal.toFixed(2)}
               </Text>

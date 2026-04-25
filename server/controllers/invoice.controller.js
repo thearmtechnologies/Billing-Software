@@ -386,13 +386,28 @@ export const deleteInvoiceItem = async (req, res) => {
 
 
 // Payment Controllers
+
+// Helper function for precise decimal arithmetic
+const toPrecision = (num) => {
+  return Math.round(num * 100) / 100;
+};
+
+// Helper function to compare amounts with tolerance
+const isAmountValidWithTolerance = (amount, maxAmount, tolerance = 0.009) => {
+  const roundedAmount = toPrecision(parseFloat(amount));
+  const roundedMax = toPrecision(maxAmount);
+  return roundedAmount <= roundedMax + tolerance;
+};
+
 export const addPayment = async (req, res) => {
   try {
     const userId = req.user._id;
     const { id } = req.params;
     const { amount, paymentMode = "bank-transfer", notes, recordedBy, paymentDate } = req.body;
 
-    if (!amount || amount <= 0) {
+    // Validate amount
+    const paymentAmount = parseFloat(amount);
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
       return res.status(400).json({ message: "Payment amount must be greater than 0" });
     }
 
@@ -401,21 +416,32 @@ export const addPayment = async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    const newTotalPaid = invoice.amountPaid + amount;
+    // Calculate remaining balance with precision
+    const currentAmountPaid = toPrecision(invoice.amountPaid);
+    const totalAmount = toPrecision(invoice.totalAmount);
+    const remainingBalance = toPrecision(totalAmount - currentAmountPaid);
     
-    if (newTotalPaid > invoice.totalAmount) {
+    // Check if payment amount is valid with tolerance
+    if (!isAmountValidWithTolerance(paymentAmount, remainingBalance)) {
       return res.status(400).json({
-        message: `Payment would exceed total amount. Maximum allowed: ${invoice.totalAmount - invoice.amountPaid}`
+        message: `Payment would exceed total amount. Maximum allowed: ${remainingBalance.toFixed(2)}`
       });
-    } 
+    }
 
-    const balanceDueAfter = Math.max(0, invoice.totalAmount - newTotalPaid);
+    // Adjust amount if it's within tolerance but slightly over
+    let finalAmount = paymentAmount;
+    if (paymentAmount > remainingBalance && paymentAmount <= remainingBalance + 0.009) {
+      finalAmount = remainingBalance;
+    }
+
+    const newTotalPaid = toPrecision(currentAmountPaid + finalAmount);
+    const balanceDueAfter = toPrecision(Math.max(0, totalAmount - newTotalPaid));
 
     // Create payment history record
     const paymentRecord = {
-      amountPaid: amount,
+      amountPaid: toPrecision(finalAmount),
       paymentMode,
-      notes,
+      notes: notes || "",
       recordedBy: recordedBy || req.user.name || "System",
       balanceDueAfter,
       paymentDate: paymentDate || new Date()
@@ -423,8 +449,15 @@ export const addPayment = async (req, res) => {
 
     invoice.amountPaid = newTotalPaid;
     invoice.paymentHistory.push(paymentRecord);
+    
+    // Update invoice status based on payment
+    if (newTotalPaid >= totalAmount - 0.009) {
+      invoice.status = "paid";
+    } else if (newTotalPaid > 0) {
+      invoice.status = "partial";
+    }
 
-    const updatedInvoice = await invoice.save()
+    const updatedInvoice = await invoice.save();
     await updatedInvoice.populate("client");
 
     res.status(200).json({
@@ -447,11 +480,18 @@ export const getPaymentHistory = async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
+    // Format payment history with precise values
+    const formattedPaymentHistory = invoice.paymentHistory.map(payment => ({
+      ...payment.toObject(),
+      amountPaid: toPrecision(payment.amountPaid),
+      balanceDueAfter: toPrecision(payment.balanceDueAfter)
+    }));
+
     res.status(200).json({
-      paymentHistory: invoice.paymentHistory,
-      totalAmount: invoice.totalAmount,
-      amountPaid: invoice.amountPaid,
-      amountDue: invoice.amountDue
+      paymentHistory: formattedPaymentHistory,
+      totalAmount: toPrecision(invoice.totalAmount),
+      amountPaid: toPrecision(invoice.amountPaid),
+      amountDue: toPrecision(invoice.amountDue)
     });
   } catch (error) {
     console.error("Error fetching payment history:", error);
@@ -475,33 +515,59 @@ export const updatePayment = async (req, res) => {
       return res.status(404).json({ message: "Payment record not found" });
     }
 
-    const oldAmount = paymentToUpdate.amountPaid;
-    const newAmount = amount || oldAmount;
-
-    // Calculate new total paid
-    const newTotalPaid = invoice.amountPaid - oldAmount + newAmount;
+    const oldAmount = toPrecision(paymentToUpdate.amountPaid);
+    let newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
     
-    if (newTotalPaid > invoice.totalAmount) {
+    if (isNaN(newAmount) || newAmount <= 0) {
+      return res.status(400).json({ message: "Payment amount must be greater than 0" });
+    }
+
+    // Calculate current total without the payment being edited
+    const currentAmountPaidWithoutOld = toPrecision(invoice.amountPaid - oldAmount);
+    const totalAmount = toPrecision(invoice.totalAmount);
+    const remainingBalance = toPrecision(totalAmount - currentAmountPaidWithoutOld);
+    
+    // Check if new amount is valid with tolerance
+    if (!isAmountValidWithTolerance(newAmount, remainingBalance)) {
       return res.status(400).json({
-        message: `Updated payment would exceed total amount. Maximum allowed: ${invoice.totalAmount - (invoice.amountPaid - oldAmount)}`
+        message: `Updated payment would exceed total amount. Maximum allowed: ${remainingBalance.toFixed(2)}`
       });
     }
 
+    // Adjust amount if it's within tolerance but slightly over
+    if (newAmount > remainingBalance && newAmount <= remainingBalance + 0.009) {
+      newAmount = remainingBalance;
+    }
+
+    // Calculate new total paid
+    const newTotalPaid = toPrecision(currentAmountPaidWithoutOld + newAmount);
+    const balanceDueAfter = toPrecision(Math.max(0, totalAmount - newTotalPaid));
+
     // Update payment record
-    paymentToUpdate.amountPaid = newAmount;
+    paymentToUpdate.amountPaid = toPrecision(newAmount);
     if (paymentMode) paymentToUpdate.paymentMode = paymentMode;
     if (notes !== undefined) paymentToUpdate.notes = notes;
     if (paymentDate) paymentToUpdate.paymentDate = paymentDate;
-    paymentToUpdate.balanceDueAfter = Math.max(0, invoice.totalAmount - newTotalPaid);
+    paymentToUpdate.balanceDueAfter = balanceDueAfter;
 
     // Update invoice totals
     invoice.amountPaid = newTotalPaid;
+    
+    // Update invoice status based on payment
+    if (newTotalPaid >= totalAmount - 0.009) {
+      invoice.status = "paid";
+    } else if (newTotalPaid > 0) {
+      invoice.status = "partial";
+    } else {
+      invoice.status = "draft";
+    }
 
     await invoice.save();
+    await invoice.populate("client");
 
     res.status(200).json({
       message: "Payment updated successfully",
-      invoice: await InvoiceModel.findById(id).populate("client")
+      invoice: invoice
     });
   } catch (error) {
     console.error("Error updating payment:", error);
@@ -524,15 +590,29 @@ export const deletePayment = async (req, res) => {
       return res.status(404).json({ message: "Payment record not found" });
     }
 
+    const paymentAmount = toPrecision(paymentToRemove.amountPaid);
+    const currentAmountPaid = toPrecision(invoice.amountPaid);
+    const totalAmount = toPrecision(invoice.totalAmount);
+    
     // Remove payment and update totals
-    invoice.amountPaid -= paymentToRemove.amountPaid;
+    invoice.amountPaid = toPrecision(currentAmountPaid - paymentAmount);
     invoice.paymentHistory.pull(paymentId);
+    
+    // Update invoice status
+    if (invoice.amountPaid <= 0) {
+      invoice.status = "draft";
+    } else if (invoice.amountPaid >= totalAmount - 0.009) {
+      invoice.status = "paid";
+    } else {
+      invoice.status = "partial";
+    }
 
     await invoice.save();
+    await invoice.populate("client");
 
     res.status(200).json({
       message: "Payment deleted successfully",
-      invoice: await InvoiceModel.findById(id).populate("client")
+      invoice: invoice
     });
   } catch (error) {
     console.error("Error deleting payment:", error);

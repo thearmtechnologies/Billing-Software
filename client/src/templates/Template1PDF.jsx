@@ -190,15 +190,71 @@ const s = StyleSheet.create({
   notesBlock: { marginBottom: 8 },
   notesTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, marginBottom: 3 },
   notesBody: { fontSize: 9 },
+
+  /* ── Tiered pricing container ──────────────────── */
+  tierContainer: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  tierText: {
+    fontSize: 8.5,
+    fontFamily: "Helvetica",
+    textAlign: "right",
+  },
 });
 
-// Column widths (percentages)
-const COL = { sr: "6%", desc: "38%", hsn: "10%", qty: "10%", rate: "18%", amt: "12%" };
-const COL_NO_HSN = { sr: "6%", desc: "48%", qty: "10%", rate: "20%", amt: "16%" };
+// ── Helper: Check if any item has tiered pricing ────────────────
+const hasAnyTieredPricing = (items) => {
+  return items.some(item => 
+    item.pricingType === "tiered" && 
+    item.pricingTiers && 
+    item.pricingTiers.length > 0
+  );
+};
+
+// ── Helper: Get column widths based on tiered pricing presence ──
+const getColumnWidths = (hasHSN, hasTiered) => {
+  if (hasTiered) {
+    // With tiered pricing - increased rate column width for better tier display
+    if (hasHSN) {
+      return { sr: "5%", desc: "35%", hsn: "10%", qty: "8%", rate: "28%", amt: "14%" };
+    } else {
+      return { sr: "6%", desc: "44%", qty: "10%", rate: "26%", amt: "14%" };
+    }
+  } else {
+    // Without tiered pricing - balanced columns with more space for amount
+    if (hasHSN) {
+      return { sr: "5%", desc: "35%", hsn: "10%", qty: "10%", rate: "15%", amt: "25%" };
+    } else {
+      return { sr: "5%", desc: "45%", qty: "10%", rate: "15%", amt: "25%" };
+    }
+  }
+};
 
 // ── Helper: format account type ─────────────────────────────────
 const fmtAcct = (t) =>
   t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "";
+
+// ── Helper: render tiered pricing lines ─────────────────────────
+const renderTieredLines = (tiers, unitType) => {
+  if (!tiers || tiers.length === 0) return null;
+  
+  return tiers.map((tier, idx) => {
+    let rangeText = "";
+    if (tier.maxValue !== null && tier.maxValue !== undefined && tier.maxValue !== "") {
+      rangeText = `${tier.minValue} – ${tier.maxValue} ${unitType || ""}`;
+    } else {
+      rangeText = `Above ${tier.minValue} ${unitType || ""}`;
+    }
+    const slabText = tier.rateType === "unitRate" ? `/ ${unitType || ""}` : "(slab)";
+    return (
+      <Text key={idx} style={s.tierText}>
+        {rangeText}: Rs. {Number(tier.rate).toFixed(2)} {slabText}
+      </Text>
+    );
+  });
+};
 
 // ── Component ───────────────────────────────────────────────────
 const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signatureBase64, logoBase64 }) => {
@@ -207,7 +263,8 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
-  const col = hasHSN ? COL : COL_NO_HSN;
+  const hasTiered = hasAnyTieredPricing(invoiceData.items);
+  const col = getColumnWidths(hasHSN, hasTiered);
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
   const copyLabel = copyType || "ORIGINAL FOR RECIPIENT";
@@ -216,15 +273,10 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
     <Document>
       <Page size="A4" style={s.page}>
         {/* ═══ HEADER ═══ */}
-        {/* When a logo is available: left-align row so logo sits left of company info.
-            When no logo: keep the centered layout unchanged. */}
         {(logoBase64 && invoiceData.includeLogo !== false) ? (
           <View style={s.headerRowWithLogo}>
             <View style={s.logoContainer}>
-              <Image
-                src={logoBase64}
-                style={s.logo}
-              />
+              <Image src={logoBase64} style={s.logo} />
             </View>
             <View style={s.headerCenterWithLogo}>
               <Text style={s.businessName}>
@@ -241,7 +293,6 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
               {(currentUser?.taxId || currentUser?.udyamNo || currentUser?.panNumber) && (
                 <Text style={s.headerDetails}>
-                  {/* {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""} */}
                   {currentUser?.taxId && (currentUser?.udyamNo || currentUser?.panNumber) ? " | " : ""}
                   {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
                   {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
@@ -447,45 +498,48 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
                 {item.quantity} {item.unitType || ""}
               </Text>
-              <Text style={[s.td, s.tdRight, { width: col.rate, fontSize: item.pricingType === "tiered" ? 7.5 : 10, paddingHorizontal: item.pricingType === "tiered" ? 2 : 5 }]}>
-                {item.pricingType === "tiered"
-                  ? item.pricingTiers
-                      ?.map(
-                        (t) =>
-                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)} ${t.rateType === "unitRate" ? "/ " + (item.unitType || "") : "(slab)"}`.replace(/ /g, "\u00A0")
-                      )
-                      .join("\n")
-                  : `Rs. ${(item.baseRate || 0).toFixed(2)}`}
-              </Text>
-              <Text style={[s.tdLast, s.tdRight, { width: col.amt }]}>
+              <View style={[s.td, s.tdRight, { width: col.rate, paddingHorizontal: 4, justifyContent: "center" }]}>
+                {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
+                  <View style={s.tierContainer}>
+                    {renderTieredLines(item.pricingTiers, item.unitType)}
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 10 }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                )}
+              </View>
+              <Text style={[s.tdLast, s.tdRight, { width: col.amt, fontWeight: 'bold' }]}>
                 Rs. {item.subtotal.toFixed(2)}
               </Text>
             </View>
           ))}
 
-
-
-          {/* Tax rows */}
+          {/* Tax rows - Fixed alignment */}
           {invoiceData.taxes && invoiceData.taxes.length > 0 && (
             <View style={s.tableRow} wrap={false}>
               <View
                 style={[
                   s.td,
-                  s.tdRight,
-                  { width: hasHSN ? "54%" : "54%", flexDirection: "column" },
+                  { 
+                    width: hasHSN 
+                      ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%` 
+                      : `${parseFloat(col.sr) + parseFloat(col.desc)}%`,
+                    flexDirection: "column",
+                    textAlign: "right"
+                  }
                 ]}
               >
                 {invoiceData.taxes.map((tax, idx) => (
-                  <Text key={idx} style={s.bold}>
+                  <Text key={idx} style={[s.bold, { textAlign: "right" }]}>
                     {tax.name} @{tax.rate}%
                   </Text>
                 ))}
               </View>
-              <Text style={[s.td, s.tdCenter, { width: "28%" }]}> </Text>
-              <View style={[s.tdLast, s.tdRight, { width: "18%", flexDirection: "column" }]}>
+              <Text style={[s.td, s.tdCenter, { width: col.qty }]}> </Text>
+              <Text style={[s.td, s.tdCenter, { width: col.rate }]}> </Text>
+              <View style={[s.tdLast, s.tdRight, { width: col.amt, flexDirection: "column" }]}>
                 {invoiceData.taxes.map((tax, idx) => (
-                  <Text key={idx} style={s.bold}>
-                    Rs.  {tax.amount.toFixed(2)}
+                  <Text key={idx} style={[s.bold, { textAlign: "right" }]}>
+                    Rs. {tax.amount.toFixed(2)}
                   </Text>
                 ))}
               </View>
@@ -494,12 +548,23 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
 
           {/* Total row */}
           <View style={s.tableRow} wrap={false}>
-            <Text style={[s.td, s.tdRight, s.totalLabel, { width: "54%" }]}>
-              Total
-            </Text>
-            <Text style={[s.td, s.tdCenter, { width: "28%" }]}> </Text>
-            <Text style={[s.tdLast, s.tdRight, s.totalLabel, { width: "18%" }]}>
-              Rs.  {invoiceData.totalAmount.toFixed(2)}
+            <View
+              style={[
+                s.td,
+                s.tdRight,
+                { 
+                  width: hasHSN 
+                    ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%` 
+                    : `${parseFloat(col.sr) + parseFloat(col.desc)}%`,
+                }
+              ]}
+            >
+              <Text style={[s.totalLabel, { textAlign: "right" }]}>Total</Text>
+            </View>
+            <Text style={[s.td, s.tdCenter, { width: col.qty }]}> </Text>
+            <Text style={[s.td, s.tdCenter, { width: col.rate }]}> </Text>
+            <Text style={[s.tdLast, s.tdRight, s.totalLabel, { width: col.amt }]}>
+              Rs. {invoiceData.totalAmount.toFixed(2)}
             </Text>
           </View>
         </View>
@@ -512,7 +577,6 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             {numberToWords
               ? numberToWords(invoiceData.totalAmount)
               : invoiceData.totalAmount.toFixed(2)}{" "}
-            
           </Text>
         </View>
 
@@ -614,7 +678,6 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                 {numberToWords
                   ? numberToWords(invoiceData.totalTax)
                   : invoiceData.totalTax.toFixed(2)}{" "}
-                
               </Text>
             </Text>
           </View>
