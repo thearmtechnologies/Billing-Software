@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Download, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download, TrendingUp, TrendingDown, Wallet, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppleDataTable from '../components/AppleDataTable';
 import axios from 'axios';
@@ -87,6 +87,7 @@ const ClientLedger = () => {
   const [loading, setLoading] = useState(true);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState("pdf");
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchLedger();
@@ -94,6 +95,7 @@ const ClientLedger = () => {
 
   const fetchLedger = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${BASE_URL}/users/client/${id}/ledger`);
       setLedgerData(response.data.ledger);
       setClientInfo(response.data.client);
@@ -168,17 +170,27 @@ const ClientLedger = () => {
   };
 
   const handleExecuteExport = async () => {
-    if (exportFormat === "excel") {
-      handleExportExcel();
-    } else {
-      const blob = await pdf(<LedgerPDF clientInfo={clientInfo} ledgerData={ledgerData} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${clientInfo?.name || "Client"}_Ledger.pdf`;
-      link.click();
+    setIsExporting(true);
+    try {
+      if (exportFormat === "excel") {
+        handleExportExcel();
+      } else {
+        const blob = await pdf(<LedgerPDF clientInfo={clientInfo} ledgerData={ledgerData} />).toBlob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${clientInfo?.name || "Client"}_Ledger.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+      toast.success(`Ledger exported as ${exportFormat.toUpperCase()}`);
+      setIsExportModalOpen(false);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export ledger");
+    } finally {
+      setIsExporting(false);
     }
-    setIsExportModalOpen(false);
   };
 
   const ledgerColumns = [
@@ -195,7 +207,7 @@ const ClientLedger = () => {
       render: (row) => (
         <span 
           className={`text-xs font-medium rounded-full whitespace-nowrap ${row.type === 'Invoice Generated' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
-          style={{ padding: "4px 8px" }}
+          style={{ padding: "4px 8px", display: "inline-block" }}
         >
           {row.type}
         </span>
@@ -255,6 +267,36 @@ const ClientLedger = () => {
   const totalPaid = ledgerData.reduce((acc, curr) => acc + curr.credit, 0);
   const currentBalance = ledgerData.length > 0 ? ledgerData[ledgerData.length - 1].balance : 0;
 
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        minHeight: "400px",
+        padding: "32px 24px"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <Loader2 style={{ 
+            width: "48px", 
+            height: "48px", 
+            color: "#3B82F6", 
+            margin: "0 auto 16px",
+            animation: "spin 0.8s linear infinite"
+          }} />
+          <p style={{ color: "#6B7280", fontSize: "14px" }}>Loading ledger data...</p>
+          <style>{`
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl print-container" style={{ padding: "32px 24px" }}>
       {/* Header */}
@@ -266,7 +308,7 @@ const ClientLedger = () => {
           <button 
             onClick={() => navigate('/clients')} 
             className="bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm flex items-center justify-center"
-            style={{ padding: "8px", width: "40px", height: "40px" }}
+            style={{ padding: "8px", width: "40px", height: "40px", cursor: "pointer" }}
             aria-label="Back to Clients"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -288,7 +330,7 @@ const ClientLedger = () => {
         <button 
           onClick={handleExportPDF}
           className="flex items-center bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          style={{ padding: "8px 16px", gap: "8px", height: "40px" }}
+          style={{ padding: "8px 16px", gap: "8px", height: "40px", cursor: "pointer" }}
         >
           <Download className="w-4 h-4" />
           Print / Export PDF
@@ -380,6 +422,11 @@ const ClientLedger = () => {
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           style={{ padding: "16px" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isExporting) {
+              setIsExportModalOpen(false);
+            }
+          }}
         >
           <div 
             className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
@@ -397,7 +444,7 @@ const ClientLedger = () => {
               style={{ marginBottom: "24px", gap: "12px" }}
             >
               <label 
-                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "pdf" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"}`}
+                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "pdf" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"} ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 style={{ padding: "16px" }}
               >
                 <div className="relative flex items-center justify-center">
@@ -406,8 +453,9 @@ const ClientLedger = () => {
                     name="exportFormat" 
                     value="pdf" 
                     checked={exportFormat === "pdf"} 
-                    onChange={() => setExportFormat("pdf")} 
-                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" 
+                    onChange={() => !isExporting && setExportFormat("pdf")} 
+                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                    disabled={isExporting}
                   />
                 </div>
                 <span 
@@ -422,7 +470,7 @@ const ClientLedger = () => {
               </label>
 
               <label 
-                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "excel" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"}`}
+                className={`flex items-center border rounded-2xl cursor-pointer transition-all duration-200 group ${exportFormat === "excel" ? "border-blue-500 bg-blue-50/50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50/50"} ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 style={{ padding: "16px" }}
               >
                 <div className="relative flex items-center justify-center">
@@ -431,8 +479,9 @@ const ClientLedger = () => {
                     name="exportFormat" 
                     value="excel" 
                     checked={exportFormat === "excel"} 
-                    onChange={() => setExportFormat("excel")} 
-                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" 
+                    onChange={() => !isExporting && setExportFormat("excel")} 
+                    className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                    disabled={isExporting}
                   />
                 </div>
                 <span 
@@ -449,24 +498,47 @@ const ClientLedger = () => {
 
             <div className="flex justify-end" style={{ gap: "12px" }}>
               <button 
-                onClick={() => setIsExportModalOpen(false)} 
+                onClick={() => !isExporting && setIsExportModalOpen(false)} 
                 className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all"
-                style={{ padding: "10px 20px" }}
+                style={{ padding: "10px 20px", cursor: isExporting ? "not-allowed" : "pointer", opacity: isExporting ? 0.5 : 1 }}
+                disabled={isExporting}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleExecuteExport} 
+                disabled={isExporting}
                 className="text-sm font-semibold text-white bg-blue-600 border border-transparent rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center shadow-lg shadow-blue-200 transition-all transform active:scale-95"
-                style={{ padding: "10px 24px", gap: "8px" }}
+                style={{ 
+                  padding: "10px 24px", 
+                  gap: "8px", 
+                  cursor: isExporting ? "not-allowed" : "pointer",
+                  opacity: isExporting ? 0.7 : 1
+                }}
               >
-                <Download className="w-5 h-5" />
-                Export
+                {isExporting ? (
+                  <>
+                    <Loader2 style={{ width: "16px", height: "16px", animation: "spin 0.8s linear infinite" }} />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Export
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

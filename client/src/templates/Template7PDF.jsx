@@ -12,7 +12,7 @@ const s = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 8,
-    paddingTop: 15,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingLeft: 25,
     paddingRight: 25,
@@ -37,34 +37,34 @@ const s = StyleSheet.create({
   // specific sections
   blueBar: {
     backgroundColor: "#1D70B8",
-    paddingVertical: 3,
+    paddingVertical: 5,
     borderRadius: 2,
   },
   blueBarText: {
     color: "#FFF",
-    fontSize: 8,
+    fontSize: 9,
     textAlign: "center",
   },
 
   // Tables - COMPACT VERSION
   th: {
-    paddingVertical: 4,
-    paddingHorizontal: 3,
+    paddingVertical: 5,
+    paddingHorizontal: 4,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
     borderRightWidth: 1,
     borderColor: "#000",
-    fontSize: 7.5,
+    fontSize: 8,
   },
   td: {
     paddingVertical: 3,
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
     borderRightWidth: 1,
     borderColor: "#000",
-    fontSize: 7.5,
+    fontSize: 8,
   },
 
-  // Grid rows - The fundamental fix for broken borders
+  // Grid rows
   gridRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -78,21 +78,21 @@ const s = StyleSheet.create({
     borderColor: "#000",
   }, 
   
-  // Labels - COMPACT
+  // Labels
   metaLabel: {
     width: "40%",
-    paddingVertical: 3,
-    paddingHorizontal: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 5,
     borderRightWidth: 1,
     borderColor: "#000",
-    fontSize: 7.5,
+    fontSize: 8,
   },
   metaValue: {
     width: "60%",
-    paddingVertical: 3,
-    paddingHorizontal: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 5,
     justifyContent: "center",
-    fontSize: 7.5,
+    fontSize: 8,
   },
 });
 
@@ -112,7 +112,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
   const formatAmt = (num) => (num != null ? Number(num).toFixed(2) : "0.00");
   const subtotal = invoiceData.subtotal || 0;
   
-  // COMPACT column widths - optimized
+  // Column widths
   const colDims = { sr: "5%", desc: "34%", hsn: "10%", qty: "7%", unit: "7%", rate: "22%", total: "15%" };
   const leftOffset = 100 - parseInt(colDims.total); 
 
@@ -128,67 +128,67 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
     <Document>
       <Page size="A4" style={s.page} wrap={false}>
         
-        {/* HEADER — matches reference image exactly */}
-        <View style={{ flexDirection: "row", marginTop: 2, marginBottom: 4, alignItems: "center" }} wrap={false}>
+        {/* HEADER - ENLARGED */}
+        <View style={{ flexDirection: "row", marginTop: 5, marginBottom: 8, alignItems: "center" }} wrap={false}>
           
-          {/* LEFT: Logo */}
+          {/* LEFT: Logo - Enlarged */}
           {(logoBase64 && invoiceData.includeLogo !== false) && (
-            <View style={{ width: 50, height: 50, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 8 }}>
-              <Image src={logoBase64} style={{ maxWidth: 48, maxHeight: 48 }} />
+            <View style={{ width: 70, height: 70, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 12 }}>
+              <Image src={logoBase64} style={{ maxWidth: 65, maxHeight: 65 }} />
             </View>
           )}
 
-          {/* RIGHT: GSTIN/UDYAM row + Business Name */}
+          {/* RIGHT: GSTIN/UDYAM row + Business Name - Enlarged */}
           <View style={{ flex: 1, justifyContent: "center" }}>
-            {/* GSTIN and UDYAM on same line */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
-              <Text style={{ fontSize: 7.5, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+            {/* GSTIN and UDYAM on same line - Larger text */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
                 GSTIN : {currentUser?.taxId || "-"}
               </Text>
-              <Text style={{ fontSize: 7.5, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
                 UDYAM NO : {currentUser?.udyamNo || "-"}
               </Text>
             </View>
-            {/* Large Red Business Name */}
-            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 20, color: "#E04F3D", letterSpacing: 1 }}>
+            {/* Large Red Business Name - Enlarged */}
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 28, color: "#E04F3D", letterSpacing: 1.5, textAlign: "center" }}>
               {currentUser?.businessName || "BUSINESS NAME"}
             </Text>
           </View>
 
         </View>
 
-        {/* Blue Address Bar */}
+        {/* Blue Address Bar - Enlarged */}
         <View style={s.blueBar} wrap={false}>
           <Text style={s.blueBarText}>
             {userAddr.street ? `${userAddr.street}, ` : ""}{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}
           </Text>
         </View>
 
-        {/* Email and Mobile */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 }} wrap={false}>
-          <Text style={{ color: "#E04F3D", fontSize: 7.5, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
-          <Text style={{ color: "#E04F3D", fontSize: 7.5, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
+        {/* Email and Mobile - Larger */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }} wrap={false}>
+          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
+          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
         </View>
-        <View style={{ height: 1, backgroundColor: "#E04F3D", marginBottom: 5 }} wrap={false} />
+        <View style={{ height: 1.5, backgroundColor: "#E04F3D", marginBottom: 8 }} wrap={false} />
 
-        {/* TITLE ROW - COMPACT */}
+        {/* TITLE ROW - Larger */}
         <View style={[s.headerGridRow, { backgroundColor: "#F9F9F9" }]} wrap={false}>
-          <View style={{ flex: 1, paddingVertical: 3, alignItems: "center", justifyContent: "center" }}>
-            <Text style={[s.bold, { fontSize: 10, letterSpacing: 1 }]}>TAX INVOICE</Text>
+          <View style={{ flex: 1, paddingVertical: 4, alignItems: "center", justifyContent: "center" }}>
+            <Text style={[s.bold, { fontSize: 12, letterSpacing: 1.5 }]}>TAX INVOICE</Text>
           </View>
-          <View style={{ width: 70, borderLeftWidth: 1, borderColor: "#000", justifyContent: "center", backgroundColor: "#FFF" }}>
-            <Text style={{ textAlign: "center", fontSize: 7.5 }}>Original</Text>
+          <View style={{ width: 80, borderLeftWidth: 1, borderColor: "#000", justifyContent: "center", backgroundColor: "#FFF" }}>
+            <Text style={{ textAlign: "center", fontSize: 8 }}>Original</Text>
           </View>
         </View>
 
-        {/* SUPPLIER + META GRID - COMPACT */}
+        {/* SUPPLIER + META GRID */}
         <View style={s.gridRow} wrap={false}>
           {/* LEFT SIDE: Supplier Details */}
           <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
-             <View style={{ padding: 4, borderBottomWidth: 1, borderColor: "#000" }}>
-               <Text style={[s.bold, { fontSize: 10, marginBottom: 2 }]}>{currentUser?.businessName || "Supplier Name"}</Text>
-               <Text style={{ fontSize: 7.5, lineHeight: 1.2 }}>{userAddr.street || ""}</Text>
-               <Text style={{ fontSize: 7.5, lineHeight: 1.2, marginTop: 1 }}>{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}</Text>
+             <View style={{ padding: 5, borderBottomWidth: 1, borderColor: "#000" }}>
+               <Text style={[s.bold, { fontSize: 11, marginBottom: 3 }]}>{currentUser?.businessName || "Supplier Name"}</Text>
+               <Text style={{ fontSize: 8, lineHeight: 1.3 }}>{userAddr.street || ""}</Text>
+               <Text style={{ fontSize: 8, lineHeight: 1.3, marginTop: 2 }}>{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}</Text>
              </View>
              <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                <View style={s.metaLabel}><Text>GSTIN</Text></View>
@@ -218,7 +218,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                <View style={s.metaLabel}><Text>Place of Supply</Text></View>
                <View style={s.metaValue}><Text>{invoiceData.placeOfSupply || clientAddr.state || clientAddr.city || "-"}</Text></View>
              </View>
-             {/* CUSTOM FIELDS — rendered dynamically from invoiceData.customFields */}
+             {/* CUSTOM FIELDS */}
              {invoiceData.customFields && invoiceData.customFields.length > 0 && (
                invoiceData.customFields.map((cf, cfIdx) => (
                  <View key={`cf-${cfIdx}`} style={[s.row, { borderBottomWidth: cfIdx < invoiceData.customFields.length - 1 ? 1 : 0, borderColor: "#000" }]}>
@@ -232,12 +232,12 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
 
         {/* RECIPIENT BLOCK TITLE */}
         <View style={s.gridRow} wrap={false}>
-          <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1 }}>
-            <Text style={[s.bold, { textDecoration: "underline", fontSize: 8 }]}>Details of Recipient of Service</Text>
+          <View style={{ paddingVertical: 4, paddingHorizontal: 6, flex: 1 }}>
+            <Text style={[s.bold, { textDecoration: "underline", fontSize: 9 }]}>Details of Recipient of Service</Text>
           </View>
         </View>
         
-        {/* RECIPIENT BLOCK DATA - COMPACT */}
+        {/* RECIPIENT BLOCK DATA */}
         <View style={s.gridRow} wrap={false}>
           <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
              <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
@@ -247,8 +247,8 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
              <View style={s.row}>
                <View style={s.metaLabel}><Text>Address</Text></View>
                <View style={s.metaValue}>
-                  <Text style={{ fontSize: 7.5, lineHeight: 1.2 }}>{clientAddr.street || "-"}</Text>
-                  {clientAddr.city && <Text style={{ fontSize: 7.5, marginTop: 1 }}>{clientAddr.city}</Text>}
+                  <Text style={{ fontSize: 8, lineHeight: 1.3 }}>{clientAddr.street || "-"}</Text>
+                  {clientAddr.city && <Text style={{ fontSize: 8, marginTop: 1 }}>{clientAddr.city}</Text>}
                </View>
              </View>
           </View>
@@ -268,25 +268,25 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           </View>
         </View>
 
-        {/* SERVICE PERIOD - COMPACT */}
+        {/* SERVICE PERIOD */}
         <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1, flexDirection: "row" }}>
-              <Text style={{ fontSize: 7.5 }}>Service Rendered Period : </Text>
-              <Text style={[s.bold, { fontSize: 7.5 }]}>{invoiceData.servicePeriod || "-"}</Text>
+           <View style={{ paddingVertical: 4, paddingHorizontal: 6, flex: 1, flexDirection: "row" }}>
+              <Text style={{ fontSize: 8 }}>Service Rendered Period : </Text>
+              <Text style={[s.bold, { fontSize: 8 }]}>{invoiceData.servicePeriod || "-"}</Text>
            </View>
         </View>
 
-        {/* DESCRIPTION NOTE - COMPACT */}
+        {/* DESCRIPTION NOTE */}
         <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1 }}>
-              <Text style={{ fontSize: 7.5, lineHeight: 1.2 }}>
+           <View style={{ paddingVertical: 4, paddingHorizontal: 6, flex: 1 }}>
+              <Text style={{ fontSize: 8, lineHeight: 1.3 }}>
                 <Text style={s.bold}>Terms & Conditions : </Text>
                 {invoiceData.notes || ""}
               </Text>
            </View>
         </View>
 
-        {/* ITEM TABLE HEADER - COMPACT */}
+        {/* ITEM TABLE HEADER */}
         <View style={[s.gridRow, { backgroundColor: "#F4F4F4" }]} wrap={false}>
           <Text style={[s.th, { width: colDims.sr }]}>Sr.No</Text>
           <Text style={[s.th, { width: colDims.desc }]}>Description of Services</Text>
@@ -297,15 +297,15 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           <Text style={[s.th, { width: colDims.total, borderRightWidth: 0 }]}>Total Amount</Text>
         </View>
 
-        {/* ITEMS MAP - COMPACT with minimal padding */}
+        {/* ITEMS MAP */}
         {items.map((item, index) => (
           <View key={index} style={s.gridRow} wrap={false}>
             <View style={[s.td, { width: colDims.sr, justifyContent: "center", paddingVertical: 2 }]}>
               <Text style={{ textAlign: "center" }}>{index + 1}</Text>
             </View>
             <View style={[s.td, { width: colDims.desc, justifyContent: "center", paddingVertical: 2 }]}>
-              <Text style={{ fontSize: 7.5, lineHeight: 1.2 }}>{item.description}</Text>
-              {item.notes && <Text style={{ marginTop: 2, fontSize: 6.5 }}>{item.notes}</Text>}
+              <Text style={{ fontSize: 8, lineHeight: 1.2 }}>{item.description}</Text>
+              {item.notes && <Text style={{ marginTop: 2, fontSize: 7 }}>{item.notes}</Text>}
             </View>
             <View style={[s.td, { width: colDims.hsn, justifyContent: "center", paddingVertical: 2 }]}>
               <Text style={{ textAlign: "center" }}>{item.hsnCode || "-"}</Text>
@@ -317,7 +317,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
               <Text style={{ textAlign: "center" }}>{item.unitType || "-"}</Text>
             </View>
             <View style={[s.td, { width: colDims.rate, justifyContent: "center", paddingVertical: 2 }]}>
-              <Text style={{ textAlign: "right", fontSize: item.pricingType === "tiered" ? 6.5 : 7.5 }}>
+              <Text style={{ textAlign: "right", fontSize: item.pricingType === "tiered" ? 7 : 8 }}>
                 {item.pricingType === "tiered"
                   ? item.pricingTiers
                       ?.map(
@@ -334,78 +334,82 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           </View>
         ))}
 
-        {/* TOTALS SECTIONS - COMPACT */}
+        {/* TOTALS SECTIONS */}
         <View style={[s.gridRow, { backgroundColor: "#FAFAFA" }]} wrap={false}>
-          <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 3, paddingHorizontal: 4, justifyContent: "center" }}>
-            <Text style={[s.bold, { textAlign: "right", fontSize: 7.5 }]}>Total Taxable Value =====&gt;</Text>
+          <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 4, paddingHorizontal: 5, justifyContent: "center" }}>
+            <Text style={[s.bold, { textAlign: "right", fontSize: 8 }]}>Total Taxable Value =====&gt;</Text>
           </View>
-          <View style={{ width: colDims.total, paddingVertical: 3, paddingHorizontal: 3, justifyContent: "center" }}>
-            <Text style={[s.bold, { textAlign: "right", fontSize: 7.5 }]}>{formatAmt(subtotal)}</Text>
+          <View style={{ width: colDims.total, paddingVertical: 4, paddingHorizontal: 4, justifyContent: "center" }}>
+            <Text style={[s.bold, { textAlign: "right", fontSize: 8 }]}>{formatAmt(subtotal)}</Text>
           </View>
         </View>
 
         {invoiceData.taxes && invoiceData.taxes.map((tax, i) => (
           <View key={`tax-${i}`} style={[s.gridRow, { backgroundColor: "#FAFAFA" }]} wrap={false}>
-            <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 3, paddingHorizontal: 4, justifyContent: "center" }}>
-              <Text style={[s.bold, { textAlign: "right", fontSize: 7.5 }]}>{tax.name} : {tax.rate}% ==========&gt;</Text>
+            <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 4, paddingHorizontal: 5, justifyContent: "center" }}>
+              <Text style={[s.bold, { textAlign: "right", fontSize: 8 }]}>{tax.name} : {tax.rate}% ==========&gt;</Text>
             </View>
-            <View style={{ width: colDims.total, paddingVertical: 3, paddingHorizontal: 3, justifyContent: "center" }}>
-              <Text style={{ textAlign: "right", fontSize: 7.5 }}>{formatAmt(tax.amount)}</Text>
+            <View style={{ width: colDims.total, paddingVertical: 4, paddingHorizontal: 4, justifyContent: "center" }}>
+              <Text style={{ textAlign: "right", fontSize: 8 }}>{formatAmt(tax.amount)}</Text>
             </View>
           </View>
         ))}
 
         <View style={[s.gridRow, { backgroundColor: "#F5F5F5" }]} wrap={false}>
-          <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 3, paddingHorizontal: 4, justifyContent: "center" }}>
-            <Text style={[s.bold, { textAlign: "right", fontSize: 8 }]}>TOTAL BILL VALUE (IN FIGURE)</Text>
+          <View style={{ width: `${leftOffset}%`, borderRightWidth: 1, borderColor: "#000", paddingVertical: 5, paddingHorizontal: 5, justifyContent: "center" }}>
+            <Text style={[s.bold, { textAlign: "right", fontSize: 9 }]}>TOTAL BILL VALUE (IN FIGURE)</Text>
           </View>
-          <View style={{ width: colDims.total, paddingVertical: 3, paddingHorizontal: 3, justifyContent: "center" }}>
-            <Text style={[s.bold, { textAlign: "right", fontSize: 9 }]}>
+          <View style={{ width: colDims.total, paddingVertical: 5, paddingHorizontal: 4, justifyContent: "center" }}>
+            <Text style={[s.bold, { textAlign: "right", fontSize: 10 }]}>
               {invoiceData.totalAmount != null ? Math.round(invoiceData.totalAmount).toLocaleString("en-IN") : "0"}
             </Text>
           </View>
         </View>
 
-        {/* AMOUNT IN WORDS - COMPACT */}
+        {/* AMOUNT IN WORDS */}
         <View style={[s.gridRow, { backgroundColor: "#FAFAFA" }]} wrap={false}>
-          <View style={{ width: "40%", paddingVertical: 4, paddingHorizontal: 4, borderRightWidth: 1, borderColor: "#000", justifyContent: "center" }}>
-            <Text style={[s.bold, { textAlign: "center", fontSize: 7.5 }]}>TOTAL BILL VALUE (IN WORDS)</Text>
+          <View style={{ width: "40%", paddingVertical: 5, paddingHorizontal: 5, borderRightWidth: 1, borderColor: "#000", justifyContent: "center" }}>
+            <Text style={[s.bold, { textAlign: "center", fontSize: 8 }]}>TOTAL BILL VALUE (IN WORDS)</Text>
           </View>
-          <View style={{ width: "60%", paddingVertical: 4, paddingHorizontal: 6, justifyContent: "center" }}>
-            <Text style={[s.bold, { fontSize: 7.5 }]}>{wordsFormatted ? `${wordsFormatted} Rupees Only.` : "-"}</Text>
+          <View style={{ width: "60%", paddingVertical: 5, paddingHorizontal: 6, justifyContent: "center" }}>
+            <Text style={[s.bold, { fontSize: 8 }]}>{wordsFormatted ? `${wordsFormatted} Rupees Only.` : "-"}</Text>
           </View>
         </View>
 
-        {/* BANK DETAILS & SIGNATURE - COMPACT */}
-        <View style={{ flexDirection: "row", paddingVertical: 8, marginTop: 3 }} wrap={false}>
+        {/* BANK DETAILS & SIGNATURE - SIGNATURE MOVED TO FAR RIGHT */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, marginTop: 5 }} wrap={false}>
           
-          <View style={{ flex: 1, paddingRight: 8 }}>
-            {invoiceData.bankDetails && (
+          {/* LEFT: Bank Details */}
+          <View style={{ flex: 1, paddingRight: 15 }}>
+            {bankDetails && (bankDetails.bankName || bankDetails.accountNumber) && (
               <View>
-                <Text style={[s.bold, { textDecoration: "underline", marginBottom: 4, fontSize: 8 }]}>BANK DETAILS FOR PAYMENT</Text>
-                <View style={{ gap: 2 }}>
-                  <Text style={{ fontSize: 7.5 }}><Text style={s.bold}>Bank Name:</Text> {invoiceData.bankDetails.bankName || "-"}</Text>
-                  <Text style={{ fontSize: 7.5 }}><Text style={s.bold}>A/C Name:</Text> {invoiceData.bankDetails.accountHolderName || "-"}</Text>
-                  <Text style={{ fontSize: 7.5 }}><Text style={s.bold}>A/C No:</Text> {invoiceData.bankDetails.accountNumber || "-"}</Text>
-                  <Text style={{ fontSize: 7.5 }}><Text style={s.bold}>IFSC Code:</Text> {invoiceData.bankDetails.ifscCode || "-"}</Text>
-                  <Text style={{ fontSize: 7.5 }}><Text style={s.bold}>Branch:</Text> {invoiceData.bankDetails.branchName || "-"}</Text>
+                <Text style={[s.bold, { textDecoration: "underline", marginBottom: 6, fontSize: 9 }]}>BANK DETAILS FOR PAYMENT</Text>
+                <View style={{ gap: 3 }}>
+                  <Text style={{ fontSize: 8 }}><Text style={s.bold}>Bank Name:</Text> {bankDetails.bankName || "-"}</Text>
+                  <Text style={{ fontSize: 8 }}><Text style={s.bold}>A/C Name:</Text> {bankDetails.accountHolderName || "-"}</Text>
+                  <Text style={{ fontSize: 8 }}><Text style={s.bold}>A/C No:</Text> {bankDetails.accountNumber || "-"}</Text>
+                  <Text style={{ fontSize: 8 }}><Text style={s.bold}>IFSC Code:</Text> {bankDetails.ifscCode || "-"}</Text>
+                  <Text style={{ fontSize: 8 }}><Text style={s.bold}>Branch:</Text> {bankDetails.branchName || "-"}</Text>
                 </View>
               </View>
             )}
           </View>
 
-          <View style={{ width: "45%", alignItems: "center" }}>
-            <Text style={[s.bold, { fontSize: 8 }]}>For {currentUser?.businessName || "R C MECHANICALS"}</Text>
-            
-            <View style={{ height: 50, justifyContent: "center", alignItems: "center", marginVertical: 4 }}>
-              {signatureBase64 ? (
-                <Image src={signatureBase64} style={{ maxWidth: 120, maxHeight: 45 }} />
-              ) : (
-                <View style={{ height: 25 }}></View>
-              )}
-            </View>
+          {/* RIGHT: Authorised Signatory - Aligned to far right */}
+          <View style={{ width: "45%", alignItems: "flex-end" }}>
+            <View style={{ textAlign: "right" }}>
+              <Text style={[s.bold, { fontSize: 9, marginBottom: 2 }]}>For {currentUser?.businessName || "R C MECHANICALS"}</Text>
+              
+              <View style={{ height: 60, justifyContent: "center", alignItems: "flex-end", marginVertical: 6 }}>
+                {signatureBase64 ? (
+                  <Image src={signatureBase64} style={{ maxWidth: 130, maxHeight: 50 }} />
+                ) : (
+                  <View style={{ height: 30 }}></View>
+                )}
+              </View>
 
-            <Text style={[s.bold, { fontSize: 8 }]}>Authorised signatory</Text>
+              <Text style={[s.bold, { fontSize: 9 }]}>Authorised signatory</Text>
+            </View>
           </View>
 
         </View>

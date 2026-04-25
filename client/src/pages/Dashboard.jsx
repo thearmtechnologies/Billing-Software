@@ -55,7 +55,7 @@ const calculateSparklineData = (invoices, metricType) => {
 };
 
 const Sparkline = ({ data, color }) => {
-  if (!data || data.length === 0) return <div style={{height: "60px", marginTop: "16px"}} />;
+  if (!data || data.length === 0) return <div style={{height: "40px", marginTop: "12px"}} />;
   const max = Math.max(...data.map(d => d.value));
   const min = Math.min(...data.map(d => d.value));
   const allZero = max === 0 && min === 0;
@@ -63,7 +63,7 @@ const Sparkline = ({ data, color }) => {
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', border: `1px solid ${tokens.colors.borderLight}`, padding: "4px 8px", borderRadius: "6px", fontSize: "12px", color: tokens.colors.textPrimary, boxShadow: tokens.shadows.soft }}>
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', border: `1px solid ${tokens.colors.borderLight}`, padding: "4px 8px", borderRadius: "6px", fontSize: "11px", color: tokens.colors.textPrimary, boxShadow: tokens.shadows.soft }}>
           {payload[0].payload.monthYear}: <b>{payload[0].value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</b>
         </div>
       );
@@ -72,7 +72,7 @@ const Sparkline = ({ data, color }) => {
   };
 
   return (
-    <div style={{ height: "60px", width: "100%", marginTop: "16px" }}>
+    <div style={{ height: "40px", width: "100%", marginTop: "12px" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, bottom: 5, left: 0, right: 0}}>
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: tokens.colors.borderLight, strokeWidth: 1, strokeDasharray: "3 3" }} />
@@ -80,9 +80,9 @@ const Sparkline = ({ data, color }) => {
             type="monotone" 
             dataKey="value" 
             stroke={allZero ? tokens.colors.borderLight : color} 
-            strokeWidth={2} 
+            strokeWidth={1.5} 
             dot={false}
-            activeDot={{ r: 4, fill: color, stroke: "#fff", strokeWidth: 2 }}
+            activeDot={{ r: 3, fill: color, stroke: "#fff", strokeWidth: 1.5 }}
             isAnimationActive={false}
           />
         </LineChart>
@@ -208,6 +208,35 @@ const Dashboard = () => {
     }
   };
 
+  // Format value with proper sizing
+  const formatCardValue = (card) => {
+    if (typeof card.value === 'number') {
+      if (card.title === "Total Revenue" || card.title === "Amount Due") {
+        return `₹ ${card.value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      }
+      return card.value.toLocaleString('en-IN');
+    }
+    return card.value;
+  };
+
+  // Determine font size based on value length
+  const getValueFontSize = (value, title) => {
+    const stringValue = String(value);
+    const length = stringValue.length;
+    
+    if (title === "Total Revenue" || title === "Amount Due") {
+      if (length > 15) return "18px";
+      if (length > 12) return "20px";
+      if (length > 10) return "24px";
+      return "28px";
+    }
+    
+    // For numbers
+    if (length > 6) return "24px";
+    if (length > 4) return "28px";
+    return "32px";
+  };
+
   const statCards = [
     {
       title: "Total Clients",
@@ -229,7 +258,7 @@ const Dashboard = () => {
     },
     {
       title: "Total Revenue",
-      value: `Rs. ${stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
+      value: stats.totalRevenue,
       icon: DollarSign,
       accentText: tokens.colors.warning,
       accentBg: "#FFFBEB",
@@ -238,7 +267,7 @@ const Dashboard = () => {
     },
     {
       title: "Amount Due",
-      value: `Rs. ${stats.totalAmountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
+      value: stats.totalAmountDue,
       icon: TrendingUp,
       accentText: tokens.colors.danger,
       accentBg: "#FEF2F2",
@@ -286,128 +315,236 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ backgroundColor: tokens.colors.bgCanvas }}
+        style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          minHeight: "100vh",
+          backgroundColor: tokens.colors.bgCanvas
+        }}
       >
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: tokens.colors.accent }}></div>
+        <div style={{ textAlign: "center" }}>
+          <div 
+            style={{ 
+              width: "40px", 
+              height: "40px", 
+              border: `3px solid ${tokens.colors.borderLight}`,
+              borderTopColor: tokens.colors.accent,
+              borderRadius: "50%",
+              margin: "0 auto",
+              animation: "spin 0.8s linear infinite"
+            }}
+          />
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+          <p style={{ marginTop: "12px", color: tokens.colors.textSecondary, fontSize: "14px" }}>Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: tokens.colors.bgCanvas, minHeight: "100vh", padding: `${tokens.spacing.xl} 0`, fontFamily: "'Inter', 'SF Pro Text', sans-serif" }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style={{ 
+      backgroundColor: tokens.colors.bgCanvas, 
+      minHeight: "100vh", 
+      padding: "20px 16px 40px",
+      fontFamily: "'Inter', 'SF Pro Text', sans-serif"
+    }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between" style={{ marginBottom: tokens.spacing.lg }}>
-          <div>
-            <h1 style={{ fontSize: "32px", fontWeight: "700", color: tokens.colors.textPrimary, lineHeight: "40px", letterSpacing: "-0.02em", margin: 0 }}>
-              Dashboard
-            </h1>
-            <p style={{ fontSize: "16px", color: tokens.colors.textSecondary, marginTop: "4px" }}>
-              Welcome to your billing dashboard
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 flex">
+        <div style={{ 
+          display: "flex", 
+          flexDirection: "column",
+          gap: "16px",
+          marginBottom: "24px"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <div>
+              <h1 style={{ 
+                fontSize: "28px", 
+                fontWeight: "700", 
+                color: tokens.colors.textPrimary, 
+                lineHeight: "1.2", 
+                letterSpacing: "-0.02em", 
+                margin: 0 
+              }}>
+                Dashboard
+              </h1>
+              <p style={{ 
+                fontSize: "14px", 
+                color: tokens.colors.textSecondary, 
+                marginTop: "4px" 
+              }}>
+                Welcome back to your billing dashboard
+              </p>
+            </div>
             <Link
               to="/invoices/create"
-              className="btn-primary"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "10px 20px",
+                backgroundColor: tokens.colors.accent,
+                color: "white",
+                borderRadius: "10px",
+                fontWeight: "500",
+                fontSize: "14px",
+                textDecoration: "none",
+                transition: "all 150ms ease",
+                whiteSpace: "nowrap"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#005bb5";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = tokens.colors.accent;
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
             >
-              <Plus className="h-5 w-5 mr-1" />
+              <Plus style={{ width: "18px", height: "18px" }} />
               Create Invoice
             </Link>
           </div>
         </div>
 
-        {/* Summary Cards Grid - Responsive: 1 column on mobile, 2 on tablet, 4 on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style={{ marginBottom: tokens.spacing.xl }}>
+        {/* Summary Cards Grid */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", 
+          gap: "16px",
+          marginBottom: "28px"
+        }}>
           {statCards.map((card, index) => {
             const Icon = card.icon;
-            const valStr = String(card.value);
-            const dynamicFontSize = valStr.length >= 15 ? "clamp(18px, 3vw, 24px)" : valStr.length >= 11 ? "clamp(24px, 4vw, 32px)" : "clamp(28px, 5vw, 42px)";
-
+            const displayValue = formatCardValue(card);
+            const fontSize = getValueFontSize(displayValue, card.title);
+            
             return (
               <Link
                 key={index}
                 to={card.link}
-                className="app-card"
                 style={{
-                  padding: tokens.spacing.lg,
+                  padding: "18px",
+                  backgroundColor: "white",
+                  borderRadius: "16px",
+                  border: `1px solid ${tokens.colors.borderLight}`,
                   textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  outline: "none",
+                  display: "block",
+                  transition: "all 200ms ease",
+                  cursor: "pointer"
                 }}
-                tabIndex={0}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.borderColor = tokens.colors.accent;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.borderColor = tokens.colors.borderLight;
+                }}
               >
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: "15px", fontWeight: "600", color: tokens.colors.textSecondary, marginBottom: "6px" }}>
-                        {card.title}
-                      </p>
-                      <p style={{ 
-                        fontWeight: "700", 
-                        color: tokens.colors.textPrimary, 
-                        lineHeight: "1.2",
-                        fontSize: dynamicFontSize,
-                        wordBreak: "break-word",
-                        whiteSpace: "normal",
-                        letterSpacing: "-0.02em"
-                      }}>
-                        {card.value}
-                      </p>
-                    </div>
-                    <div
-                      style={{
-                        backgroundColor: card.accentBg,
-                        color: card.accentText,
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginLeft: tokens.spacing.sm,
-                      }}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ 
+                      fontSize: "13px", 
+                      fontWeight: "600", 
+                      color: tokens.colors.textSecondary, 
+                      marginBottom: "8px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      {card.title}
+                    </p>
+                    <p style={{ 
+                      fontWeight: "700", 
+                      color: tokens.colors.textPrimary, 
+                      fontSize: fontSize,
+                      lineHeight: "1.2",
+                      margin: 0,
+                      wordBreak: "break-word"
+                    }}>
+                      {displayValue}
+                    </p>
                   </div>
-                  {card.sparklineData && (
-                    <Sparkline data={card.sparklineData} color={card.accentText} />
-                  )}
+                  <div
+                    style={{
+                      backgroundColor: card.accentBg,
+                      color: card.accentText,
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginLeft: "12px"
+                    }}
+                  >
+                    <Icon style={{ width: "20px", height: "20px" }} />
+                  </div>
                 </div>
+                {card.sparklineData && (
+                  <Sparkline data={card.sparklineData} color={card.accentText} />
+                )}
               </Link>
             );
           })}
         </div>
 
         {/* Unified Chart */}
-        <div style={{ marginBottom: tokens.spacing.xl }}>
+        <div style={{ marginBottom: "28px" }}>
           <div
-            className="app-card"
             style={{
-              padding: "1.5rem",
+              backgroundColor: "white",
+              borderRadius: "16px",
+              border: `1px solid ${tokens.colors.borderLight}`,
+              padding: "20px",
+              transition: "all 200ms ease"
             }}
           >
             <UnifiedChart data={invoiceData} />
-            <div style={{ marginTop: tokens.spacing.md, backgroundColor: "#EEF2FF", borderRadius: "8px", padding: "12px 16px" }}>
-              <p style={{ fontSize: "13px", color: tokens.colors.accent, margin: 0 }}>
-                💡 <strong>Insight:</strong> Manage your billing trends. Use the controls above to explore ranges and data views.
+            <div style={{ 
+              marginTop: "16px", 
+              backgroundColor: "#EEF2FF", 
+              borderRadius: "10px", 
+              padding: "12px 16px" 
+            }}>
+              <p style={{ 
+                fontSize: "13px", 
+                color: tokens.colors.accent, 
+                margin: 0,
+                lineHeight: "1.4"
+              }}>
+                💡 <strong>Insight:</strong> Track your billing trends. Use the controls above to explore different time ranges and data views.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Two Column Layout */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "1fr",
+          gap: "28px"
+        }}>
           {/* Recent Activity */}
-          <div className="lg:col-span-2">
-            <h2 style={{ fontSize: "20px", fontWeight: "600", color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md }}>
+          <div>
+            <h2 style={{ 
+              fontSize: "20px", 
+              fontWeight: "600", 
+              color: tokens.colors.textPrimary, 
+              marginBottom: "16px" 
+            }}>
               Recent Activity
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {recentInvoices.length > 0 ? (
                 recentInvoices.map((invoice) => {
                   const StatusIcon = getStatusIcon(invoice.status);
@@ -420,58 +557,101 @@ const Dashboard = () => {
                   return (
                     <div
                       key={invoice._id}
-                      className="app-card"
                       style={{
-                        padding: "16px 20px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        flexWrap: "wrap",
-                        gap: "12px",
+                        backgroundColor: "white",
+                        borderRadius: "14px",
+                        border: `1px solid ${tokens.colors.borderLight}`,
+                        padding: "16px",
+                        transition: "all 150ms ease"
                       }}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center" style={{ gap: tokens.spacing.md, flex: 1, minWidth: 0 }}>
-                        <div className="hidden sm:flex" style={{ backgroundColor: pillColors.bg, color: pillColors.text, borderRadius: "50%", width: "40px", height: "40px", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <StatusIcon className="h-5 w-5" />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 style={{ fontSize: "15px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }}>
-                              {invoice.invoiceNumber}
-                            </h3>
-                            <span
-                              className={`badge ${invoice.status === 'paid' ? 'badge-paid' : invoice.status === 'overdue' ? 'badge-overdue' : invoice.status === 'sent' ? 'badge-active' : ''}`}
-                              style={invoice.status === 'partial' || invoice.status === 'draft' ? {
+                      <div style={{ 
+                        display: "flex", 
+                        alignItems: "flex-start", 
+                        justifyContent: "space-between", 
+                        flexWrap: "wrap", 
+                        gap: "12px" 
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
+                          <div style={{ 
+                            backgroundColor: pillColors.bg, 
+                            borderRadius: "10px", 
+                            width: "36px", 
+                            height: "36px", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            justifyContent: "center", 
+                            flexShrink: 0 
+                          }}>
+                            <StatusIcon style={{ width: "18px", height: "18px", color: pillColors.text }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                              <h3 style={{ 
+                                fontSize: "15px", 
+                                fontWeight: "600", 
+                                color: tokens.colors.textPrimary, 
+                                margin: 0 
+                              }}>
+                                {invoice.invoiceNumber}
+                              </h3>
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                padding: "3px 8px",
+                                borderRadius: "20px",
                                 backgroundColor: pillColors.bg,
                                 color: pillColors.text,
-                                border: 'none'
-                              } : {}}
-                              aria-label={`Status: ${invoice.status}`}
-                            >
-                              {invoice.status}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: "13px", color: tokens.colors.textSecondary, margin: 0 }}>
-                            {invoice.client?.companyName || "Unknown Client"} 
-                            {(invoice.status === 'partial' || invoice.status === 'sent' || invoice.status === 'overdue') && invoice.amountDue && (
-                              <span style={{ marginLeft: "8px", color: invoice.status === 'overdue' ? tokens.colors.danger : tokens.colors.textSecondary }}>
-                                • Due: Rs. {invoice.amountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                textTransform: "capitalize"
+                              }}>
+                                {invoice.status}
                               </span>
-                            )}
-                          </p>
+                            </div>
+                            <p style={{ 
+                              fontSize: "13px", 
+                              color: tokens.colors.textSecondary, 
+                              margin: 0,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis"
+                            }}>
+                              {invoice.client?.companyName || "Unknown Client"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ textAlign: "right", paddingLeft: tokens.spacing.md, flexShrink: 0 }}>
-                        <p style={{ fontSize: "16px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                          Rs. {invoice.totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                        </p>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <p style={{ 
+                            fontSize: "16px", 
+                            fontWeight: "600", 
+                            color: tokens.colors.textPrimary, 
+                            margin: 0,
+                            fontVariantNumeric: "tabular-nums"
+                          }}>
+                            ₹ {invoice.totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          </p>
+                          {(invoice.status === 'partial' || invoice.status === 'sent' || invoice.status === 'overdue') && invoice.amountDue > 0 && (
+                            <p style={{ 
+                              fontSize: "11px", 
+                              color: invoice.status === 'overdue' ? tokens.colors.danger : tokens.colors.textSecondary, 
+                              margin: "4px 0 0 0"
+                            }}>
+                              Due: ₹ {invoice.amountDue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div style={{ textAlign: "center", padding: "40px 0", backgroundColor: tokens.colors.bgSurface, borderRadius: tokens.radii.card, border: `1px solid ${tokens.colors.borderLight}` }}>
-                  <FileText className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                <div style={{ 
+                  textAlign: "center", 
+                  padding: "48px 20px", 
+                  backgroundColor: "white", 
+                  borderRadius: "16px", 
+                  border: `1px solid ${tokens.colors.borderLight}` 
+                }}>
+                  <FileText style={{ width: "48px", height: "48px", color: "#9CA3AF", margin: "0 auto 12px" }} />
                   <p style={{ color: tokens.colors.textSecondary, fontSize: "14px" }}>No recent activity</p>
                 </div>
               )}
@@ -487,79 +667,120 @@ const Dashboard = () => {
                   fontWeight: "500",
                   textDecoration: "none",
                   backgroundColor: "transparent",
-                  borderRadius: "8px",
-                  transition: "color 150ms ease, background-color 150ms ease",
-                  marginTop: "8px"
+                  borderRadius: "10px",
+                  transition: "all 150ms ease",
+                  marginTop: "4px"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.03)";
+                  e.currentTarget.style.backgroundColor = "#F3F4F6";
                   e.currentTarget.style.color = tokens.colors.textPrimary;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
                   e.currentTarget.style.color = tokens.colors.textSecondary;
                 }}
-                onFocus={(e) => {
-                  e.currentTarget.style.outline = `2px solid ${tokens.colors.accent}`;
-                  e.currentTarget.style.outlineOffset = "2px";
-                }}
-                onBlur={(e) => e.currentTarget.style.outline = "none"}
               >
-                View all invoices &rarr;
+                View all invoices →
               </Link>
             </div>
           </div>
 
-          {/* Right Column Content */}
-          <div>
-            <div style={{ marginBottom: tokens.spacing.xl }}>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md }}>
-                Snapshot Summary
+          {/* Right Column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+            {/* Snapshot Summary */}
+            <div>
+              <h2 style={{ 
+                fontSize: "20px", 
+                fontWeight: "600", 
+                color: tokens.colors.textPrimary, 
+                marginBottom: "16px" 
+              }}>
+                Invoice Summary
               </h2>
-              <div className="app-card" style={{ padding: tokens.spacing.lg }}>
+              <div style={{
+                backgroundColor: "white",
+                borderRadius: "16px",
+                border: `1px solid ${tokens.colors.borderLight}`,
+                padding: "20px"
+              }}>
                 <SummaryPie data={invoiceData} />
               </div>
             </div>
 
-            {/* Business Types Panel */}
-            <div>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md }}>
-                Business Modules
-              </h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
-                {(Array.isArray(currentUser?.businessType) ? currentUser.businessType : []).map((type) => {
-                  const meta = BUSINESS_META[type] || { name: titleize(type), icon: Settings };
-                  const Icon = meta.icon;
-                  return (
-                    <div
-                      key={type}
-                      className="app-card"
-                      style={{
-                        padding: "16px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: tokens.spacing.md,
-                      }}
-                    >
-                      <div style={{ backgroundColor: "#F3F4F6", color: "#6B7280", borderRadius: "10px", padding: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Icon className="h-5 w-5" />
+            {/* Business Modules */}
+            {Array.isArray(currentUser?.businessType) && currentUser.businessType.length > 0 && (
+              <div>
+                <h2 style={{ 
+                  fontSize: "20px", 
+                  fontWeight: "600", 
+                  color: tokens.colors.textPrimary, 
+                  marginBottom: "16px" 
+                }}>
+                  Business Modules
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {(currentUser.businessType || []).map((type) => {
+                    const meta = BUSINESS_META[type] || { name: titleize(type), icon: Settings };
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={type}
+                        style={{
+                          backgroundColor: "white",
+                          borderRadius: "14px",
+                          border: `1px solid ${tokens.colors.borderLight}`,
+                          padding: "14px 16px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "14px",
+                          transition: "all 150ms ease"
+                        }}
+                      >
+                        <div style={{ 
+                          backgroundColor: "#F3F4F6", 
+                          borderRadius: "10px", 
+                          width: "40px", 
+                          height: "40px", 
+                          display: "flex", 
+                          alignItems: "center", 
+                          justifyContent: "center",
+                          flexShrink: 0
+                        }}>
+                          <Icon style={{ width: "20px", height: "20px", color: "#6B7280" }} />
+                        </div>
+                        <div>
+                          <h3 style={{ 
+                            fontSize: "14px", 
+                            fontWeight: "600", 
+                            color: tokens.colors.textPrimary, 
+                            margin: 0 
+                          }}>
+                            {meta.name}
+                          </h3>
+                          <p style={{ 
+                            fontSize: "12px", 
+                            color: tokens.colors.textSecondary, 
+                            margin: "2px 0 0 0" 
+                          }}>
+                            Active module
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 style={{ fontSize: "14px", fontWeight: "600", color: tokens.colors.textPrimary, margin: 0 }}>
-                          {meta.name}
-                        </h3>
-                        <p style={{ fontSize: "12px", color: tokens.colors.textSecondary, margin: "2px 0 0 0" }}>
-                          Active module
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
