@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 import axios from "axios";
 import { UserContext } from "../context/userContext";
@@ -19,6 +20,45 @@ import UnifiedChart from "../components/UnifiedChart";
 import SummaryPie from "../components/SummaryPie";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { tokens } from "../components/tokens";
+
+/* ── Financial Year Helpers ─────────────────────────────────── */
+const getCurrentFY = () => {
+  const now = new Date();
+  const month = now.getMonth(); // 0-indexed: 0=Jan, 3=Apr
+  const year = now.getFullYear();
+  // April (3) onwards → FY starts this year; Jan-Mar → FY started previous year
+  const startYear = month >= 3 ? year : year - 1;
+  return `${startYear}-${startYear + 1}`;
+};
+
+const generateFYOptions = () => {
+  const now = new Date();
+  const currentStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const options = [];
+  // Generate from 2022-2023 up to currentFY + 1 (next FY)
+  const startFrom = 2022;
+  const endAt = currentStartYear + 1;
+  for (let y = endAt; y >= startFrom; y--) {
+    options.push(`${y}-${y + 1}`);
+  }
+  return options;
+};
+
+const getFYDateRange = (fyString) => {
+  const [startYear] = fyString.split("-").map(Number);
+  return {
+    from: new Date(startYear, 3, 1),       // April 1
+    to: new Date(startYear + 1, 2, 31, 23, 59, 59, 999), // March 31 end-of-day
+  };
+};
+
+const filterInvoicesByFY = (invoices, fyString) => {
+  const { from, to } = getFYDateRange(fyString);
+  return invoices.filter((inv) => {
+    const d = new Date(inv.invoiceDate);
+    return d >= from && d <= to;
+  });
+};
 
 const calculateSparklineData = (invoices, metricType) => {
   const now = new Date();
@@ -118,7 +158,13 @@ const Dashboard = () => {
   });
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allInvoices, setAllInvoices] = useState([]);
+  const [allClients, setAllClients] = useState([]);
   const [invoiceData, setInvoiceData] = useState([]);
+  const [selectedFY, setSelectedFY] = useState(getCurrentFY());
+  const [fyDropdownOpen, setFyDropdownOpen] = useState(false);
+
+  const fyOptions = useMemo(() => generateFYOptions(), []);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -138,65 +184,78 @@ const Dashboard = () => {
       
       const invoicesData = invoicesRes.data || [];
       const invoices = Array.isArray(invoicesData) ? invoicesData : (Array.isArray(invoicesData.invoices) ? invoicesData.invoices : (Array.isArray(invoicesData.data) ? invoicesData.data : []));
-      setInvoiceData(invoices);
 
-      // Calculate comprehensive stats
-      const totalRevenue = invoices.reduce((sum, inv) => {
-        if (inv.status === "paid") {
-          return sum + inv.totalAmount;
-        } else if (inv.status === "partial") {
-          return sum + inv.amountPaid;
-        }
-        return sum;
-      }, 0);
-
-      const totalAmountDue = invoices.reduce((sum, inv) => {
-        if (inv.status === "sent" || inv.status === "overdue" || inv.status === "partial") {
-          return sum + inv.amountDue;
-        }
-        return sum;
-      }, 0);
-
-      const sentInvoices = invoices.filter(inv => inv.status === "sent").length;
-      const pendingInvoices = invoices.filter(inv => inv.status === "sent" || inv.status === "overdue").length;
-      const partialPayments = invoices.filter(inv => inv.status === "partial").length;
-      const overdueInvoices = invoices.filter(inv => inv.status === "overdue").length;
-      const draftInvoices = invoices.filter(inv => inv.status === "draft").length;
-
-      setStats({
-        totalClients: clients.clients?.length || clients.length || 0,
-        totalInvoices: invoices.length,
-        totalRevenue,
-        pendingInvoices,
-        partialPayments,
-        sentInvoices,
-        overdueInvoices,
-        draftInvoices,
-        totalAmountDue,
-        sparklines: {
-          totalInvoices: calculateSparklineData(invoices, 'totalInvoices'),
-          totalRevenue: calculateSparklineData(invoices, 'totalRevenue'),
-          amountDue: calculateSparklineData(invoices, 'amountDue'),
-          sentInvoices: calculateSparklineData(invoices, 'sentInvoices'),
-          overdueInvoices: calculateSparklineData(invoices, 'overdueInvoices'),
-          partialPayments: calculateSparklineData(invoices, 'partialPayments'),
-          draftInvoices: calculateSparklineData(invoices, 'draftInvoices'),
-        }
-      });
-
-      // Show recent invoices (all statuses except draft)
-      const recentInvoicesArr = invoices
-        .filter((inv) => inv.status !== "draft")
-        .sort((a, b) => new Date(b.invoiceDate) - new Date(a.invoiceDate))
-        .slice(0, 6);
-
-      setRecentInvoices(recentInvoicesArr);
+      setAllInvoices(invoices);
+      setAllClients(clients);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Recompute stats whenever FY selection or raw data changes
+  useEffect(() => {
+    if (allInvoices.length === 0 && allClients.length === 0) return;
+
+    const invoices = filterInvoicesByFY(allInvoices, selectedFY);
+    setInvoiceData(invoices);
+
+    // Calculate comprehensive stats
+    const totalRevenue = invoices.reduce((sum, inv) => {
+      if (inv.status === "paid") {
+        return sum + inv.totalAmount;
+      } else if (inv.status === "partial") {
+        return sum + inv.amountPaid;
+      }
+      return sum;
+    }, 0);
+
+    const totalAmountDue = invoices.reduce((sum, inv) => {
+      if (inv.status === "sent" || inv.status === "overdue" || inv.status === "partial") {
+        return sum + inv.amountDue;
+      }
+      return sum;
+    }, 0);
+
+    const sentInvoices = invoices.filter(inv => inv.status === "sent").length;
+    const pendingInvoices = invoices.filter(inv => inv.status === "sent" || inv.status === "overdue").length;
+    const partialPayments = invoices.filter(inv => inv.status === "partial").length;
+    const overdueInvoices = invoices.filter(inv => inv.status === "overdue").length;
+    const draftInvoices = invoices.filter(inv => inv.status === "draft").length;
+
+    // Count unique clients in this FY's invoices
+    const uniqueClientIds = new Set(invoices.map(inv => inv.client?._id || inv.client).filter(Boolean));
+
+    setStats({
+      totalClients: uniqueClientIds.size,
+      totalInvoices: invoices.length,
+      totalRevenue,
+      pendingInvoices,
+      partialPayments,
+      sentInvoices,
+      overdueInvoices,
+      draftInvoices,
+      totalAmountDue,
+      sparklines: {
+        totalInvoices: calculateSparklineData(invoices, 'totalInvoices'),
+        totalRevenue: calculateSparklineData(invoices, 'totalRevenue'),
+        amountDue: calculateSparklineData(invoices, 'amountDue'),
+        sentInvoices: calculateSparklineData(invoices, 'sentInvoices'),
+        overdueInvoices: calculateSparklineData(invoices, 'overdueInvoices'),
+        partialPayments: calculateSparklineData(invoices, 'partialPayments'),
+        draftInvoices: calculateSparklineData(invoices, 'draftInvoices'),
+      }
+    });
+
+    // Show recent invoices (all statuses except draft)
+    const recentInvoicesArr = invoices
+      .filter((inv) => inv.status !== "draft")
+      .sort((a, b) => new Date(b.invoiceDate) - new Date(a.invoiceDate))
+      .slice(0, 6);
+
+    setRecentInvoices(recentInvoicesArr);
+  }, [allInvoices, allClients, selectedFY]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -308,7 +367,7 @@ const Dashboard = () => {
               Welcome to your billing dashboard
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 flex">
+          <div className="mt-4 sm:mt-0" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
             <Link
               to="/invoices/create"
               className="btn-primary"
@@ -316,6 +375,105 @@ const Dashboard = () => {
               <Plus className="h-5 w-5 mr-1" />
               Create Invoice
             </Link>
+
+            {/* Financial Year Filter */}
+            <div style={{ position: "relative" }}>
+              <button
+                id="fy-filter-btn"
+                onClick={() => setFyDropdownOpen((prev) => !prev)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 14px",
+                  backgroundColor: tokens.colors.bgSurface,
+                  border: `1px solid ${tokens.colors.borderLight}`,
+                  borderRadius: tokens.radii.card,
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: tokens.colors.textPrimary,
+                  cursor: "pointer",
+                  boxShadow: tokens.shadows.soft,
+                  transition: "all 150ms ease",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = tokens.colors.accent;
+                  e.currentTarget.style.boxShadow = tokens.shadows.hover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = tokens.colors.borderLight;
+                  e.currentTarget.style.boxShadow = tokens.shadows.soft;
+                }}
+              >
+                <Calendar className="h-4 w-4" style={{ color: tokens.colors.accent, flexShrink: 0 }} />
+                <span>FY {selectedFY}</span>
+                <ChevronDown className="h-4 w-4" style={{ color: tokens.colors.textSecondary, flexShrink: 0, transform: fyDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms ease" }} />
+              </button>
+
+              {fyDropdownOpen && (
+                <>
+                  {/* Backdrop to close dropdown on outside click */}
+                  <div
+                    onClick={() => setFyDropdownOpen(false)}
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 6px)",
+                      zIndex: 50,
+                      backgroundColor: tokens.colors.bgSurface,
+                      border: `1px solid ${tokens.colors.borderLight}`,
+                      borderRadius: tokens.radii.card,
+                      boxShadow: tokens.shadows.hover,
+                      minWidth: "170px",
+                      padding: "4px",
+                      maxHeight: "260px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {fyOptions.map((fy) => (
+                      <button
+                        key={fy}
+                        onClick={() => {
+                          setSelectedFY(fy);
+                          setFyDropdownOpen(false);
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "10px 14px",
+                          fontSize: "14px",
+                          fontWeight: selectedFY === fy ? "700" : "500",
+                          color: selectedFY === fy ? tokens.colors.accent : tokens.colors.textPrimary,
+                          backgroundColor: selectedFY === fy ? "#EFF6FF" : "transparent",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          transition: "background-color 100ms ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedFY !== fy) e.currentTarget.style.backgroundColor = "#F3F4F6";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedFY !== fy) e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        FY {fy}
+                        {fy === getCurrentFY() && (
+                          <span style={{ marginLeft: "8px", fontSize: "11px", fontWeight: "600", color: tokens.colors.success, backgroundColor: "#ECFDF5", padding: "2px 8px", borderRadius: "9999px" }}>
+                            Current
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
