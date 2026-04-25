@@ -392,7 +392,7 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
 
         {invoiceData.notes && (
           <View style={[s.coloredBlock, s.noteBlock]} wrap={false}>
-            <Text style={s.blockTitle}>Notes:</Text>
+            <Text style={s.blockTitle}>Terms:</Text>
             <Text style={s.blockBody}>{invoiceData.notes}</Text>
           </View>
         )}

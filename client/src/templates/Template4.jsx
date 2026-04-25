@@ -288,7 +288,7 @@ const Template4 = ({ invoiceData, ref, numberToWords }) => {
           borderRadius: "8px"
         }}>
           <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "8px" }}>
-            Notes:
+            Terms:
           </div>
           <div style={{ fontSize: "14px" }}>{invoiceData.notes}</div>
         </div>

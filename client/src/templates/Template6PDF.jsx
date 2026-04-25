@@ -235,7 +235,7 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </View>
               <View style={s.flexRow}>
                 <Text style={s.headerLabel}>State Code</Text>
-                <Text style={s.headerValue}>: {safeText(invoiceData?.client?.address?.state)}</Text>
+                <Text style={s.headerValue}>: {safeText(invoiceData?.client?.address?.stateCode || invoiceData?.client?.stateCode || (invoiceData?.client?.gstin || invoiceData?.client?.gstNumber ? String(invoiceData?.client?.gstin || invoiceData?.client?.gstNumber).substring(0, 2) : invoiceData?.client?.address?.state))}</Text>
               </View>
               <View style={s.flexRow}>
                 <Text style={s.headerLabel}>Phone No.</Text>

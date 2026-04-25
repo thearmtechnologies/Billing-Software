@@ -61,6 +61,7 @@ export const createInvoice = async (req, res) => {
       taxes = [],
       bankDetails,
       shippingAddress,
+      customFields,
     } = req.body;
 
     // Prevent duplicate invoice number
@@ -129,6 +130,7 @@ export const createInvoice = async (req, res) => {
       taxes: updatedTaxes,
       totalTax,
       totalAmount,
+      customFields: customFields || [],
       status,
       dueDate,
       paidDate,
