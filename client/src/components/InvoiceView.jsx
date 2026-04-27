@@ -19,6 +19,7 @@ import Template3PDF from "../templates/Template3PDF";
 import Template4PDF from "../templates/Template4PDF";
 import Template6PDF from "../templates/Template6PDF";
 import Template7PDF from "../templates/Template7PDF";
+import Template8PDF from "../templates/Template8PDF";
 
 const InvoiceView = () => {
   const { id } = useParams();
@@ -189,6 +190,8 @@ const InvoiceView = () => {
         return <Template6PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
       case "Template7PDF":
         return <Template7PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
+      case "Template8PDF":
+        return <Template8PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;
       case "Template1PDF":
       default:
         return <Template1PDF invoiceData={data} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={signature} logoBase64={logo} />;

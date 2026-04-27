@@ -32,6 +32,7 @@ const AdminUsers = () => {
     { id: "Template5PDF", name: "Template 5" },
     { id: "Template6PDF", name: "Template 6" },
     { id: "Template7PDF", name: "Template 7" },
+    { id: "Template8PDF", name: "Template 8" },
   ];
 
   useEffect(() => {
