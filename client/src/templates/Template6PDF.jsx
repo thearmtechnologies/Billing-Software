@@ -91,7 +91,7 @@ const s = StyleSheet.create({
   // Table Styles
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#0047ab", // Dark Blue from design
+    backgroundColor: "#0047ab",
     color: "#fff",
     borderBottomWidth: 1,
     borderColor: "#000",
@@ -119,7 +119,7 @@ const s = StyleSheet.create({
   wRate: { width: "22%" },
   wAmt: { width: "12%", borderRightWidth: 0 },
 
-  // Watermark (Centered Background Text)
+  // Watermark
   watermark: {
     position: "absolute",
     top: "35%",
@@ -156,18 +156,36 @@ const s = StyleSheet.create({
   totalLabel: { width: "60%", fontFamily: "Helvetica" },
   totalVal: { width: "40%", textAlign: "right" },
 
-  // Footer / Grand Total
+  // Footer / Grand Total - OPTIMIZED
   footerBar: {
     flexDirection: "row",
     backgroundColor: "#1a5fb4",
     color: "#fff",
-    padding: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     alignItems: "center",
     justifyContent: "space-between",
+    minHeight: 32,
   },
   grandTotalText: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    flex: 1,
+    marginRight: 12,
+  },
+  grandTotalLabel: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
+    marginRight: 8,
+  },
+  grandTotalNumber: {
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+  },
+  grandTotalWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 0,
   },
 
   termsTitle: {
@@ -196,6 +214,19 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   const totalTax = Number(invoiceData?.totalTax) || 0;
   const discount = Number(invoiceData?.discount) || 0;
   const grandTotal = Number(invoiceData?.totalAmount) || (subtotal + totalTax - discount);
+
+  // Clean up number to words to remove any duplicate "only"
+  const getAmountInWords = () => {
+    if (typeof numberToWords !== "function") return "";
+    let words = numberToWords(grandTotal);
+    // Remove duplicate "only" if present
+    words = words.replace(/\s+only\s+only/gi, " only");
+    words = words.replace(/\s+only$/i, " only");
+    if (!words.toLowerCase().endsWith("only")) {
+      words += " only";
+    }
+    return words;
+  };
 
   return (
     <Document>
@@ -381,14 +412,16 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             </View>
           </View>
 
-          {/* Final Footer Bar */}
+          {/* Final Footer Bar - OPTIMIZED */}
           <View style={s.footerBar}>
             <Text style={s.grandTotalText}>
-              Rs. {typeof numberToWords === "function" ? numberToWords(grandTotal) : ""} only
+              Rs. {getAmountInWords()}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={[s.grandTotalText, { marginRight: 10 }]}>Grand Total</Text>
-              <Text style={[s.grandTotalText, { fontSize: 14 }]}>{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+            <View style={s.grandTotalWrapper}>
+              <Text style={s.grandTotalLabel}>Grand Total</Text>
+              <Text style={s.grandTotalNumber}>
+                Rs. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Text>
             </View>
           </View>
 
@@ -398,4 +431,4 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   );
 };
 
-export default Template6PDF;    
+export default Template6PDF;

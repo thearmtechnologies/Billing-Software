@@ -12,11 +12,11 @@ import {
 const s = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
-    fontSize: 9,
-    padding: 25,
+    fontSize: 8.5,
+    padding: 15,
     color: "#000",
     backgroundColor: "#fff",
-    lineHeight: 1.4,
+    lineHeight: 1.3,
   },
   bold: { fontFamily: "Helvetica-Bold" },
   textRight: { textAlign: "right" },
@@ -24,10 +24,10 @@ const s = StyleSheet.create({
 
   // 1. Top Title
   mainTitle: { 
-    fontSize: 16, 
+    fontSize: 14, 
     fontFamily: "Helvetica-Bold", 
     textAlign: "center", 
-    marginBottom: 8, 
+    marginBottom: 6, 
     textTransform: "uppercase" 
   },
 
@@ -35,33 +35,33 @@ const s = StyleSheet.create({
   box: { 
     borderWidth: 1, 
     borderColor: "#000", 
-    marginBottom: 10 
+    marginBottom: 6 
   },
   boxRow: { flexDirection: "row" },
   
   // 2. Company Header Box
-  headerColLeft: { width: "65%", padding: 6, borderRightWidth: 1, borderColor: "#000" },
-  headerColRight: { width: "35%", padding: 6, justifyContent: "center" },
-  businessName: { fontSize: 13, fontFamily: "Helvetica-Bold", marginBottom: 3 },
-  companyText: { fontSize: 9, color: "#222" },
+  headerColLeft: { width: "65%", padding: 4, borderRightWidth: 1, borderColor: "#000" },
+  headerColRight: { width: "35%", padding: 4, justifyContent: "center" },
+  businessName: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 2 },
+  companyText: { fontSize: 7.5, color: "#222", marginBottom: 1 },
   
   // 3. Bill To & Invoice Info Box
-  billToColLeft: { width: "65%", padding: 6, borderRightWidth: 1, borderColor: "#000" },
-  shipToColMid: { padding: 6, borderRightWidth: 1, borderColor: "#000" },
-  billToColRight: { width: "35%", padding: 6 },
-  sectionTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 4, color: "#444" },
-  customerName: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 2 },
-  customerText: { fontSize: 9, color: "#222" },
+  billToColLeft: { width: "65%", padding: 4, borderRightWidth: 1, borderColor: "#000" },
+  shipToColMid: { padding: 4, borderRightWidth: 1, borderColor: "#000" },
+  billToColRight: { width: "35%", padding: 4 },
+  sectionTitle: { fontSize: 8, fontFamily: "Helvetica-Bold", marginBottom: 3, color: "#444" },
+  customerName: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 2 },
+  customerText: { fontSize: 7.5, color: "#222", marginBottom: 1 },
 
-  metaRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
-  metaLabel: { fontSize: 9, fontFamily: "Helvetica-Bold" },
-  metaValue: { fontSize: 9, textAlign: "right" },
+  metaRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
+  metaLabel: { fontSize: 8, fontFamily: "Helvetica-Bold" },
+  metaValue: { fontSize: 8, textAlign: "right" },
 
   // 4. Items Table
   table: { 
     borderWidth: 1, 
     borderColor: "#000", 
-    marginBottom: 10 
+    marginBottom: 6 
   },
   tableHeader: { 
     flexDirection: "row", 
@@ -69,13 +69,13 @@ const s = StyleSheet.create({
     borderColor: "#000", 
     backgroundColor: "#f0f0f0" 
   },
-  tableRow: { flexDirection: "row", borderBottomWidth: 1, borderColor: "#ccc" },
+  tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderColor: "#ccc" },
   tableRowLast: { flexDirection: "row" },
   
-  colHeader: { padding: 4, fontSize: 8, fontFamily: "Helvetica-Bold", borderRightWidth: 1, borderColor: "#000", textAlign: "center" },
-  colHeaderLast: { padding: 4, fontSize: 8, fontFamily: "Helvetica-Bold", textAlign: "center" },
-  colCell: { padding: 4, fontSize: 8, borderRightWidth: 1, borderColor: "#000" },
-  colCellLast: { padding: 4, fontSize: 8 },
+  colHeader: { padding: 3, fontSize: 7.5, fontFamily: "Helvetica-Bold", borderRightWidth: 1, borderColor: "#000", textAlign: "center" },
+  colHeaderLast: { padding: 3, fontSize: 7.5, fontFamily: "Helvetica-Bold", textAlign: "center" },
+  colCell: { padding: 3, fontSize: 7.5, borderRightWidth: 1, borderColor: "#000" },
+  colCellLast: { padding: 3, fontSize: 7.5 },
 
   wNo: { width: "5%" },
   wItem: { width: "32%" },
@@ -93,7 +93,7 @@ const s = StyleSheet.create({
   },
 
   // 6. Tax Summary
-  taxTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 4 },
+  taxTitle: { fontSize: 8.5, fontFamily: "Helvetica-Bold", marginBottom: 3 },
   tHsn: { width: "16%" },
   tTaxable: { width: "14%" },
   tCgstRate: { width: "10%" },
@@ -103,33 +103,34 @@ const s = StyleSheet.create({
   tTotalTax: { width: "20%" },
 
   // 7. Totals & Words
-  bottomSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  wordsBox: { width: "55%", paddingRight: 10 },
-  wordsLabel: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 3 },
-  wordsText: { fontSize: 9, fontStyle: "italic", color: "#333", lineHeight: 1.5 },
+  bottomSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  wordsBox: { width: "55%", paddingRight: 8 },
+  wordsLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", marginBottom: 2 },
+  wordsText: { fontSize: 8, fontStyle: "italic", color: "#333", lineHeight: 1.3 },
 
   totalsBox: { width: "40%", borderWidth: 1, borderColor: "#000" },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", padding: 5, borderBottomWidth: 1, borderColor: "#ccc" },
-  totalRowLast: { flexDirection: "row", justifyContent: "space-between", padding: 5, backgroundColor: "#f0f0f0" },
-  totalLabel: { fontSize: 9, fontFamily: "Helvetica-Bold" },
-  totalValBold: { fontSize: 10, fontFamily: "Helvetica-Bold", textAlign: "right" },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", padding: 3, borderBottomWidth: 0.5, borderColor: "#ccc" },
+  totalRowLast: { flexDirection: "row", justifyContent: "space-between", padding: 3, backgroundColor: "#f0f0f0" },
+  totalLabel: { fontSize: 8, fontFamily: "Helvetica-Bold" },
+  totalValue: { fontSize: 8, textAlign: "right" },
+  totalValBold: { fontSize: 9, fontFamily: "Helvetica-Bold", textAlign: "right" },
 
   // 8. Bank Details
   bankBox: { 
-    marginBottom: 10, 
-    padding: 6, 
+    marginBottom: 6, 
+    padding: 4, 
     borderWidth: 1, 
     borderColor: "#000", 
     backgroundColor: "#f8f9fa" 
   },
-  bankTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 4 },
-  bankRow: { fontSize: 8, marginBottom: 2 },
+  bankTitle: { fontSize: 8, fontFamily: "Helvetica-Bold", marginBottom: 3 },
+  bankRow: { fontSize: 7.5, marginBottom: 1.5 },
 
   // 9. Footer
-  footerBox: { flexDirection: "row", justifyContent: "space-between", marginTop: 10, paddingTop: 5 },
+  footerBox: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 4 },
   termsBox: { width: "55%" },
   sigBox: { width: "35%", alignItems: "flex-end" },
-  sigLine: { borderTopWidth: 1, borderColor: "#000", width: "100%", textAlign: "center", paddingTop: 4 },
+  sigLine: { borderTopWidth: 1, borderColor: "#000", width: "100%", textAlign: "center", paddingTop: 3 },
 });
 
 const formatAccountType = (type) => {
@@ -235,14 +236,14 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           </View>
           <View style={s.headerColRight}>
             <Text style={s.sectionTitle}>GSTIN</Text>
-            <Text style={[s.bold, { fontSize: 11 }]}>
+            <Text style={[s.bold, { fontSize: 10 }]}>
               {currentUser?.taxId || "N/A"}
             </Text>
             {currentUser?.udyamNo && (
-              <Text style={[s.companyText, { marginTop: 2 }]}>Udyam: {currentUser.udyamNo}</Text>
+              <Text style={[s.companyText, { marginTop: 1 }]}>Udyam: {currentUser.udyamNo}</Text>
             )}
             {currentUser?.panNumber && (
-              <Text style={[s.companyText, { marginTop: 2 }]}>PAN: {currentUser.panNumber}</Text>
+              <Text style={[s.companyText, { marginTop: 1 }]}>PAN: {currentUser.panNumber}</Text>
             )}
           </View>
         </View>
@@ -308,23 +309,21 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <Text style={[s.colHeader, s.wHsn]}>HSN/SAC</Text>
             <Text style={[s.colHeader, s.wQty, s.textRight]}>Quantity</Text>
             <Text style={[s.colHeader, s.wPrice, s.textRight]}>Price / Unit (Rs.)</Text>
-            {/* <Text style={[s.colHeader, s.wGst, s.textRight]}>GST (Rs.)</Text> */}
             <Text style={[s.colHeaderLast, s.wAmt, s.textRight]}>Amount (Rs.)</Text>
           </View>
           
           {invoiceData.items.map((item, index) => {
             const isLast = index === invoiceData.items.length - 1;
-            const taxAmt = ((item.subtotal * (item.taxRate || 0)) / 100);
             return (
               <View key={index} style={isLast ? s.tableRowLast : s.tableRow}>
                 <Text style={[s.colCell, s.wNo, s.textCenter]}>{index + 1}</Text>
                 <View style={[s.colCell, s.wItem]}>
                   <Text>{item.description}</Text>
-                  {item.notes && <Text style={{ fontSize: 7, color: "#555", marginTop: 2 }}>{item.notes}</Text>}
+                  {item.notes && <Text style={{ fontSize: 6.5, color: "#555", marginTop: 1 }}>{item.notes}</Text>}
                 </View>
                 <Text style={[s.colCell, s.wHsn, s.textCenter]}>{item.hsnCode || "-"}</Text>
                 <Text style={[s.colCell, s.wQty, s.textRight]}>{item.quantity}</Text>
-                <Text style={[s.colCell, s.wPrice, s.textRight, { fontSize: item.pricingType === "tiered" ? 7.5 : 8 }]}>
+                <Text style={[s.colCell, s.wPrice, s.textRight, { fontSize: item.pricingType === "tiered" ? 7 : 7.5 }]}>
                   {item.pricingType === "tiered"
                     ? item.pricingTiers
                         ?.map(
@@ -334,10 +333,6 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                         .join("\n")
                     : `${Number(item.baseRate || 0).toFixed(2)}`}
                 </Text>
-                {/* <Text style={[s.colCell, s.wGst, s.textRight]}>
-                  {taxAmt.toFixed(2)}{"\n"}
-                  <Text style={{ fontSize: 6, color: "#666" }}>({item.taxRate || 0}%)</Text>
-                </Text> */}
                 <Text style={[s.colCellLast, s.wAmt, s.textRight]}>{item.subtotal.toFixed(2)}</Text>
               </View>
             );
@@ -350,14 +345,13 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <Text style={[s.colCell, s.wHsn]}></Text>
             <Text style={[s.colCell, s.wQty, s.bold, s.textRight]}>{totalQty}</Text>
             <Text style={[s.colCell, s.wPrice]}></Text>
-            {/* <Text style={[s.colCell, s.wGst]}></Text> */}
             <Text style={[s.colCellLast, s.wAmt, s.bold, s.textRight]}>{aggregateSubtotal.toFixed(2)}</Text>
           </View>
         </View>
 
         {/* 6. Tax Summary Section */}
         {taxSummaryRows.length > 0 && invoiceData.totalTax > 0 && (
-          <View style={{ marginBottom: 10 }}>
+          <View style={{ marginBottom: 6 }}>
             <Text style={s.taxTitle}>Tax Summary</Text>
             <View style={[s.table, { marginBottom: 0 }]}>
               <View style={s.tableHeader}>
@@ -475,7 +469,7 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </View>
             )}
             <View style={s.totalRow}>
-              <Text style={[s.totalLabel, { fontSize: 11 }]}>Total</Text>
+              <Text style={[s.totalLabel, { fontSize: 10 }]}>Total</Text>
               <Text style={s.totalValBold}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>
             </View>
             {invoiceData.receivedAmount > 0 && (
@@ -497,23 +491,23 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
         <View style={s.footerBox}>
           <View style={s.termsBox}>
             <Text style={s.sectionTitle}>Terms & Conditions:</Text>
-            <Text style={{ fontSize: 8, color: "#444" }}>
+            <Text style={{ fontSize: 7.5, color: "#444" }}>
               {invoiceData.notes || invoiceData.termsAndConditions || "Thanks for doing business with us!"}
             </Text>
           </View>
 
           <View style={s.sigBox}>
-            <Text style={[s.bold, { fontSize: 10, marginBottom: signatureBase64 && invoiceData.includeSignature !== false ? 10 : 30 }]}>
+            <Text style={[s.bold, { fontSize: 9, marginBottom: signatureBase64 && invoiceData.includeSignature !== false ? 8 : 20 }]}>
               For {currentUser?.businessName || "Your Company Name"}
             </Text>
             {signatureBase64 && invoiceData.includeSignature !== false && (
               <Image 
                 src={signatureBase64} 
-                style={{ width: 140, height: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                style={{ width: 120, height: 50, objectFit: "contain", alignSelf: "flex-end", marginBottom: 6 }} 
               />
             )}
             <View style={s.sigLine}>
-              <Text>Authorized Signatory</Text>
+              <Text style={{ fontSize: 7.5 }}>Authorized Signatory</Text>
             </View>
           </View>
         </View>

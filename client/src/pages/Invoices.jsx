@@ -27,6 +27,7 @@ import Template4PDF from "../templates/Template4PDF";
 import Template5PDF from "../templates/Template5PDF";
 import Template6PDF from "../templates/Template6PDF";
 import Template7PDF from "../templates/Template7PDF";
+import Template8PDF from "../templates/Template8PDF";
 import { numberToWords } from "../utils/numberToWords";
 import { UserContext } from "../context/userContext";
 axios.defaults.withCredentials = true;
@@ -196,6 +197,9 @@ const Invoices = () => {
             break;
           case "Template7PDF":
             pdfDoc = <Template7PDF invoiceData={fullInvoice} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={null} logoBase64={logoBase64} />;
+            break;
+          case "Template8PDF":
+            pdfDoc = <Template8PDF invoiceData={fullInvoice} numberToWords={numberToWords} currentUser={currentUser} signatureBase64={null} logoBase64={logoBase64} />;
             break;
           case "Template1PDF":
           default:

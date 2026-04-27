@@ -91,7 +91,7 @@ const s = StyleSheet.create({
     borderColor: "#000",
   },
   th: {
-    padding: 4,
+    paddingTop: 3,
     fontFamily: "Helvetica-Bold",
     fontSize: 8,
     textAlign: "center",
@@ -105,7 +105,7 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   td: {
-    padding: 4,
+    padding: 2,
     fontSize: 8,
     borderRightWidth: 1,
     borderColor: "#000",
@@ -161,15 +161,15 @@ const s = StyleSheet.create({
     marginTop: 15,
   },
   bankBox: {
-    width: "48%",
+    width: "100%",
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
     borderColor: "#dee2e6",
     borderRadius: 4,
-    padding: 8,
+    padding: 0,
   },
   sigBox: {
-    width: "48%",
+    width: "100%",
     alignItems: "flex-end",
   },
   sigBoxFull: {
@@ -396,7 +396,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                       {item.pricingType === "tiered"
                         ? item.pricingTiers?.map(
                             (t, i) => (
-                              <Text key={i} style={{ marginBottom: 2, fontSize: 8 }}>{`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`}</Text>
+                              <Text key={i} style={{ fontSize: 8 }}>{`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`}</Text>
                             )
                           )
                         : <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>}
@@ -519,7 +519,7 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 {signatureBase64 && invoiceData.includeSignature !== false && (
                   <Image 
                     src={signatureBase64} 
-                    style={{ width: 100, height: 60, maxWidth: 100, maxHeight: 60, alignSelf: "flex-end", marginBottom: 10 }} 
+                    style={{ width: 140, height: 40, objectFit: "contain", marginBottom: 10, alignSelf: "flex-end" }}
                   />
                 )}
                 <Text style={s.sigLabel}>Authorized Signatory</Text>
@@ -533,15 +533,6 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <Text style={{ fontSize: 8 }}>{invoiceData.notes}</Text>
               </View>
             )}
-
-            {/* Standard Footer */}
-            <View style={s.footer} fixed>
-              <Text style={s.footerText}>E. & O.E.</Text>
-              {currentUser?.address?.city && (
-                <Text style={s.footerText}>Subject to {currentUser.address.city} jurisdiction</Text>
-              )}
-              <Text style={s.footerText}>This is a computer generated invoice</Text>
-            </View>
 
           </View>
         </View>

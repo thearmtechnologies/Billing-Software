@@ -311,7 +311,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
               <Text style={{ textAlign: "center" }}>{item.hsnCode || "-"}</Text>
             </View>
             <View style={[s.td, { width: colDims.qty, justifyContent: "center", paddingVertical: 2 }]}>
-              <Text style={{ textAlign: "center" }}>{item.quantity != null ? Number(item.quantity).toFixed(3) : "0.000"}</Text>
+              <Text style={{ textAlign: "center" }}>{item.quantity != null ? Number(item.quantity) : "0"}</Text>
             </View>
             <View style={[s.td, { width: colDims.unit, justifyContent: "center", paddingVertical: 2 }]}>
               <Text style={{ textAlign: "center" }}>{item.unitType || "-"}</Text>
@@ -400,7 +400,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
             <View style={{ textAlign: "right" }}>
               <Text style={[s.bold, { fontSize: 9, marginBottom: 2 }]}>For {currentUser?.businessName || "R C MECHANICALS"}</Text>
               
-              <View style={{ height: 60, justifyContent: "center", alignItems: "flex-end", marginVertical: 6 }}>
+              <View style={{ height: 60, justifyContent: "center", alignItems: "center", marginVertical: 6 }}>
                 {signatureBase64 ? (
                   <Image src={signatureBase64} style={{ maxWidth: 130, maxHeight: 50 }} />
                 ) : (
