@@ -222,7 +222,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     justifyContent: "center",
     padding: "10px 20px",
     borderRadius: "12px",
-    background: "var(--accent, #0071E3)",
+    background: "var(--gradient-primary)",
     color: "#fff",
     fontSize: "14px",
     fontWeight: 600,
@@ -491,12 +491,12 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                         fontSize: "13px",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+                        e.currentTarget.style.background = "var(--gradient-hover)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                         e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "var(--accent, #0071E3)";
+                        e.currentTarget.style.background = "var(--gradient-primary)";
                         e.currentTarget.style.transform = "translateY(0)";
                         e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
                       }}
@@ -665,12 +665,12 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
               form="service-form"
               style={btnPrimary}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--accent-hover, #0077ED)";
+                e.currentTarget.style.background = "var(--gradient-hover)";
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--accent, #0071E3)";
+                e.currentTarget.style.background = "var(--gradient-primary)";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
               }}

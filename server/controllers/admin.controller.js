@@ -1,15 +1,36 @@
 import UserModel from "../models/user.model.js";
+import InvoiceModel from "../models/invoice.model.js";
+import ClientModel from "../models/client.model.js";
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/v1/admin/users
 // @access  Private/Admin
 export const getUsers = async (req, res) => {
   try {
-    const users = await UserModel.find().select("_id name email businessName role isActive createdAt allowedTemplates");
+    const users = await UserModel.find().select("_id name email phone businessName role isActive createdAt allowedTemplates");
+    
+    // Fetch total invoices, clients and revenue for each user
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const invoices = await InvoiceModel.find({ user: user._id }).select("totalAmount");
+        const clientsCount = await ClientModel.countDocuments({ user: user._id });
+        
+        const totalInvoices = invoices.length;
+        const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+        
+        return {
+          ...user.toObject(),
+          totalInvoices,
+          totalRevenue,
+          totalClients: clientsCount
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      count: users.length,
-      data: users,
+      count: usersWithStats.length,
+      data: usersWithStats,
     });
   } catch (error) {
     console.error("Error getting users:", error);

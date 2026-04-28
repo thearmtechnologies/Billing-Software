@@ -167,8 +167,7 @@ const Clients = () => {
         <div style={{ marginTop: '1rem' }} className="sm:mt-0 w-full sm:w-auto">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center justify-center w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
+            className="btn-primary w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
             Add Client
@@ -207,8 +206,7 @@ const Clients = () => {
             !searchTerm && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                className="btn-primary"
               >
                 <Plus className="h-4 w-4" style={{ marginRight: '0.5rem' }} />
                 Add Client

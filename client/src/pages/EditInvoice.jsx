@@ -7,6 +7,7 @@ import {
   ChevronUp,
   ChevronDown,
   X,
+  Copy,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -395,6 +396,18 @@ const EditInvoice = () => {
     }
   };
 
+  const duplicateItem = (index) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      const duplicatedItem = JSON.parse(JSON.stringify(newItems[index]));
+      newItems.splice(index + 1, 0, duplicatedItem);
+      return { ...prev, items: newItems };
+    });
+    setCollapsedItems((prev) => {
+      return prev.map(i => i > index ? i + 1 : i);
+    });
+  };
+
   const addTier = (itemIndex) => {
     setFormData((prev) => ({
       ...prev,
@@ -741,7 +754,7 @@ const EditInvoice = () => {
     justifyContent: "center",
     padding: "12px 24px",
     borderRadius: "12px",
-    background: "var(--accent, #0071E3)",
+    background: "var(--gradient-primary)",
     color: "#fff",
     fontSize: "14px",
     fontWeight: 600,
@@ -1679,31 +1692,56 @@ const EditInvoice = () => {
                       </div>
                     </div>
 
-                    {/* Remove Button */}
-                    {formData.items.length > 1 && (
+                    {/* Actions Row */}
+                    <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
+                        onClick={() => duplicateItem(index)}
                         style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "6px",
-                          color: "#DC2626",
-                          background: "#FEF2F2",
-                          border: "1px solid #FEE2E2",
+                          color: "var(--text-primary, #1D1D1F)",
+                          background: "var(--surface-secondary, #F5F5F7)",
+                          border: "1px solid var(--border, #E5E5E7)",
                           cursor: "pointer",
                           fontSize: "13px",
                           fontWeight: 500,
                           padding: "10px",
                           borderRadius: "12px",
                           transition: "all 150ms ease",
-                          width: "100%",
+                          flex: 1,
                         }}
                       >
-                        <Trash2 size={16} /> Remove Item
+                        <Copy size={16} /> Duplicate
                       </button>
-                    )}
+
+                      {formData.items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            color: "#DC2626",
+                            background: "#FEF2F2",
+                            border: "1px solid #FEE2E2",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            padding: "10px",
+                            borderRadius: "12px",
+                            transition: "all 150ms ease",
+                            flex: 1,
+                          }}
+                        >
+                          <Trash2 size={16} /> Remove Item
+                        </button>
+                      )}
+                    </div>
 
                     {/* Validation errors summary */}
                     {(validationErrors[`item_${index}_description`] ||

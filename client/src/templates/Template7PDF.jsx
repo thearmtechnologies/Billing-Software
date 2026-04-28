@@ -194,13 +194,9 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                <View style={s.metaLabel}><Text>GSTIN</Text></View>
                <View style={s.metaValue}><Text style={s.bold}>{currentUser?.taxId || "-"}</Text></View>
              </View>
-             <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
-               <View style={s.metaLabel}><Text>Acc No</Text></View>
-               <View style={s.metaValue}><Text>{bankDetails?.accountNumber || "-"}</Text></View>
-             </View>
              <View style={s.row}>
-               <View style={s.metaLabel}><Text>IFSC</Text></View>
-               <View style={s.metaValue}><Text>{bankDetails?.ifscCode || "-"}</Text></View>
+               <View style={s.metaLabel}><Text>UDYAM NO</Text></View>
+               <View style={s.metaValue}><Text>{currentUser?.udyamNo || "-"}</Text></View>
              </View>
           </View>
 
@@ -221,7 +217,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
              {/* CUSTOM FIELDS — rendered dynamically from invoiceData.customFields */}
              {invoiceData.customFields && invoiceData.customFields.length > 0 && (
                invoiceData.customFields.map((cf, cfIdx) => (
-                 <View key={`cf-${cfIdx}`} style={[s.row, { borderBottomWidth: cfIdx < invoiceData.customFields.length - 1 ? 1 : 0, borderColor: "#000" }]}>
+                 <View key={`cf-${cfIdx}`} style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                    <View style={s.metaLabel}><Text>{cf.label || ""}</Text></View>
                    <View style={s.metaValue}><Text>{cf.value || ""}</Text></View>
                  </View>
