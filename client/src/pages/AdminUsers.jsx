@@ -201,8 +201,9 @@ const AdminUsers = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[var(--surface-secondary)] text-[var(--text-secondary)] text-sm font-medium border-b border-[var(--border)]">
-                  <th style={{ padding: '16px', whiteSpace: 'nowrap', width: '25%' }}>Name</th>
-                  <th style={{ padding: '16px', whiteSpace: 'nowrap', width: '30%' }}>Email</th>
+                  <th style={{ padding: '16px', whiteSpace: 'nowrap' }}>Name & Email</th>
+                  <th style={{ padding: '16px', whiteSpace: 'nowrap' }}>Phone</th>
+                  <th style={{ padding: '16px', whiteSpace: 'nowrap' }}>Stats</th>
                   <th style={{ padding: '16px', whiteSpace: 'nowrap' }}>Templates</th>
                   <th style={{ padding: '16px', whiteSpace: 'nowrap' }}>Status</th>
                   <th className="text-right" style={{ padding: '16px', whiteSpace: 'nowrap' }}>Actions</th>
@@ -212,12 +213,19 @@ const AdminUsers = () => {
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <tr key={user._id} className="border-b border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-colors">
-                      <td className="font-medium text-[var(--text-primary)]" style={{ padding: '16px', whiteSpace: 'nowrap' }}>
-                        {user.name}
-                        {user.role === 'admin' && <span className="text-xs bg-purple-100 text-purple-700 font-bold rounded-full" style={{ marginLeft: '8px', padding: '2px 8px' }}>Admin</span>}
+                      <td style={{ padding: '16px', whiteSpace: 'nowrap' }}>
+                        <div className="font-medium text-[var(--text-primary)]">
+                          {user.name}
+                          {user.role === 'admin' && <span className="text-xs bg-purple-100 text-purple-700 font-bold rounded-full" style={{ marginLeft: '8px', padding: '2px 8px' }}>Admin</span>}
+                        </div>
+                        <div className="text-sm text-[var(--text-secondary)] mt-1">{user.email}</div>
                       </td>
                       <td className="text-[var(--text-secondary)]" style={{ padding: '16px', whiteSpace: 'nowrap' }}>
-                        {user.email}
+                        {user.phone || '-'}
+                      </td>
+                      <td className="text-[var(--text-secondary)]" style={{ padding: '16px', whiteSpace: 'nowrap' }}>
+                        <div className="text-sm">Invoices: <strong style={{ color: 'var(--text-primary)' }}>{user.totalInvoices || 0}</strong></div>
+                        <div className="text-sm mt-1">Clients: <strong style={{ color: 'var(--text-primary)' }}>{user.totalClients || 0}</strong></div>
                       </td>
                       <td className="text-[var(--text-secondary)]" style={{ padding: '16px', whiteSpace: 'nowrap' }}>
                         {user.allowedTemplates ? (user.allowedTemplates.length > 0 ? `${user.allowedTemplates.length}` : 'None') : 'All (Default)'}
@@ -258,7 +266,7 @@ const AdminUsers = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="text-center text-[var(--text-secondary)] font-medium" style={{ padding: '32px' }}>
+                    <td colSpan="6" className="text-center text-[var(--text-secondary)] font-medium" style={{ padding: '32px' }}>
                       No users found.
                     </td>
                   </tr>

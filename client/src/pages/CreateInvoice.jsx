@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, X } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, X, Copy, GripVertical } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import ItemLabel from "../components/ItemLabel";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -14,6 +30,33 @@ const pricingTypes = ["fixed", "flat", "tiered"];
 const discountTypes = ["percentage", "fixed"];
 const taxTypes = ["percentage", "fixed"];
 const tierRateTypes = ["slabRate", "unitRate"];
+
+const generateId = () => Math.random().toString(36).substring(2, 9);
+
+const SortableItemWrapper = ({ id, children }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(attributes, listeners)}
+    </div>
+  );
+};
 
 const CreateInvoice = () => {
   const navigate = useNavigate();
@@ -35,9 +78,16 @@ const CreateInvoice = () => {
   const [isShippingDifferent, setIsShippingDifferent] = useState(false);
   const [allowedTemplates, setAllowedTemplates] = useState([]);
   
-  const toggleCollapse = (index) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const toggleCollapse = (id) => {
     setCollapsedItems((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
@@ -48,6 +98,7 @@ const CreateInvoice = () => {
     shippingAddress: "",
     items: [
       {
+        id: generateId(),
         service: "",
         description: "",
         hsnCode: "",
@@ -263,6 +314,7 @@ const CreateInvoice = () => {
       items: [
         ...prev.items,
         {
+          id: generateId(),
           service: "",
           description: "",
           hsnCode: "",
@@ -275,7 +327,6 @@ const CreateInvoice = () => {
         },
       ],
     }));
-    setCollapsedItems((prev) => prev.filter((i) => i !== formData.items.length));
   };
 
   const removeItem = (index) => {
@@ -284,9 +335,32 @@ const CreateInvoice = () => {
         ...prev,
         items: prev.items.filter((_, i) => i !== index),
       }));
-      setCollapsedItems((prev) => 
-        prev.filter((i) => i !== index).map((i) => i > index ? i - 1 : i)
-      );
+    }
+  };
+
+  const duplicateItem = (index) => {
+    setFormData((prev) => {
+      const newItems = [...prev.items];
+      const duplicatedItem = JSON.parse(JSON.stringify(newItems[index]));
+      duplicatedItem.id = generateId();
+      newItems.splice(index + 1, 0, duplicatedItem);
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setFormData((prev) => {
+        const oldIndex = prev.items.findIndex((item) => item.id === active.id);
+        const newIndex = prev.items.findIndex((item) => item.id === over.id);
+        
+        return {
+          ...prev,
+          items: arrayMove(prev.items, oldIndex, newIndex),
+        };
+      });
     }
   };
 
@@ -542,6 +616,7 @@ const CreateInvoice = () => {
       invoiceNumber: `${invoicePreferences.prefix}${payload.invoiceNumber}${invoicePreferences.suffix}`,
       items: payload.items.map((item) => {
         const cleanedItem = { ...item };
+        delete cleanedItem.id;
         if (!cleanedItem.service) delete cleanedItem.service;
         return cleanedItem;
       }),
@@ -608,7 +683,7 @@ const CreateInvoice = () => {
     justifyContent: "center",
     padding: "12px 24px",
     borderRadius: "12px",
-    background: "var(--accent, #0071E3)",
+    background: "var(--gradient-primary)",
     color: "#fff",
     fontSize: "14px",
     fontWeight: 600,
@@ -882,73 +957,80 @@ const CreateInvoice = () => {
             Invoice Items
           </h2>
           
-          {formData.items.map((item, index) => {
-            const isCollapsed = collapsedItems.includes(index);
-            return (
-              <div key={index} style={{
-                ...cardStyle, 
-                padding: "0",
-                border: "1px solid var(--border-light, #F0F0F2)",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                transition: "all 200ms ease"
-              }}>
-                {/* Header Toggle */}
-                <div
-                  onClick={() => toggleCollapse(index)}
-                  style={{ 
-                    padding: "14px 16px",
-                    background: isCollapsed ? "transparent" : "var(--bg-page, #F7F7F8)",
-                    borderBottom: isCollapsed ? "none" : "1px solid var(--border-light, #F0F0F2)",
-                    borderRadius: isCollapsed ? "20px" : "20px 20px 0 0",
-                    transition: "all 200ms ease",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-tertiary, #86868B)", flexShrink: 0 }}>
-                        {index + 1}.
-                      </span>
-                      <span 
-                        style={{ 
-                          fontSize: "14px", 
-                          fontWeight: 600, 
-                          color: "var(--text-primary, #1D1D1F)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                        title={item.description || "New Item"}
-                      >
-                        {item.description || <span style={{ color: "var(--text-tertiary, #86868B)", fontStyle: "italic" }}>New Item</span>}
-                      </span>
-                    </div>
-                    {isCollapsed && item.quantity > 0 && (
-                      <div style={{ fontSize: "12px", color: "var(--text-secondary, #6E6E73)", marginTop: "4px" }}>
-                        Qty: {item.quantity} {item.unitType !== "item" ? item.unitType : ""}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                    <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                      Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
-                    </span>
-                    <div style={{
-                      width: "28px", height: "28px", borderRadius: "50%", background: "var(--surface, #FFFFFF)",
-                      border: "1px solid var(--border, #E5E5E7)", display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "transform 200ms ease"
-                    }}>
-                      {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-                    </div>
-                  </div>
-                </div>
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext 
+              items={formData.items.map(i => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {formData.items.map((item, index) => {
+                const isCollapsed = collapsedItems.includes(item.id);
+                return (
+                  <SortableItemWrapper key={item.id} id={item.id}>
+                    {(attributes, listeners) => (
+                      <div style={{
+                        ...cardStyle, 
+                        padding: "0",
+                        border: "1px solid var(--border-light, #F0F0F2)",
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                        transition: "all 200ms ease"
+                      }}>
+                        {/* Header Toggle */}
+                        <div
+                          style={{ 
+                            padding: "14px 16px",
+                            background: isCollapsed ? "transparent" : "var(--bg-page, #F7F7F8)",
+                            borderBottom: isCollapsed ? "none" : "1px solid var(--border-light, #F0F0F2)",
+                            borderRadius: isCollapsed ? "20px" : "20px 20px 0 0",
+                            transition: "all 200ms ease",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "12px",
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div {...attributes} {...listeners} style={{ cursor: "grab", display: "flex", alignItems: "center", color: "var(--text-tertiary)", padding: "4px" }}>
+                              <GripVertical size={18} />
+                            </div>
+                            <div onClick={() => toggleCollapse(item.id)} style={{ cursor: "pointer", flex: 1, display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-tertiary, #86868B)", flexShrink: 0 }}>
+                                {index + 1}.
+                              </span>
+                              <span 
+                                style={{ 
+                                  fontSize: "14px", 
+                                  fontWeight: 600, 
+                                  color: "var(--text-primary, #1D1D1F)",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}
+                                title={item.description || "New Item"}
+                              >
+                                {item.description || <span style={{ color: "var(--text-tertiary, #86868B)", fontStyle: "italic" }}>New Item</span>}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div onClick={() => toggleCollapse(item.id)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                            <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                              Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
+                            </span>
+                            <div style={{
+                              width: "28px", height: "28px", borderRadius: "50%", background: "var(--surface, #FFFFFF)",
+                              border: "1px solid var(--border, #E5E5E7)", display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "transform 200ms ease"
+                            }}>
+                              {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                            </div>
+                          </div>
+                        </div>
 
                 {/* Form Content */}
                 {!isCollapsed && (
@@ -1105,21 +1187,36 @@ const CreateInvoice = () => {
                       </div>
                     </div>
 
-                    {/* Remove Button */}
-                    {formData.items.length > 1 && (
+                    {/* Actions Row */}
+                    <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
+                        onClick={() => duplicateItem(index)}
                         style={{
                           display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                          color: "#DC2626", background: "#FEF2F2", border: "1px solid #FEE2E2",
+                          color: "var(--text-primary, #1D1D1F)", background: "var(--surface-secondary, #F5F5F7)", border: "1px solid var(--border, #E5E5E7)",
                           cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: "10px",
-                          borderRadius: "12px", transition: "all 150ms ease", width: "100%"
+                          borderRadius: "12px", transition: "all 150ms ease", flex: 1
                         }}
                       >
-                        <Trash2 size={16} /> Remove Item
+                        <Copy size={16} /> Duplicate
                       </button>
-                    )}
+                      
+                      {formData.items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                            color: "#DC2626", background: "#FEF2F2", border: "1px solid #FEE2E2",
+                            cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: "10px",
+                            borderRadius: "12px", transition: "all 150ms ease", flex: 1
+                          }}
+                        >
+                          <Trash2 size={16} /> Remove Item
+                        </button>
+                      )}
+                    </div>
 
                     {/* Validation errors summary */}
                     {(validationErrors[`item_${index}_description`] || validationErrors[`item_${index}_quantity`] || validationErrors[`item_${index}_baseRate`]) && (
@@ -1203,8 +1300,12 @@ const CreateInvoice = () => {
                   </div>
                 )}
               </div>
-            );
-          })}
+            )}
+                  </SortableItemWrapper>
+                );
+              })}
+            </SortableContext>
+          </DndContext>
 
           <button
             type="button"
