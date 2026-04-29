@@ -6,7 +6,7 @@ export const isAuthenticated = async(req, res, next) => {
         const token = req.cookies.jwt
         if (!token) {
             return res.status(401).json({ message: 'Unauthorized' });
-        }
+        } 
 
         // Verify the token using the secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -42,4 +42,4 @@ export const isAdmin = async(req, res, next) => {
         console.error("Error in admin middleware:", error);
         return res.status(500).json({ message: 'Server Error' });
     }
-}
+}
