@@ -389,8 +389,9 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={s.bodyText}>PAN: {invoiceData.client.panNumber}</Text>
             )}
             <Text style={s.bodyText}>
-              State Name: {invoiceData.client?.address?.state || ""}, Code:{" "}
-              {invoiceData.client?.address?.zipCode?.substring(0, 2) || ""}
+              State Name: {invoiceData.client?.address?.state || ""}
+              {/* Code:{" "} */}
+              {/* {invoiceData.client?.address?.zipCode?.substring(0, 2) || ""} */}
             </Text>
           </View>
 
