@@ -264,23 +264,27 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           </View>
         </View>
 
-        {/* SERVICE PERIOD */}
-        <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 4, paddingHorizontal: 6, flex: 1, flexDirection: "row" }}>
-              <Text style={{ fontSize: 8 }}>Service Rendered Period : </Text>
-              <Text style={[s.bold, { fontSize: 8 }]}>{invoiceData.servicePeriod || "-"}</Text>
-           </View>
-        </View>
 
-        {/* DESCRIPTION NOTE */}
-        <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 4, paddingHorizontal: 6, flex: 1 }}>
-              <Text style={{ fontSize: 8, lineHeight: 1.3 }}>
-                <Text style={s.bold}>Terms & Conditions : </Text>
-                {invoiceData.notes || ""}
-              </Text>
-           </View>
-        </View>
+        {/* SERVICE PERIOD - COMPACT */}
+        {/* <View style={s.gridRow} wrap={false}>
+           <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1, flexDirection: "row" }}>
+              <Text style={{ fontSize: 7.5 }}>Service Rendered Period : </Text>
+              <Text style={[s.bold, { fontSize: 7.5 }]}>{invoiceData.servicePeriod || "-"}</Text>
+
+
+
+        {/* DESCRIPTION NOTE - COMPACT */}
+        {invoiceData.notes ? (
+          <View style={s.gridRow} wrap={false}>
+             <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1 }}>
+                <Text style={[s.bold, { fontSize: 7.5 }]}>Terms & Conditions : </Text>
+                <Text style={{ fontSize: 7.5, lineHeight: 1.2, marginTop: 2 }}>
+                  {invoiceData.notes}
+                </Text>
+             </View>
+          </View>
+        ) : null}
+
 
         {/* ITEM TABLE HEADER */}
         <View style={[s.gridRow, { backgroundColor: "#F4F4F4" }]} wrap={false}>

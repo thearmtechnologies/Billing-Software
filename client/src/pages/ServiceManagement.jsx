@@ -41,6 +41,8 @@ const ServiceManagement = () => {
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add service:", error);
+      toast.error(error.response?.data?.message || "Failed to add service. Please try again.");
+      throw error;
     }
   };
 
@@ -60,6 +62,8 @@ const ServiceManagement = () => {
       setEditingService(null);
     } catch (error) {
       console.error("Failed to update service:", error);
+      toast.error(error.response?.data?.message || "Failed to update service. Please try again.");
+      throw error;
     }
   };
 

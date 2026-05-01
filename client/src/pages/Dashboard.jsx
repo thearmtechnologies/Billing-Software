@@ -31,13 +31,16 @@ const getCurrentFY = () => {
 };
 
 const generateFYOptions = () => {
-  const now = new Date();
-  const currentStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const today = new Date();
   const options = ["All"];
   const startFrom = 2022;
-  const endAt = currentStartYear + 1;
-  for (let y = endAt; y >= startFrom; y--) {
-    options.push(`${y}-${y + 1}`);
+  const currentYear = today.getFullYear();
+  
+  for (let year = currentYear; year >= startFrom; year--) {
+    const fyStart = new Date(year, 3, 1); // April = month 3
+    if (today >= fyStart) {
+      options.push(`${year}-${year + 1}`);
+    }
   }
   return options;
 };
@@ -45,25 +48,43 @@ const generateFYOptions = () => {
 const getFYDateRange = (fyString) => {
   const [startYear] = fyString.split("-").map(Number);
   return {
-    from: new Date(startYear, 3, 1),
-    to: new Date(startYear + 1, 2, 31, 23, 59, 59, 999),
+    from: new Date(`${startYear}-04-01T00:00:00.000Z`),
+    to: new Date(`${startYear + 1}-03-31T23:59:59.999Z`),
   };
 };
 
 const filterInvoicesByFY = (invoices, fyString) => {
-  if (fyString === "All") return invoices;
+  if (fyString === "All") {
+    console.log("Selected FY: All");
+    console.log("Total invoices before filter:", invoices.length);
+    console.log("Filtered invoices:", invoices.length);
+    return invoices;
+  }
   const { from, to } = getFYDateRange(fyString);
-  return invoices.filter((inv) => {
+  const filtered = invoices.filter((inv) => {
     const d = new Date(inv.invoiceDate);
     return d >= from && d <= to;
   });
+  
+  console.log("Selected FY:", from, to);
+  console.log("Total invoices before filter:", invoices.length);
+  console.log("Filtered invoices:", filtered.length);
+  
+  return filtered;
 };
 
 const calculateSparklineData = (invoices, metricType) => {
-  const now = new Date();
+  let endDate = new Date();
+  if (invoices.length > 0) {
+    const maxTime = Math.max(...invoices.map(inv => new Date(inv.invoiceDate).getTime()));
+    if (!isNaN(maxTime)) {
+      endDate = new Date(maxTime);
+    }
+  }
+
   const result = [];
   for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const d = new Date(endDate.getFullYear(), endDate.getMonth() - i, 1);
     result.push({
       monthYear: `${d.getFullYear()}-${d.getMonth()}`,
       value: 0
@@ -215,10 +236,18 @@ const Dashboard = () => {
     const overdueInvoices = invoices.filter(inv => inv.status === "overdue").length;
     const draftInvoices = invoices.filter(inv => inv.status === "draft").length;
 
-    const uniqueClientIds = new Set(invoices.map(inv => inv.client?._id || inv.client).filter(Boolean));
+    let filteredClientsCount = allClients.length;
+    if (selectedFY !== "All") {
+      const { from, to } = getFYDateRange(selectedFY);
+      filteredClientsCount = allClients.filter(client => {
+        if (!client.createdAt) return true;
+        const d = new Date(client.createdAt);
+        return d >= from && d <= to;
+      }).length;
+    }
 
     setStats({
-      totalClients: uniqueClientIds.size,
+      totalClients: filteredClientsCount,
       totalInvoices: invoices.length,
       totalRevenue,
       pendingInvoices,
