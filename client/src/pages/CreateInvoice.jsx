@@ -1037,11 +1037,44 @@ const CreateInvoice = () => {
                             </div>
                           </div>
                           
-                          <div onClick={() => toggleCollapse(item.id)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                            <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                            <span onClick={() => toggleCollapse(item.id)} style={{ cursor: "pointer", fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                               Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
                             </span>
-                            <div style={{
+                            {isCollapsed && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  duplicateItem(index);
+                                }}
+                                style={{
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "var(--text-tertiary, #86868B)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  padding: "6px",
+                                  borderRadius: "6px",
+                                  transition: "all 150ms ease"
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = "var(--text-primary, #1D1D1F)";
+                                  e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = "var(--text-tertiary, #86868B)";
+                                  e.currentTarget.style.background = "transparent";
+                                }}
+                                title="Duplicate Item"
+                              >
+                                <Copy size={16} />
+                              </button>
+                            )}
+                            <div onClick={() => toggleCollapse(item.id)} style={{
+                              cursor: "pointer",
                               width: "28px", height: "28px", borderRadius: "50%", background: "var(--surface, #FFFFFF)",
                               border: "1px solid var(--border, #E5E5E7)", display: "flex", alignItems: "center", justifyContent: "center",
                               transition: "transform 200ms ease"

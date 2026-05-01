@@ -124,26 +124,35 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateForm()) {
-      onSave({
-        ...formData,
-        baseRate:
-          formData.pricingType === "tiered"
-            ? 0
-            : parseFloat(formData.baseRate) || 0,
-        pricingTiers: formData.pricingTiers.map((tier) => ({
-          ...tier,
-          minValue: parseFloat(tier.minValue),
-          maxValue:
-            tier.maxValue === "" || tier.maxValue == null
-              ? null
-              : parseFloat(tier.maxValue),
-          rate: parseFloat(tier.rate),
-        })),
-      });
+      setLoading(true);
+      try {
+        await onSave({
+          ...formData,
+          baseRate:
+            formData.pricingType === "tiered"
+              ? 0
+              : parseFloat(formData.baseRate) || 0,
+          pricingTiers: formData.pricingTiers.map((tier) => ({
+            ...tier,
+            minValue: parseFloat(tier.minValue),
+            maxValue:
+              tier.maxValue === "" || tier.maxValue == null
+                ? null
+                : parseFloat(tier.maxValue),
+            rate: parseFloat(tier.rate),
+          })),
+        });
+      } catch (err) {
+        // Error is handled by parent, just stop loading
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -663,19 +672,28 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
             <button
               type="submit"
               form="service-form"
-              style={btnPrimary}
+              disabled={loading}
+              style={{
+                ...btnPrimary,
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? "not-allowed" : "pointer"
+              }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--gradient-hover)";
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+                if (!loading) {
+                  e.currentTarget.style.background = "var(--gradient-hover)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--gradient-primary)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                if (!loading) {
+                  e.currentTarget.style.background = "var(--gradient-primary)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                }
               }}
             >
-              {service ? "Update Service" : "Add Service"}
+              {loading ? "Saving..." : (service ? "Update Service" : "Add Service")}
             </button>
           </div>
         </div>
