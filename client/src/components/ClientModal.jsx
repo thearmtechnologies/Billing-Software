@@ -86,6 +86,17 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
+      if (name === "companyName") {
+        if (value.trim()) {
+          setErrors((prev) => {
+            const newE = { ...prev };
+            delete newE.companyName;
+            return newE;
+          });
+        } else {
+          setErrors((prev) => ({ ...prev, companyName: "Company name is required" }));
+        }
+      }
     }
   };
 

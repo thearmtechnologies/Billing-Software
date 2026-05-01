@@ -283,7 +283,26 @@ const CreateInvoice = () => {
 
   const handleServiceChange = (index, serviceId) => {
     if (!serviceId) {
-      handleItemChange(index, "customItem", true);
+      setFormData((prev) => ({
+        ...prev,
+        items: prev.items.map((item, i) =>
+          i === index
+            ? {
+                ...item,
+                service: "",
+                description: "",
+                quantity: 1,
+                unitType: "item",
+                pricingType: "fixed",
+                baseRate: 0,
+                hsnCode: "",
+                pricingTiers: [],
+                notes: "",
+                customItem: true,
+              }
+            : item
+        ),
+      }));
       return;
     }
     const selectedService = services.find((s) => s._id === serviceId);
