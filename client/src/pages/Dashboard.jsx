@@ -236,15 +236,12 @@ const Dashboard = () => {
     const overdueInvoices = invoices.filter(inv => inv.status === "overdue").length;
     const draftInvoices = invoices.filter(inv => inv.status === "draft").length;
 
-    let filteredClientsCount = allClients.length;
-    if (selectedFY !== "All") {
-      const { from, to } = getFYDateRange(selectedFY);
-      filteredClientsCount = allClients.filter(client => {
-        if (!client.createdAt) return true;
-        const d = new Date(client.createdAt);
-        return d >= from && d <= to;
-      }).length;
-    }
+    const uniqueClientIds = new Set(
+      invoices
+        .map((inv) => (typeof inv.client === "object" && inv.client ? inv.client._id : inv.client))
+        .filter(Boolean)
+    );
+    const filteredClientsCount = uniqueClientIds.size;
 
     setStats({
       totalClients: filteredClientsCount,
