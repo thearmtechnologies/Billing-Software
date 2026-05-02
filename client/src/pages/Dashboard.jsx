@@ -216,35 +216,36 @@ const Dashboard = () => {
   useEffect(() => {
     if (allInvoices.length === 0 && allClients.length === 0) return;
 
+    // Filter invoices by selected FY
     const invoices = filterInvoicesByFY(allInvoices, selectedFY);
     setInvoiceData(invoices);
 
+    // Calculate total revenue from filtered invoices
     const totalRevenue = invoices.reduce((sum, inv) => {
       if (inv.status === "paid") return sum + inv.totalAmount;
       else if (inv.status === "partial") return sum + inv.amountPaid;
       return sum;
     }, 0);
 
+    // Calculate total amount due from filtered invoices
     const totalAmountDue = invoices.reduce((sum, inv) => {
       if (inv.status === "sent" || inv.status === "overdue" || inv.status === "partial") return sum + inv.amountDue;
       return sum;
     }, 0);
 
+    // Calculate invoice status counts from filtered invoices
     const sentInvoices = invoices.filter(inv => inv.status === "sent").length;
     const pendingInvoices = invoices.filter(inv => inv.status === "sent" || inv.status === "overdue").length;
     const partialPayments = invoices.filter(inv => inv.status === "partial").length;
     const overdueInvoices = invoices.filter(inv => inv.status === "overdue").length;
     const draftInvoices = invoices.filter(inv => inv.status === "draft").length;
 
-    const uniqueClientIds = new Set(
-      invoices
-        .map((inv) => (typeof inv.client === "object" && inv.client ? inv.client._id : inv.client))
-        .filter(Boolean)
-    );
-    const filteredClientsCount = uniqueClientIds.size;
+    // IMPORTANT FIX: Show ALL clients, not filtered by FY
+    // Just count all unique clients from the allClients array
+    const totalClientsCount = allClients.length;
 
     setStats({
-      totalClients: filteredClientsCount,
+      totalClients: totalClientsCount,
       totalInvoices: invoices.length,
       totalRevenue,
       pendingInvoices,
@@ -264,6 +265,7 @@ const Dashboard = () => {
       }
     });
 
+    // Recent invoices from filtered invoices (excluding drafts)
     const recentInvoicesArr = invoices
       .filter((inv) => inv.status !== "draft")
       .sort((a, b) => new Date(b.invoiceDate) - new Date(a.invoiceDate))
