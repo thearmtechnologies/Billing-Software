@@ -220,6 +220,13 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
             </Text>
             <Text style={s.textRow}>Mobile: {currentUser?.phone || "N/A"}</Text>
             <Text style={s.textRow}>Email: {currentUser?.email || "N/A"}</Text>
+            {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+              <Text style={s.textRow}>
+                {currentUser.customProfileFields.map((field, idx) => 
+                  `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                ).join('')}
+              </Text>
+            )}
           </View>
         </View>
 

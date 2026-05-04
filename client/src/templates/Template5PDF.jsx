@@ -233,6 +233,13 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             )}
             <Text style={s.companyText}>Phone: {currentUser?.phone || "N/A"}</Text>
             {currentUser?.email && <Text style={s.companyText}>Email: {currentUser.email}</Text>}
+            {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+              <Text style={s.companyText}>
+                {currentUser.customProfileFields.map((field, idx) => 
+                  `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                ).join('')}
+              </Text>
+            )}
           </View>
           <View style={s.headerColRight}>
             <Text style={s.sectionTitle}>GSTIN</Text>

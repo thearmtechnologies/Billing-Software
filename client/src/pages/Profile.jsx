@@ -15,6 +15,8 @@ import {
   Landmark,
   FileDigit,
   Hash,
+  Trash2,
+  Plus
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context/userContext";
@@ -50,6 +52,7 @@ const Profile = () => {
       suffix: "",
       addressBehavior: "billing_and_shipping",
     },
+    customProfileFields: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -102,6 +105,7 @@ const Profile = () => {
           suffix: data.invoicePreferences?.suffix || "",
           addressBehavior: data.invoicePreferences?.addressBehavior || "billing_and_shipping",
         },
+        customProfileFields: data.customProfileFields || [],
       });
       setLogoUrl(data.logoUrl || '');
       setSignatureUrl(data.signatureUrl || '');
@@ -178,6 +182,28 @@ const Profile = () => {
     return true;
   };
 
+  const handleAddCustomField = () => {
+    if (formData.customProfileFields.length < 6) {
+      setFormData(prev => ({
+        ...prev,
+        customProfileFields: [...prev.customProfileFields, { label: "", value: "" }]
+      }));
+    } else {
+      toast.error("Maximum 6 custom fields allowed");
+    }
+  };
+
+  const handleCustomFieldChange = (index, field, value) => {
+    const newFields = [...formData.customProfileFields];
+    newFields[index][field] = value;
+    setFormData(prev => ({ ...prev, customProfileFields: newFields }));
+  };
+
+  const handleRemoveCustomField = (index) => {
+    const newFields = formData.customProfileFields.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, customProfileFields: newFields }));
+  };
+
   // Save changes
   const handleSave = async () => {
     if (formData.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber)) {
@@ -188,6 +214,7 @@ const Profile = () => {
     try {
       setLoading(true);
       const payload = { ...formData };
+      payload.customProfileFields = payload.customProfileFields.filter(f => f.label.trim() && f.value.trim());
 
       if (changePassword) {
         payload.currentPassword = passwordFields.currentPassword;
@@ -523,9 +550,63 @@ const Profile = () => {
               style={{ padding: "10px" }}
               placeholder="Enter HSN Code (4-8 digits)"
             />
-            <p className="text-xs text-gray-500" style={{marginTop: '4px'}}>
+              <p className="text-xs text-gray-500" style={{marginTop: '4px'}}>
               Harmonized System of Nomenclature code for your products
             </p>
+          </div>
+
+          {/* Custom Profile Fields */}
+          <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center mb-4">
+              <label className="form-label mb-0" style={{ marginBottom: "0px" }}>
+                <FileDigit className="w-4 h-4 inline" style={{ marginRight: "8px" }} />
+                Custom Details
+              </label>
+              <button
+                type="button"
+                onClick={handleAddCustomField}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1 inline" /> Add Field
+              </button>
+            </div>
+            
+            {formData.customProfileFields.map((field, index) => (
+              <div key={index} className="flex gap-4 mb-3 items-start">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={field.label}
+                    onChange={(e) => handleCustomFieldChange(index, "label", e.target.value)}
+                    placeholder="Label (e.g. Website)"
+                    className="form-input"
+                    style={{ padding: "10px" }}
+                  />
+                </div>
+                <div className="flex-[2]">
+                  <input
+                    type="text"
+                    value={field.value}
+                    onChange={(e) => handleCustomFieldChange(index, "value", e.target.value)}
+                    placeholder="Value (e.g. xyz.com)"
+                    className="form-input"
+                    style={{ padding: "10px" }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCustomField(index)}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded mt-1"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
+            {formData.customProfileFields.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4 border border-dashed border-gray-300 rounded-lg">
+                No custom details added yet. Click "Add Field" to add items like Website, CIN, License No, etc.
+              </p>
+            )}
           </div>
 
         </div>

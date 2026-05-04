@@ -185,6 +185,13 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </Text>
               {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
               {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
+              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+                <Text style={s.textRow}>
+                  {currentUser.customProfileFields.map((field, idx) => 
+                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                  ).join('')}
+                </Text>
+              )}
             </View>
 
             {/* Bill To */}
@@ -246,6 +253,13 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               </Text>
               {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
               {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
+              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+                <Text style={s.textRow}>
+                  {currentUser.customProfileFields.map((field, idx) => 
+                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                  ).join('')}
+                </Text>
+              )}
             </View>
 
             {/* Bill To */}
