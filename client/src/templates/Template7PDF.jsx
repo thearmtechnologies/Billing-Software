@@ -160,7 +160,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
         {/* Blue Address Bar - Enlarged */}
         <View style={s.blueBar} wrap={false}>
           <Text style={s.blueBarText}>
-            {userAddr.street ? `${userAddr.street}, ` : ""}{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}
+            {userAddr.street ? `${userAddr.street}, ` : ""}{userAddr.city ? `${userAddr.city}` : ""}{userAddr.city && userAddr.state ? ", " : ""}{userAddr.state ? `${userAddr.state}` : ""}{userAddr.postalCode || userAddr.zipCode ? ` - ${userAddr.postalCode || userAddr.zipCode}` : ""}
           </Text>
         </View>
 
@@ -186,18 +186,26 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           {/* LEFT SIDE: Supplier Details */}
           <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
              <View style={{ padding: 5, borderBottomWidth: 1, borderColor: "#000" }}>
-               <Text style={[s.bold, { fontSize: 11, marginBottom: 3 }]}>{currentUser?.businessName || "Supplier Name"}</Text>
+               <Text style={{ fontSize: 20, fontWeight: "bold", fontFamily: "Helvetica-Bold", marginBottom: 3 }}>{currentUser?.businessName || "Supplier Name"}</Text>
                <Text style={{ fontSize: 8, lineHeight: 1.3 }}>{userAddr.street || ""}</Text>
-               <Text style={{ fontSize: 8, lineHeight: 1.3, marginTop: 2 }}>{userAddr.city ? `${userAddr.city}, ` : ""}{userAddr.state ? `${userAddr.state} ` : ""}{userAddr.postalCode || ""}</Text>
+               <Text style={{ fontSize: 8, lineHeight: 1.3, marginTop: 2 }}>{userAddr.city ? `${userAddr.city}` : ""}{userAddr.city && userAddr.state ? ", " : ""}{userAddr.state ? `${userAddr.state}` : ""}{userAddr.postalCode || userAddr.zipCode ? ` - ${userAddr.postalCode || userAddr.zipCode}` : ""}</Text>
              </View>
              <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                <View style={s.metaLabel}><Text>GSTIN</Text></View>
                <View style={s.metaValue}><Text style={s.bold}>{currentUser?.taxId || "-"}</Text></View>
              </View>
-             <View style={s.row}>
+             <View style={[s.row, (currentUser?.customProfileFields && currentUser.customProfileFields.length > 0) ? { borderBottomWidth: 1, borderColor: "#000" } : {}]}>
                <View style={s.metaLabel}><Text>UDYAM NO</Text></View>
                <View style={s.metaValue}><Text>{currentUser?.udyamNo || "-"}</Text></View>
              </View>
+             {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+               currentUser.customProfileFields.map((cf, cfIdx) => (
+                 <View key={`u-cf-${cfIdx}`} style={[s.row, cfIdx < currentUser.customProfileFields.length - 1 ? { borderBottomWidth: 1, borderColor: "#000" } : {}]}>
+                   <View style={s.metaLabel}><Text>{cf.label || ""}</Text></View>
+                   <View style={s.metaValue}><Text>{cf.value || ""}</Text></View>
+                 </View>
+               ))
+             )}
           </View>
 
           {/* RIGHT SIDE: Meta Data */}

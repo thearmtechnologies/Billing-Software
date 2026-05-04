@@ -309,6 +309,13 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                   {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
                 </Text>
               )}
+              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+                <Text style={s.headerDetailsSmall}>
+                  {currentUser.customProfileFields.map((field, idx) => 
+                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                  ).join('')}
+                </Text>
+              )}
             </View>
           </View>
         ) : (
@@ -331,6 +338,13 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                   {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
                   {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
                   {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
+                </Text>
+              )}
+              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+                <Text style={s.headerDetailsSmall}>
+                  {currentUser.customProfileFields.map((field, idx) => 
+                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                  ).join('')}
                 </Text>
               )}
             </View>

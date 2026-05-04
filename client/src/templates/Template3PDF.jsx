@@ -247,6 +247,13 @@ const Template3PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                     {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
                     {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
                   </Text>
+                  {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+                    <Text>
+                      {currentUser.customProfileFields.map((field, idx) => 
+                        `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
+                      ).join('')}
+                    </Text>
+                  )}
                 </View>
               </View>
             </View>
