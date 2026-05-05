@@ -140,12 +140,12 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
       <Page size="A4" style={s.page} wrap={false}>
         
         {/* HEADER - ENLARGED */}
-        <View style={{ flexDirection: "row", marginTop: 5, marginBottom: 8, alignItems: "center" }} wrap={false}>
+        <View style={{ flexDirection: "row", marginTop: 5, marginBottom: 0, alignItems: "center" }} wrap={false}>
           
           {/* LEFT: Logo - Enlarged */}
           {(logoBase64 && invoiceData.includeLogo !== false) && (
-            <View style={{ width: 70, height: 70, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 12 }}>
-              <Image src={logoBase64} style={{ maxWidth: 65, maxHeight: 65 }} />
+            <View style={{ width: 70, height: 70, flexShrink: 0, justifyContent: "center", alignItems: "center", marginRight: 12,}}>
+              <Image src={logoBase64} style={{ maxWidth: 100, height: 100 }} />
             </View>
           )}
 
@@ -213,7 +213,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           {/* LEFT SIDE: Supplier Details */}
           <View style={{ width: "50%", borderRightWidth: 1, borderColor: "#000" }}>
              <View style={{ padding: 5, borderBottomWidth: 1, borderColor: "#000" }}>
-               <Text style={{ fontSize: 20, fontWeight: "bold", fontFamily: "Helvetica-Bold", marginBottom: 3 }}>{currentUser?.businessName || "Supplier Name"}</Text>
+               <Text style={{ fontSize: 10, fontWeight: "bold", fontFamily: "Helvetica-Bold", marginBottom: 3 }}>{currentUser?.businessName || currentUser?.name || "Supplier Name"}</Text>
                <Text style={{ fontSize: 8, lineHeight: 1.3 }}>{userAddr.street || ""}</Text>
                <Text style={{ fontSize: 8, lineHeight: 1.3, marginTop: 2 }}>{userAddr.city ? `${userAddr.city}` : ""}{userAddr.city && userAddr.state ? ", " : ""}{userAddr.state ? `${userAddr.state}` : ""}{userAddr.postalCode || userAddr.zipCode ? ` - ${userAddr.postalCode || userAddr.zipCode}` : ""}</Text>
              </View>
@@ -415,7 +415,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           {/* RIGHT: Authorised Signatory - Aligned to far right */}
           <View style={{ width: "45%", alignItems: "flex-end" }}>
             <View style={{ textAlign: "right" }}>
-              <Text style={[s.bold, { fontSize: 9, marginBottom: 2 }]}>For {currentUser?.businessName || "R C MECHANICALS"}</Text>
+              <Text style={[s.bold, { fontSize: 9, marginBottom: 2 }]}>For {currentUser?.businessName || currentUser?.name}</Text>
               
               <View style={{ height: 60, justifyContent: "center", alignItems: "center", marginVertical: 6 }}>
                 {signatureBase64 ? (
