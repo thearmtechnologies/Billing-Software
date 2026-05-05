@@ -135,6 +135,12 @@ const userSchema = new mongoose.Schema(
         shortCode: { type: String, trim: true, default: "" },
       }
     ],
+    customProfileFields: [
+      {
+        label: { type: String, trim: true },
+        value: { type: String, trim: true },
+      }
+    ],
     isActive: {
       type: Boolean,
       default: true,

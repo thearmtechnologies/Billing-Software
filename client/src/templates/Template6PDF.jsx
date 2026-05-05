@@ -247,12 +247,15 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={s.companyName}>{safeText(currentUser?.businessName || "Billing")}</Text>
               <Text style={{ fontSize: 8, marginBottom: 5 }}>
                 {safeText(currentUser?.address?.street)}{"\n"}
-                {safeText(currentUser?.address?.city)} {safeText(currentUser?.address?.state)}
+                {`${safeText(currentUser?.address?.city)}${currentUser?.address?.city && currentUser?.address?.state ? ", " : ""}${safeText(currentUser?.address?.state)}${currentUser?.address?.zipCode || currentUser?.address?.postalCode ? ` - ${currentUser?.address?.zipCode || currentUser?.address?.postalCode}` : ""}`}
               </Text>
               <Text>State Code : {safeText(currentUser?.stateCode || "07- Delhi")}</Text>
               <Text>Phone : {safeText(currentUser?.phone)}</Text>
               <Text>E-mail Id : {safeText(currentUser?.email)}</Text>
               <Text>Website : {safeText(currentUser?.website || "www.general.com")}</Text>
+              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && currentUser.customProfileFields.map((field, idx) => (
+                <Text key={idx}>{field.label} : {field.value}</Text>
+              ))}
             </View>
 
             <View style={s.headerRight}>

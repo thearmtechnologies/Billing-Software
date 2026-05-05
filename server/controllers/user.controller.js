@@ -143,7 +143,8 @@ export const editUserProfile = async (req, res) => {
       businessType,
       udyamNo,
       panNumber,
-      invoicePreferences
+      invoicePreferences,
+      customProfileFields
     } = req.body;
 
     const user = await UserModel.findById(userId);
@@ -229,6 +230,14 @@ export const editUserProfile = async (req, res) => {
       if (prefix !== undefined) user.invoicePreferences.prefix = prefix.trim();
       if (suffix !== undefined) user.invoicePreferences.suffix = suffix.trim();
       if (addressBehavior !== undefined) user.invoicePreferences.addressBehavior = addressBehavior;
+    }
+
+    // === Custom Profile Fields Update ===
+    if (customProfileFields && Array.isArray(customProfileFields)) {
+      user.customProfileFields = customProfileFields.map(field => ({
+        label: field.label ? field.label.trim() : "",
+        value: field.value ? field.value.trim() : ""
+      })).filter(field => field.label && field.value);
     }
 
     // === Password Update ===
