@@ -556,23 +556,23 @@ const Profile = () => {
           </div>
 
           {/* Custom Profile Fields */}
-          <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <label className="form-label mb-0" style={{ marginBottom: "0px" }}>
+          <div className="md:col-span-2 border-t border-gray-200" style={{marginTop: "16px", paddingTop: "16px"}}>
+            <div className="flex justify-between items-center mb-4" style={{ marginBottom: "16px" }}>
+              <label className="form-label" style={{ marginBottom: "0px" }}>
                 <FileDigit className="w-4 h-4 inline" style={{ marginRight: "8px" }} />
                 Custom Details
               </label>
               <button
                 type="button"
                 onClick={handleAddCustomField}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center cursor-pointer"
               >
-                <Plus className="w-4 h-4 mr-1 inline" /> Add Field
+                <Plus className="w-4 h-4 inline" style={{marginLeft: "4px"}}/> Add Field
               </button>
             </div>
             
             {formData.customProfileFields.map((field, index) => (
-              <div key={index} className="flex gap-4 mb-3 items-start">
+              <div key={index} className="flex gap-4 items-start" style={{marginBottom: "12px"}}>
                 <div className="flex-1">
                   <input
                     type="text"
@@ -596,7 +596,8 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={() => handleRemoveCustomField(index)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded mt-1"
+                  className="text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                  style={{padding: "8px", marginTop: "4px"}}
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>

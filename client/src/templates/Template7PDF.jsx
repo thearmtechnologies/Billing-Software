@@ -94,6 +94,17 @@ const s = StyleSheet.create({
     justifyContent: "center",
     fontSize: 8,
   },
+  
+  // Pipe separator style for custom fields in blue bar
+  pipeSeparator: {
+    color: "#FFF",
+    fontSize: 9,
+    marginHorizontal: 4,
+  },
+  customFieldText: {
+    color: "#FFF",
+    fontSize: 9,
+  },
 });
 
 const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64, logoBase64 }) => {
@@ -142,32 +153,48 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           <View style={{ flex: 1, justifyContent: "center" }}>
             {/* GSTIN and UDYAM on same line - Larger text */}
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+              <Text style={{ fontSize: 12, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
                 GSTIN : {currentUser?.taxId || "-"}
               </Text>
-              <Text style={{ fontSize: 9, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
+              <Text style={{ fontSize: 12, color: "#2E5B7E", fontFamily: "Helvetica-Bold" }}>
                 UDYAM NO : {currentUser?.udyamNo || "-"}
               </Text>
             </View>
             {/* Large Red Business Name - Enlarged */}
-            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 28, color: "#E04F3D", letterSpacing: 1.5, textAlign: "center" }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 40, color: "#E04F3D", letterSpacing: 1.5, textAlign: "center" }}>
               {currentUser?.businessName || "BUSINESS NAME"}
             </Text>
           </View>
 
         </View>
 
-        {/* Blue Address Bar - Enlarged */}
+        {/* Blue Address Bar with Custom Fields - Enlarged */}
         <View style={s.blueBar} wrap={false}>
-          <Text style={s.blueBarText}>
-            {userAddr.street ? `${userAddr.street}, ` : ""}{userAddr.city ? `${userAddr.city}` : ""}{userAddr.city && userAddr.state ? ", " : ""}{userAddr.state ? `${userAddr.state}` : ""}{userAddr.postalCode || userAddr.zipCode ? ` - ${userAddr.postalCode || userAddr.zipCode}` : ""}
-          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
+            <Text style={s.blueBarText}>
+              {userAddr.street ? `${userAddr.street}, ` : ""}{userAddr.city ? `${userAddr.city}` : ""}{userAddr.city && userAddr.state ? ", " : ""}{userAddr.state ? `${userAddr.state}` : ""}{userAddr.postalCode || userAddr.zipCode ? ` - ${userAddr.postalCode || userAddr.zipCode}` : ""}
+            </Text>
+            
+            {/* Custom Profile Fields after address with pipe separator */}
+            {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
+              <>
+                {currentUser.customProfileFields.map((cf, cfIdx) => (
+                  <React.Fragment key={`blue-cf-${cfIdx}`}>
+                    <Text style={s.pipeSeparator}>|</Text>
+                    <Text style={s.customFieldText}>
+                      {cf.label}: {cf.value || ""}
+                    </Text>
+                  </React.Fragment>
+                ))}
+              </>
+            )}
+          </View>
         </View>
 
         {/* Email and Mobile - Larger */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }} wrap={false}>
-          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
-          <Text style={{ color: "#E04F3D", fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
+          <Text style={{ color: "#E04F3D", fontSize: 10, fontFamily: "Helvetica-Bold" }}>E-mail: {currentUser?.email || "-"}</Text>
+          <Text style={{ color: "#E04F3D", fontSize: 10, fontFamily: "Helvetica-Bold" }}>Mob.: {currentUser?.phone || "-"}</Text>
         </View>
         <View style={{ height: 1.5, backgroundColor: "#E04F3D", marginBottom: 8 }} wrap={false} />
 
@@ -194,18 +221,10 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
                <View style={s.metaLabel}><Text>GSTIN</Text></View>
                <View style={s.metaValue}><Text style={s.bold}>{currentUser?.taxId || "-"}</Text></View>
              </View>
-             <View style={[s.row, (currentUser?.customProfileFields && currentUser.customProfileFields.length > 0) ? { borderBottomWidth: 1, borderColor: "#000" } : {}]}>
+             <View style={[s.row, { borderBottomWidth: 1, borderColor: "#000" }]}>
                <View style={s.metaLabel}><Text>UDYAM NO</Text></View>
                <View style={s.metaValue}><Text>{currentUser?.udyamNo || "-"}</Text></View>
              </View>
-             {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
-               currentUser.customProfileFields.map((cf, cfIdx) => (
-                 <View key={`u-cf-${cfIdx}`} style={[s.row, cfIdx < currentUser.customProfileFields.length - 1 ? { borderBottomWidth: 1, borderColor: "#000" } : {}]}>
-                   <View style={s.metaLabel}><Text>{cf.label || ""}</Text></View>
-                   <View style={s.metaValue}><Text>{cf.value || ""}</Text></View>
-                 </View>
-               ))
-             )}
           </View>
 
           {/* RIGHT SIDE: Meta Data */}
@@ -272,15 +291,6 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
           </View>
         </View>
 
-
-        {/* SERVICE PERIOD - COMPACT */}
-        {/* <View style={s.gridRow} wrap={false}>
-           <View style={{ paddingVertical: 3, paddingHorizontal: 5, flex: 1, flexDirection: "row" }}>
-              <Text style={{ fontSize: 7.5 }}>Service Rendered Period : </Text>
-              <Text style={[s.bold, { fontSize: 7.5 }]}>{invoiceData.servicePeriod || "-"}</Text>
-
-
-
         {/* DESCRIPTION NOTE - COMPACT */}
         {invoiceData.notes ? (
           <View style={s.gridRow} wrap={false}>
@@ -292,7 +302,6 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
              </View>
           </View>
         ) : null}
-
 
         {/* ITEM TABLE HEADER */}
         <View style={[s.gridRow, { backgroundColor: "#F4F4F4" }]} wrap={false}>
