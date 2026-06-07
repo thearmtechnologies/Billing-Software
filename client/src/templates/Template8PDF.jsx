@@ -205,6 +205,25 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica",
     textAlign: "right",
   },
+
+  /* ── Custom Fields Container ───────────────────── */
+  customFieldsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  customFieldColumn: {
+    width: "48%",
+  },
+  customFieldItem: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 2,
+  },
+  customFieldValue: {
+    fontFamily: "Helvetica",
+  },
 });
 
 // ── Helper: Check if any item has tiered pricing ────────────────
@@ -239,6 +258,55 @@ const getColumnWidths = (hasHSN, hasTiered) => {
 const fmtAcct = (t) =>
   t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "";
 
+// ── Helper: Check if unit is time-based ─────────────────────────
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = [
+    "hour",
+    "hours",
+    "hr",
+    "hrs",
+    "minute",
+    "minutes",
+    "min",
+    "mins",
+  ];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// ── Helper: Format quantity display for time units ──────────────
+const formatTimeQuantity = (quantityDisplay, quantity, unitType) => {
+  let timeString = quantityDisplay;
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+  if (!timeString) return "0";
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? "s" : ""}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? "s" : ""}`);
+  }
+  if (parts.length === 0) return "0";
+  return parts.join(" ");
+};
+
+// ── Helper: Get display quantity for an item ────────────────────
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+  if (isTimeBasedUnit(unitType)) {
+    const formatted = formatTimeQuantity(item.quantityDisplay, item.quantity, unitType);
+    return formatted;
+  }
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
 // ── Helper: render tiered pricing lines ─────────────────────────
 const renderTieredLines = (tiers, unitType) => {
   if (!tiers || tiers.length === 0) return null;
@@ -268,6 +336,11 @@ const formatMultilineText = (text, style) => {
   ));
 };
 
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
 // ── Component ───────────────────────────────────────────────────
 const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signatureBase64, logoBase64 }) => {
   let displayBankDetails = invoiceData?.bankDetails;
@@ -275,11 +348,20 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
+
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
+
   const hasTiered = hasAnyTieredPricing(invoiceData.items);
   const col = getColumnWidths(hasHSN, hasTiered);
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
   const copyLabel = copyType || "ORIGINAL FOR RECIPIENT";
+
+  const customFields = invoiceData.customFields || [];
+  const halfLength = Math.ceil(customFields.length / 2);
+  const leftCustomFields = customFields.slice(0, halfLength);
+  const rightCustomFields = customFields.slice(halfLength);
 
   return (
     <Document>
@@ -363,7 +445,7 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           </View>
 
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={s.title}>TAX INVOICE</Text>
+            <Text style={s.title}>{invoiceTypeLabel}</Text>
             <Text style={s.subtitle}>({copyLabel})</Text>
           </View>
 
@@ -373,6 +455,26 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             </Text>
           </View>
         </View>
+
+        {/* ═══ CUSTOM FIELDS SECTION - Two Column Layout (Only when shipping address exists) ═══ */}
+        {invoiceData.shippingAddress && customFields.length > 0 && (
+          <View style={s.customFieldsRow}>
+            <View style={s.customFieldColumn}>
+              {leftCustomFields.map((cf, cfIdx) => (
+                <Text key={cfIdx} style={s.customFieldItem}>
+                  {cf.label || ""}: <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                </Text>
+              ))}
+            </View>
+            <View style={s.customFieldColumn}>
+              {rightCustomFields.map((cf, cfIdx) => (
+                <Text key={cfIdx} style={s.customFieldItem}>
+                  {cf.label || ""}: <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* ═══ BILL TO + SHIP TO ═══ */}
         <View style={{ flexDirection: "row", gap: 10, marginBottom: 8, justifyContent: "space-between" }}>
@@ -394,8 +496,6 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             )}
             <Text style={s.bodyText}>
               State Name: {invoiceData.client?.address?.state || ""}
-              {/* , Code:{" "} */}
-              {/* {invoiceData.client?.address?.zipCode?.substring(0, 2) || ""} */}
             </Text>
           </View>
 
@@ -437,6 +537,13 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                 <Text style={s.bold}>Due Date: </Text>
                 {invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}
               </Text>
+              {/* CUSTOM FIELDS - When no shipping address, show in Invoice Details box */}
+              {!invoiceData.shippingAddress && customFields.length > 0 && customFields.map((cf, cfIdx) => (
+                <Text key={cfIdx} style={s.bodyText}>
+                  <Text style={s.bold}>{cf.label || ""}: </Text>
+                  <Text>{cf.value || ""}</Text>
+                </Text>
+              ))}
             </View>
           )}
         </View>
@@ -454,43 +561,48 @@ const Template8PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           </View>
 
           {/* Data rows */}
-          {invoiceData.items.map((item, index) => (
-            <View
-              key={item._id || `item-${index}`}
-              style={s.tableRow}
-              wrap={false}
-            >
-              <Text style={[s.td, s.tdCenter, { width: col.sr }]}>
-                {index + 1}
-              </Text>
-              <View style={[s.td, { width: col.desc }]}>
-                <Text style={s.bold}>{item.description}</Text>
-                {item.notes && (
-                  <Text style={{ fontSize: 7, marginTop: 1 }}>{item.notes}</Text>
-                )}
-              </View>
-              {hasHSN && (
-                <Text style={[s.td, s.tdCenter, { width: col.hsn }]}>
-                  {item.hsnCode || ""}
+          {invoiceData.items.map((item, index) => {
+            const displayQuantity = getDisplayQuantity(item);
+            const unitType = item.unitType || "";
+
+            return (
+              <View
+                key={item._id || `item-${index}`}
+                style={s.tableRow}
+                wrap={false}
+              >
+                <Text style={[s.td, s.tdCenter, { width: col.sr }]}>
+                  {index + 1}
                 </Text>
-              )}
-              <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
-                {item.quantity} {item.unitType || ""}
-              </Text>
-              <View style={[s.td, s.tdRight, { width: col.rate, paddingHorizontal: 2, justifyContent: "center" }]}>
-                {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
-                  <View style={s.tierContainer}>
-                    {renderTieredLines(item.pricingTiers, item.unitType)}
-                  </View>
-                ) : (
-                  <Text style={{ fontSize: 8 }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                <View style={[s.td, { width: col.desc }]}>
+                  <Text style={s.bold}>{item.description}</Text>
+                  {item.notes && (
+                    <Text style={{ fontSize: 7, marginTop: 1 }}>{item.notes}</Text>
+                  )}
+                </View>
+                {hasHSN && (
+                  <Text style={[s.td, s.tdCenter, { width: col.hsn }]}>
+                    {item.hsnCode || ""}
+                  </Text>
                 )}
+                <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
+                  {displayQuantity} {!isTimeBasedUnit(unitType) && `${unitType}`}
+                </Text>
+                <View style={[s.td, s.tdRight, { width: col.rate, paddingHorizontal: 2, justifyContent: "center" }]}>
+                  {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
+                    <View style={s.tierContainer}>
+                      {renderTieredLines(item.pricingTiers, item.unitType)}
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 8 }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                  )}
+                </View>
+                <Text style={[s.tdLast, s.tdRight, { width: col.amt, fontWeight: 'bold' }]}>
+                  Rs. {item.subtotal.toFixed(2)}
+                </Text>
               </View>
-              <Text style={[s.tdLast, s.tdRight, { width: col.amt, fontWeight: 'bold' }]}>
-                Rs. {item.subtotal.toFixed(2)}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
 
           {/* Tax rows */}
           {invoiceData.taxes && invoiceData.taxes.length > 0 && (

@@ -36,15 +36,31 @@ const s = StyleSheet.create({
   /* ── Meta Info (Rounded Box) ───────────────────── */
   metaBox: {
     flexDirection: "row",
+    flexWrap: "wrap",
     backgroundColor: "#f8f9fa",
     padding: 12,
     borderRadius: 6,
     marginBottom: 20,
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
   },
-  metaItem: { width: "23%" },
-  metaLabel: { fontSize: 8, color: "#555", fontFamily: "Helvetica-Bold", marginBottom: 3 },
-  metaValue: { fontSize: 10, fontFamily: "Helvetica-Bold" },
+
+  metaItem: {
+    width: "20%",
+    marginBottom: 10,
+    paddingRight: 10,
+  },
+
+  metaLabel: {
+    fontSize: 8,
+    color: "#555",
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 3,
+  },
+
+  metaValue: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+  },
 
   /* ── Items Table ───────────────────────────────── */
   tableContainer: {
@@ -108,9 +124,17 @@ const s = StyleSheet.create({
   blockBody: { fontSize: 9 },
 
   wordBlock: { backgroundColor: "#f8f9fa" },
-  termBlock: { backgroundColor: "#fff3cd", borderColor: "#ffeaa7", borderWidth: 1 },
-  noteBlock: { backgroundColor: "#d1ecf1", borderColor: "#bee5eb", borderWidth: 1 },
-  tcBlock:   { backgroundColor: "#e2e3e5" },
+  termBlock: {
+    backgroundColor: "#fff3cd",
+    borderColor: "#ffeaa7",
+    borderWidth: 1,
+  },
+  noteBlock: {
+    backgroundColor: "#d1ecf1",
+    borderColor: "#bee5eb",
+    borderWidth: 1,
+  },
+  tcBlock: { backgroundColor: "#e2e3e5" },
 
   /* ── Bank & Sig ────────────────────────────────── */
   footerRow: {
@@ -134,13 +158,13 @@ const s = StyleSheet.create({
   sigBoxFull: { width: "100%", alignItems: "flex-end" },
   sigFor: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 40 },
   sigLine: {
-    fontSize: 9, 
-    color: "#6c757d", 
-    borderTopWidth: 1, 
-    borderColor: "#adb5bd", 
+    fontSize: 9,
+    color: "#6c757d",
+    borderTopWidth: 1,
+    borderColor: "#adb5bd",
     paddingTop: 5,
     // width: "100%",
-    textAlign: "center"
+    textAlign: "center",
   },
 });
 
@@ -149,10 +173,80 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
-const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
+// Helper: Check if unit is time-based
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = ["hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins"];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// Helper: Format time quantity with 2-digit minutes to human-readable format
+// Converts "4.30" to "4hrs 30mins" or "30mins" if hours is 0
+const formatTimeQuantity = (quantityDisplay, quantity, unitType) => {
+  // Priority: use quantityDisplay if available (string with format like "4.30")
+  let timeString = quantityDisplay;
+  
+  // If quantityDisplay is not available, try to create from quantity
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+  
+  if (!timeString) return "0";
+  
+  // Parse the time notation (e.g., "4.30" or "4.3")
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+  
+  // Build the formatted string
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? 's' : ''}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? 's' : ''}`);
+  }
+  
+  // If both hours and minutes are 0, show "0"
+  if (parts.length === 0) return "0";
+  
+  return parts.join(" ");
+};
+
+// Helper: Get display quantity for an item
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+  
+  // Check if it's a time-based unit
+  if (isTimeBasedUnit(unitType)) {
+    // Try to use quantityDisplay first, then fallback to quantity
+    const formatted = formatTimeQuantity(item.quantityDisplay, item.quantity, unitType);
+    return formatted;
+  }
+  
+  // For non-time units, use quantityDisplay if available, otherwise quantity
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
+const Template4PDF = ({
+  invoiceData,
+  currentUser,
+  numberToWords,
+  signatureBase64,
+}) => {
   const hasHSN = invoiceData.items.some(
-    (item) => item.hsnCode && item.hsnCode.trim() !== ""
+    (item) => item.hsnCode && item.hsnCode.trim() !== "",
   );
+
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
   const col = hasHSN
@@ -164,52 +258,79 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        
         {/* 1. Bill From / Bill To / Ship To */}
         {invoiceData.shippingAddress ? (
           <View style={s.topGrid}>
             {/* Bill From */}
             <View style={s.thirdBox}>
               <Text style={s.sectionTitle}>Bill From:</Text>
-              <Text style={s.companyName}>{currentUser?.businessName || ""}</Text>
-              <Text style={s.textRow}>
-                {currentUser?.address?.street || ""}, {currentUser?.address?.city || ""}
+              <Text style={s.companyName}>
+                {currentUser?.businessName || ""}
               </Text>
               <Text style={s.textRow}>
-                {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                {currentUser?.address?.street || ""},{" "}
+                {currentUser?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.state || ""} -{" "}
+                {currentUser?.address?.zipCode || ""}
               </Text>
               <Text style={s.textRow}>
                 GST: {currentUser?.taxId || "N/A"}
-                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
-                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+                {currentUser?.udyamNo
+                  ? ` | Udyam No.: ${currentUser.udyamNo}`
+                  : ""}
+                {currentUser?.panNumber
+                  ? ` | PAN: ${currentUser.panNumber}`
+                  : ""}
               </Text>
-              {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
-              {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
-              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
-                <Text style={s.textRow}>
-                  {currentUser.customProfileFields.map((field, idx) => 
-                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
-                  ).join('')}
-                </Text>
+              {currentUser?.phone && (
+                <Text style={s.textRow}>Phone: {currentUser.phone}</Text>
               )}
+              {currentUser?.email && (
+                <Text style={s.textRow}>Email: {currentUser.email}</Text>
+              )}
+              {currentUser?.customProfileFields &&
+                currentUser.customProfileFields.length > 0 && (
+                  <Text style={s.textRow}>
+                    {currentUser.customProfileFields
+                      .map(
+                        (field, idx) =>
+                          `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? " | " : ""}`,
+                      )
+                      .join("")}
+                  </Text>
+                )}
             </View>
 
             {/* Bill To */}
             <View style={s.thirdBox}>
               <Text style={s.sectionTitle}>Bill To:</Text>
-              <Text style={s.companyName}>{invoiceData.client?.companyName || ""}</Text>
-              <Text style={s.textRow}>
-                {invoiceData.client?.address?.street || ""}, {invoiceData.client?.address?.city || ""}
+              <Text style={s.companyName}>
+                {invoiceData.client?.companyName || ""}
               </Text>
               <Text style={s.textRow}>
-                {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
+                {invoiceData.client?.address?.street || ""},{" "}
+                {invoiceData.client?.address?.city || ""}
               </Text>
-              <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.state || ""} -{" "}
+                {invoiceData.client?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>
+                GST: {invoiceData.client?.gstNumber || "N/A"}
+              </Text>
               {invoiceData.client?.panNumber && (
-                <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+                <Text style={s.textRow}>
+                  PAN: {invoiceData.client.panNumber}
+                </Text>
               )}
-              {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
-              {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
+              {invoiceData.client?.phone && (
+                <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
+              )}
+              {invoiceData.client?.email && (
+                <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>
+              )}
             </View>
 
             {/* Ship To */}
@@ -217,18 +338,24 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={s.sectionTitle}>Ship To:</Text>
               {typeof invoiceData.shippingAddress === "string" ? (
                 invoiceData.shippingAddress.split("\n").map((line, i) => (
-                  <Text key={i} style={s.textRow}>{line}</Text>
+                  <Text key={i} style={s.textRow}>
+                    {line}
+                  </Text>
                 ))
               ) : (
                 <>
                   <Text style={s.textRow}>
-                    {invoiceData.shippingAddress.street || ""}, {invoiceData.shippingAddress.city || ""}
+                    {invoiceData.shippingAddress.street || ""},{" "}
+                    {invoiceData.shippingAddress.city || ""}
                   </Text>
                   <Text style={s.textRow}>
-                    {invoiceData.shippingAddress.state || ""} - {invoiceData.shippingAddress.zipCode || ""}
+                    {invoiceData.shippingAddress.state || ""} -{" "}
+                    {invoiceData.shippingAddress.zipCode || ""}
                   </Text>
                   {invoiceData.shippingAddress.country && (
-                    <Text style={s.textRow}>{invoiceData.shippingAddress.country}</Text>
+                    <Text style={s.textRow}>
+                      {invoiceData.shippingAddress.country}
+                    </Text>
                   )}
                 </>
               )}
@@ -239,45 +366,73 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             {/* Bill From */}
             <View style={s.halfBox}>
               <Text style={s.sectionTitle}>Bill From:</Text>
-              <Text style={s.companyName}>{currentUser?.businessName || ""}</Text>
-              <Text style={s.textRow}>
-                {currentUser?.address?.street || ""}, {currentUser?.address?.city || ""}
+              <Text style={s.companyName}>
+                {currentUser?.businessName || ""}
               </Text>
               <Text style={s.textRow}>
-                {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                {currentUser?.address?.street || ""},{" "}
+                {currentUser?.address?.city || ""}
+              </Text>
+              <Text style={s.textRow}>
+                {currentUser?.address?.state || ""} -{" "}
+                {currentUser?.address?.zipCode || ""}
               </Text>
               <Text style={s.textRow}>
                 GST: {currentUser?.taxId || "N/A"}
-                {currentUser?.udyamNo ? ` | Udyam No.: ${currentUser.udyamNo}` : ""}
-                {currentUser?.panNumber ? ` | PAN: ${currentUser.panNumber}` : ""}
+                {currentUser?.udyamNo
+                  ? ` | Udyam No.: ${currentUser.udyamNo}`
+                  : ""}
+                {currentUser?.panNumber
+                  ? ` | PAN: ${currentUser.panNumber}`
+                  : ""}
               </Text>
-              {currentUser?.phone && <Text style={s.textRow}>Phone: {currentUser.phone}</Text>}
-              {currentUser?.email && <Text style={s.textRow}>Email: {currentUser.email}</Text>}
-              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
-                <Text style={s.textRow}>
-                  {currentUser.customProfileFields.map((field, idx) => 
-                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
-                  ).join('')}
-                </Text>
+              {currentUser?.phone && (
+                <Text style={s.textRow}>Phone: {currentUser.phone}</Text>
               )}
+              {currentUser?.email && (
+                <Text style={s.textRow}>Email: {currentUser.email}</Text>
+              )}
+              {currentUser?.customProfileFields &&
+                currentUser.customProfileFields.length > 0 && (
+                  <Text style={s.textRow}>
+                    {currentUser.customProfileFields
+                      .map(
+                        (field, idx) =>
+                          `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? " | " : ""}`,
+                      )
+                      .join("")}
+                  </Text>
+                )}
             </View>
 
             {/* Bill To */}
             <View style={s.halfBox}>
               <Text style={s.sectionTitle}>Bill To:</Text>
-              <Text style={s.companyName}>{invoiceData.client?.companyName || ""}</Text>
-              <Text style={s.textRow}>
-                {invoiceData.client?.address?.street || ""}, {invoiceData.client?.address?.city || ""}
+              <Text style={s.companyName}>
+                {invoiceData.client?.companyName || ""}
               </Text>
               <Text style={s.textRow}>
-                {invoiceData.client?.address?.state || ""} - {invoiceData.client?.address?.zipCode || ""}
+                {invoiceData.client?.address?.street || ""},{" "}
+                {invoiceData.client?.address?.city || ""}
               </Text>
-              <Text style={s.textRow}>GST: {invoiceData.client?.gstNumber || "N/A"}</Text>
+              <Text style={s.textRow}>
+                {invoiceData.client?.address?.state || ""} -{" "}
+                {invoiceData.client?.address?.zipCode || ""}
+              </Text>
+              <Text style={s.textRow}>
+                GST: {invoiceData.client?.gstNumber || "N/A"}
+              </Text>
               {invoiceData.client?.panNumber && (
-                <Text style={s.textRow}>PAN: {invoiceData.client.panNumber}</Text>
+                <Text style={s.textRow}>
+                  PAN: {invoiceData.client.panNumber}
+                </Text>
               )}
-              {invoiceData.client?.phone && <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>}
-              {invoiceData.client?.email && <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>}
+              {invoiceData.client?.phone && (
+                <Text style={s.textRow}>Phone: {invoiceData.client.phone}</Text>
+              )}
+              {invoiceData.client?.email && (
+                <Text style={s.textRow}>Email: {invoiceData.client.email}</Text>
+              )}
             </View>
           </View>
         )}
@@ -288,71 +443,169 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             <Text style={s.metaLabel}>Invoice Number</Text>
             <Text style={s.metaValue}>{invoiceData.invoiceNumber}</Text>
           </View>
+
           <View style={s.metaItem}>
             <Text style={s.metaLabel}>Invoice Date</Text>
-            <Text style={s.metaValue}>{new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}</Text>
+            <Text style={s.metaValue}>
+              {new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB")}
+            </Text>
           </View>
+
           <View style={s.metaItem}>
             <Text style={s.metaLabel}>Due Date</Text>
-            <Text style={s.metaValue}>{new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}</Text>
+            <Text style={s.metaValue}>
+              {new Date(invoiceData.dueDate).toLocaleDateString("en-GB")}
+            </Text>
           </View>
-          {invoiceData.poNumber && (
-            <View style={s.metaItem}>
-              <Text style={s.metaLabel}>PO Number</Text>
-              <Text style={s.metaValue}>{invoiceData.poNumber}</Text>
+
+          {/* Custom Fields */}
+          {invoiceData.customFields?.map((cf, idx) => (
+            <View key={idx} style={s.metaItem}>
+              <Text style={s.metaLabel}>{cf.label}</Text>
+              <Text style={s.metaValue}>{cf.value}</Text>
             </View>
-          )}
+          ))}
         </View>
 
         {/* 3. Items Table */}
         <View style={s.tableContainer}>
           <View style={s.tableHeaderRow} fixed>
-            <Text style={[s.th, { width: col.sr, textAlign: "center" }]}>#</Text>
-            <Text style={[s.th, { width: col.desc, textAlign: "left", borderLeftWidth: 0 }]}>Description</Text>
-            {hasHSN && <Text style={[s.th, { width: col.hsn, textAlign: "center", borderLeftWidth: 0 }]}>HSN/SAC</Text>}
-            <Text style={[s.th, { width: col.qty, textAlign: "center", borderLeftWidth: 0 }]}>Qty</Text>
-            <Text style={[s.th, { width: col.rate, textAlign: "center", borderLeftWidth: 0 }]}>Rate</Text>
-            <Text style={[s.th, { width: col.amt, textAlign: "center", borderLeftWidth: 0 }]}>Amount</Text>
+            <Text style={[s.th, { width: col.sr, textAlign: "center" }]}>
+              #
+            </Text>
+            <Text
+              style={[
+                s.th,
+                { width: col.desc, textAlign: "left", borderLeftWidth: 0 },
+              ]}
+            >
+              Description
+            </Text>
+            {hasHSN && (
+              <Text
+                style={[
+                  s.th,
+                  { width: col.hsn, textAlign: "center", borderLeftWidth: 0 },
+                ]}
+              >
+                HSN/SAC
+              </Text>
+            )}
+            <Text
+              style={[
+                s.th,
+                { width: col.qty, textAlign: "center", borderLeftWidth: 0 },
+              ]}
+            >
+              Qty
+            </Text>
+            <Text
+              style={[
+                s.th,
+                { width: col.rate, textAlign: "center", borderLeftWidth: 0 },
+              ]}
+            >
+              Rate
+            </Text>
+            <Text
+              style={[
+                s.th,
+                { width: col.amt, textAlign: "center", borderLeftWidth: 0 },
+              ]}
+            >
+              Amount
+            </Text>
           </View>
 
-          {invoiceData.items.map((item, index) => (
-            <View key={index} style={s.tableRow} wrap={false}>
-              <Text style={[s.td, { width: col.sr, textAlign: "center" }]}>{index + 1}</Text>
-              <View style={[s.td, { width: col.desc, borderLeftWidth: 0 }]}>
-                <Text>{item.description}</Text>
-              </View>
-              {hasHSN && (
-                <Text style={[s.td, { width: col.hsn, textAlign: "center", borderLeftWidth: 0 }]}>
-                  {item.hsnCode || "-"}
+          {invoiceData.items.map((item, index) => {
+            const displayQuantity = getDisplayQuantity(item);
+            const unitType = item.unitType || "";
+            
+            return (
+              <View key={index} style={s.tableRow} wrap={false}>
+                <Text style={[s.td, { width: col.sr, textAlign: "center" }]}>
+                  {index + 1}
                 </Text>
-              )}
-              <Text style={[s.td, { width: col.qty, textAlign: "center", borderLeftWidth: 0 }]}>
-                {item.quantity} {item.unitType || ""}
-              </Text>
-              <View style={[s.td, { width: col.rate, borderLeftWidth: 0, paddingHorizontal: item.pricingType === "tiered" ? 2 : 8 }]}>
-                {item.pricingType === "tiered"
-                  ? item.pricingTiers?.map(
-                      (t, i) => (
-                        <Text key={i} style={{ marginBottom: 2, fontSize: 7.5 }}>{`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs. ${Number(t.rate).toFixed(2)} ${t.rateType === "unitRate" ? "/ " + (item.unitType || "") : "(slab)"}`.replace(/ /g, "\u00A0")}</Text>
-                      )
-                    )
-                  : <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>}
+                <View style={[s.td, { width: col.desc, borderLeftWidth: 0 }]}>
+                  <Text>{item.description}</Text>
+                </View>
+                {hasHSN && (
+                  <Text
+                    style={[
+                      s.td,
+                      { width: col.hsn, textAlign: "center", borderLeftWidth: 0 },
+                    ]}
+                  >
+                    {item.hsnCode || "-"}
+                  </Text>
+                )}
+                <Text
+                  style={[
+                    s.td,
+                    { width: col.qty, textAlign: "center", borderLeftWidth: 0 },
+                  ]}
+                >
+                  {displayQuantity} {!isTimeBasedUnit(unitType) && `${unitType}`}
+                </Text>
+                <View
+                  style={[
+                    s.td,
+                    {
+                      width: col.rate,
+                      borderLeftWidth: 0,
+                      paddingHorizontal: item.pricingType === "tiered" ? 2 : 8,
+                    },
+                  ]}
+                >
+                  {item.pricingType === "tiered" ? (
+                    item.pricingTiers?.map((t, i) => (
+                      <Text key={i} style={{ marginBottom: 2, fontSize: 7.5 }}>
+                        {`${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${unitType}: Rs. ${Number(t.rate).toFixed(2)} ${t.rateType === "unitRate" ? "/ " + unitType : "(slab)"}`.replace(
+                          / /g,
+                          "\u00A0",
+                        )}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    s.td,
+                    {
+                      width: col.amt,
+                      textAlign: "center",
+                      fontFamily: "Helvetica-Bold",
+                      borderLeftWidth: 0,
+                    },
+                  ]}
+                >
+                  Rs. {item.subtotal.toFixed(2)}
+                </Text>
               </View>
-              <Text style={[s.td, { width: col.amt, textAlign: "center", fontFamily: "Helvetica-Bold", borderLeftWidth: 0 }]}>
-                Rs. {item.subtotal.toFixed(2)}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* 4. Amount in Words & Totals */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }} wrap={false}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            marginBottom: 20,
+          }}
+          wrap={false}
+        >
           {/* Left: Amount in Words */}
           <View style={{ width: "48%" }}>
             <View style={[s.coloredBlock, s.wordBlock, { marginBottom: 0 }]}>
               <Text style={s.blockTitle}>Amount in Words:</Text>
               <Text style={s.blockBody}>
-                {numberToWords ? numberToWords(invoiceData.totalAmount) : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`} 
+                {numberToWords
+                  ? numberToWords(invoiceData.totalAmount)
+                  : `Rupees ${(invoiceData.totalAmount || 0).toFixed(2)}`}
               </Text>
             </View>
           </View>
@@ -362,7 +615,9 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             {invoiceData.subtotal > 0 && (
               <View style={s.calcRow}>
                 <Text style={s.calcLabel}>Sub Total</Text>
-                <Text style={s.calcValue}>Rs. {invoiceData.subtotal.toFixed(2)}</Text>
+                <Text style={s.calcValue}>
+                  Rs. {invoiceData.subtotal.toFixed(2)}
+                </Text>
               </View>
             )}
 
@@ -371,26 +626,37 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <View style={s.calcRow}>
                   <Text style={s.calcLabel}>Discount</Text>
                   <Text style={s.calcValue}>
-                    -Rs. {invoiceData.discount}{invoiceData.discountType === "percentage" ? "%" : ""}
+                    -Rs. {invoiceData.discount}
+                    {invoiceData.discountType === "percentage" ? "%" : ""}
                   </Text>
                 </View>
                 <View style={s.calcRow}>
                   <Text style={s.calcLabel}>Taxable Amount</Text>
-                  <Text style={s.calcValue}>Rs. {taxableAmount.toFixed(2)}</Text>
+                  <Text style={s.calcValue}>
+                    Rs. {taxableAmount.toFixed(2)}
+                  </Text>
                 </View>
               </>
             )}
 
-            {invoiceData.taxes && invoiceData.taxes.length > 0 && invoiceData.taxes.map((tax, index) => (
-              <View key={index} style={s.calcRow}>
-                <Text style={s.calcLabel}>{tax.name} @{tax.rate}%</Text>
-                <Text style={s.calcValue}>Rs. {(tax.amount || 0).toFixed(2)}</Text>
-              </View>
-            ))}
+            {invoiceData.taxes &&
+              invoiceData.taxes.length > 0 &&
+              invoiceData.taxes.map((tax, index) => (
+                <View key={index} style={s.calcRow}>
+                  <Text style={s.calcLabel}>
+                    {tax.name} @{tax.rate}%
+                  </Text>
+                  <Text style={s.calcValue}>
+                    Rs. {(tax.amount || 0).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
 
             <View style={s.calcMainRow}>
               <Text style={s.calcMainText}>TOTAL</Text>
-              <Text style={s.calcMainText}>Rs. {invoiceData.totalAmount.toFixed(2)}</Text>
+              <Text style={s.calcMainText}>
+                Rs. {invoiceData.totalAmount.toFixed(2)}
+              </Text>
             </View>
           </View>
         </View>
@@ -427,58 +693,90 @@ const Template4PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
               <Text style={s.sectionTitle}>Bank Details:</Text>
               {displayBankDetails?.accountHolderName && (
                 <Text style={s.textRow}>
-                  <Text style={s.bold}>Account Holder:</Text> {displayBankDetails.accountHolderName}
+                  <Text style={s.bold}>Account Holder:</Text>{" "}
+                  {displayBankDetails.accountHolderName}
                 </Text>
               )}
               {displayBankDetails?.bankName && (
                 <Text style={s.textRow}>
-                  <Text style={s.bold}>Bank:</Text> {displayBankDetails.bankName}
+                  <Text style={s.bold}>Bank:</Text>{" "}
+                  {displayBankDetails.bankName}
                 </Text>
               )}
               {displayBankDetails?.accountNumber && (
                 <Text style={s.textRow}>
-                  <Text style={s.bold}>Account No:</Text> {displayBankDetails.accountNumber}
+                  <Text style={s.bold}>Account No:</Text>{" "}
+                  {displayBankDetails.accountNumber}
                 </Text>
               )}
               {displayBankDetails?.ifscCode && (
                 <Text style={s.textRow}>
-                  <Text style={s.bold}>IFSC:</Text> {displayBankDetails.ifscCode}
+                  <Text style={s.bold}>IFSC:</Text>{" "}
+                  {displayBankDetails.ifscCode}
                 </Text>
               )}
             </View>
 
             {/* Signature Box - 35% width, right-aligned */}
             <View style={s.sigBox}>
-              <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+              <Text
+                style={[
+                  s.sigFor,
+                  signatureBase64 && invoiceData.includeSignature !== false
+                    ? { marginBottom: 10 }
+                    : {},
+                ]}
+              >
                 For {currentUser?.businessName || ""}
               </Text>
               {signatureBase64 && invoiceData.includeSignature !== false && (
-                <Image 
-                  src={signatureBase64} 
-                  style={{ width: 140, height: 60, maxWidth: 160, maxHeight: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                <Image
+                  src={signatureBase64}
+                  style={{
+                    width: 140,
+                    height: 60,
+                    maxWidth: 160,
+                    maxHeight: 60,
+                    objectFit: "contain",
+                    alignSelf: "flex-end",
+                    marginBottom: 10,
+                  }}
                 />
               )}
               <Text style={s.sigLine}>Authorized Signatory</Text>
             </View>
           </View>
         ) : (
-          
           <View style={s.footerRowFull} wrap={false}>
             <View style={s.sigBoxFull}>
-              <Text style={[s.sigFor, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+              <Text
+                style={[
+                  s.sigFor,
+                  signatureBase64 && invoiceData.includeSignature !== false
+                    ? { marginBottom: 10 }
+                    : {},
+                ]}
+              >
                 For {currentUser?.businessName || ""}
               </Text>
               {signatureBase64 && invoiceData.includeSignature !== false && (
-                <Image 
-                  src={signatureBase64} 
-                  style={{ width: 140, height: 60, maxWidth: 160, maxHeight: 60, objectFit: "contain", alignSelf: "flex-end", marginBottom: 10 }} 
+                <Image
+                  src={signatureBase64}
+                  style={{
+                    width: 140,
+                    height: 60,
+                    maxWidth: 160,
+                    maxHeight: 60,
+                    objectFit: "contain",
+                    alignSelf: "flex-end",
+                    marginBottom: 10,
+                  }}
                 />
               )}
               <Text style={s.sigLine}>Authorized Signatory</Text>
             </View>
           </View>
         )}
-
       </Page>
     </Document>
   );

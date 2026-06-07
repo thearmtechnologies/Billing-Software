@@ -13,7 +13,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import logoSrc from "../assets/logo.jpeg";
+import logoSrc from "../assets/logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -104,12 +104,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex w-full" style={{ backgroundColor: "var(--bg-page)" }}>
-      {/* LEFT SIDE - Info Panel (Glass / Subtle Gradient) */}
+      {/* LEFT SIDE - Info Panel (Glass / Subtle Gradient) - Hidden on mobile, visible on tablet and desktop */}
       <div 
-        className="hidden md:flex md:w-1/2 flex-col justify-center items-center relative overflow-hidden"
+        className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center relative overflow-hidden"
         style={{ 
-          paddingLeft: "3rem", 
-          paddingRight: "3rem",
+          paddingLeft: "clamp(1.5rem, 5vw, 3rem)", 
+          paddingRight: "clamp(1.5rem, 5vw, 3rem)",
           background: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)",
           borderRight: "1px solid rgba(255,255,255,0.4)"
         }}
@@ -120,49 +120,49 @@ const Login = () => {
 
         <div className="w-full max-w-lg relative z-10">
           {/* Logo block */}
-          <div className="flex items-center" style={{ gap: "1rem", marginBottom: "3rem" }}>
-            <img src={logoSrc} alt="ARM Technologies Logo" style={{ height: "48px", width: "48px", objectFit: "contain" }} />
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+          <div className="flex items-center" style={{ gap: "clamp(0.75rem, 2vw, 1rem)", marginBottom: "clamp(2rem, 5vw, 3rem)" }}>
+            <img src={logoSrc} alt="ARM Technologies Logo" style={{ height: "clamp(60px, 8vw, 100px)", width: "clamp(60px, 8vw, 100px)", objectFit: "contain" }} />
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-gray-900">
               ARM Technologies
             </h1>
           </div>
 
-          <h2 className="text-[2.25rem] font-bold text-gray-900 leading-tight tracking-tight" style={{ marginBottom: "1rem" }}>
+          <h2 className="text-[clamp(1.5rem,4vw,2.25rem)] font-bold text-gray-900 leading-tight tracking-tight" style={{ marginBottom: "clamp(0.75rem, 2vw, 1rem)" }}>
             Welcome to Excellence.
           </h2>
-          <p className="text-[1.1rem] font-medium text-gray-600" style={{ marginBottom: "3rem", lineHeight: "1.6" }}>
+          <p className="text-[clamp(0.9rem,2vw,1.1rem)] font-medium text-gray-600" style={{ marginBottom: "clamp(2rem, 5vw, 3rem)", lineHeight: "1.6" }}>
             Streamline your billing, manage client ledgers, and automate notifications effortlessly with a premium experience.
           </p>
 
-          <div className="flex flex-col" style={{ gap: "2rem" }}>
+          <div className="flex flex-col" style={{ gap: "clamp(1.5rem, 3vw, 2rem)" }}>
             {/* Feature 1 */}
-            <div className="flex items-start" style={{ gap: "1.25rem" }}>
-              <div className="shrink-0" style={{ padding: "0.75rem", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
-                <FileText style={{ width: "20px", height: "20px", color: "var(--color-primary)" }} />
+            <div className="flex items-start" style={{ gap: "clamp(0.75rem, 2vw, 1.25rem)" }}>
+              <div className="shrink-0" style={{ padding: "clamp(0.5rem, 1.5vw, 0.75rem)", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
+                <FileText style={{ width: "clamp(16px, 2vw, 20px)", height: "clamp(16px, 2vw, 20px)", color: "var(--color-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-[1rem] leading-tight">Professional Invoicing</h3>
-                <p className="text-[0.95rem] text-gray-500" style={{ marginTop: "0.25rem" }}>Generate elegant, GST-ready invoices and estimates instantly.</p>
+                <h3 className="font-semibold text-gray-900 text-[clamp(0.9rem,2vw,1rem)] leading-tight">Professional Invoicing</h3>
+                <p className="text-[clamp(0.85rem,1.8vw,0.95rem)] text-gray-500" style={{ marginTop: "0.25rem" }}>Generate elegant, GST-ready invoices and estimates instantly.</p>
               </div>
             </div>
             {/* Feature 2 */}
-            <div className="flex items-start" style={{ gap: "1.25rem" }}>
-              <div className="shrink-0" style={{ padding: "0.75rem", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
-                <BarChart2 style={{ width: "20px", height: "20px", color: "var(--color-primary)" }} />
+            <div className="flex items-start" style={{ gap: "clamp(0.75rem, 2vw, 1.25rem)" }}>
+              <div className="shrink-0" style={{ padding: "clamp(0.5rem, 1.5vw, 0.75rem)", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
+                <BarChart2 style={{ width: "clamp(16px, 2vw, 20px)", height: "clamp(16px, 2vw, 20px)", color: "var(--color-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-[1rem] leading-tight">Comprehensive Ledgers</h3>
-                <p className="text-[0.95rem] text-gray-500" style={{ marginTop: "0.25rem" }}>Keep track of client balances and payment histories automatically.</p>
+                <h3 className="font-semibold text-gray-900 text-[clamp(0.9rem,2vw,1rem)] leading-tight">Comprehensive Ledgers</h3>
+                <p className="text-[clamp(0.85rem,1.8vw,0.95rem)] text-gray-500" style={{ marginTop: "0.25rem" }}>Keep track of client balances and payment histories automatically.</p>
               </div>
             </div>
             {/* Feature 3 */}
-            <div className="flex items-start" style={{ gap: "1.25rem" }}>
-              <div className="shrink-0" style={{ padding: "0.75rem", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
-                <ShieldCheck style={{ width: "20px", height: "20px", color: "var(--color-primary)" }} />
+            <div className="flex items-start" style={{ gap: "clamp(0.75rem, 2vw, 1.25rem)" }}>
+              <div className="shrink-0" style={{ padding: "clamp(0.5rem, 1.5vw, 0.75rem)", marginTop: "0.25rem", background: "var(--surface)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-soft)", border: "1px solid rgba(255,255,255,1)" }}>
+                <ShieldCheck style={{ width: "clamp(16px, 2vw, 20px)", height: "clamp(16px, 2vw, 20px)", color: "var(--color-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-[1rem] leading-tight">Smart Notifications</h3>
-                <p className="text-[0.95rem] text-gray-500" style={{ marginTop: "0.25rem" }}>Send automated payment reminders via WhatsApp, SMS, and Email.</p>
+                <h3 className="font-semibold text-gray-900 text-[clamp(0.9rem,2vw,1rem)] leading-tight">Smart Notifications</h3>
+                <p className="text-[clamp(0.85rem,1.8vw,0.95rem)] text-gray-500" style={{ marginTop: "0.25rem" }}>Send automated payment reminders via WhatsApp, SMS, and Email.</p>
               </div>
             </div>
           </div>
@@ -171,22 +171,22 @@ const Login = () => {
 
       {/* RIGHT SIDE - Form Panel */}
       <div 
-        className="w-full md:w-1/2 flex flex-col justify-center items-center"
-        style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem", background: "var(--surface)" }}
+        className="w-full lg:w-1/2 flex flex-col justify-center items-center"
+        style={{ paddingLeft: "clamp(1rem, 4vw, 1.5rem)", paddingRight: "clamp(1rem, 4vw, 1.5rem)", background: "var(--surface)" }}
       >
         <div className="w-full max-w-md">
           {/* Mobile Logo for smaller screens */}
-          <div className="flex md:hidden items-center" style={{ gap: "0.75rem", marginBottom: "2.5rem", justifyContent: "center" }}>
-            <img src={logoSrc} alt="ARM Technologies Logo" style={{ height: "40px", width: "40px", objectFit: "contain" }} />
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">ARM Technologies</h1>
+          <div className="flex lg:hidden items-center" style={{ gap: "0.75rem", marginBottom: "clamp(1.5rem, 5vh, 2.5rem)", justifyContent: "center" }}>
+            <img src={logoSrc} alt="ARM Technologies Logo" style={{ height: "clamp(60px, 6vw, 80px)", width: "clamp(60px, 6vw, 80px)", objectFit: "contain" }} />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">ARM Technologies</h1>
           </div>
 
-          <h2 className="text-[2rem] font-bold text-gray-900 tracking-tight" style={{ marginBottom: "0.3rem" }}>Sign In</h2>
-          <p className="text-gray-500 text-[0.95rem]" style={{ marginBottom: "2.5rem" }}>Enter your credentials to securely access your account.</p>
+          <h2 className="text-[clamp(1.5rem,5vw,2rem)] font-bold text-gray-900 tracking-tight" style={{ marginBottom: "0.3rem" }}>Sign In</h2>
+          <p className="text-gray-500 text-[clamp(0.85rem,2vw,0.95rem)]" style={{ marginBottom: "clamp(1.5rem, 5vh, 2.5rem)" }}>Enter your credentials to securely access your account.</p>
 
           <form className="flex flex-col" style={{ gap: "1.5rem" }} onSubmit={handleSubmit}>
             {errors.general && (
-              <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "var(--radius-md)", padding: "1rem" }}>
+              <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "var(--radius-md)", padding: "clamp(0.75rem, 2vw, 1rem)" }}>
                 <div className="flex">
                   <div className="flex-shrink-0">
                      <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
@@ -206,7 +206,7 @@ const Login = () => {
                   Email Address
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none" style={{ paddingLeft: "1rem" }}>
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none" style={{ paddingLeft: "clamp(0.75rem, 2vw, 1rem)" }}>
                     <Mail style={{ height: "18px", width: "18px", color: "#9CA3AF" }} />
                   </div>
                   <input
@@ -217,7 +217,7 @@ const Login = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="form-input"
-                    style={{ paddingLeft: "2.75rem" }}
+                    style={{ paddingLeft: "clamp(2.25rem, 5vw, 2.75rem)" }}
                     placeholder="name@company.com"
                   />
                 </div>
@@ -231,7 +231,7 @@ const Login = () => {
                   Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none" style={{ paddingLeft: "1rem" }}>
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none" style={{ paddingLeft: "clamp(0.75rem, 2vw, 1rem)" }}>
                     <Lock style={{ height: "18px", width: "18px", color: "#9CA3AF" }} />
                   </div>
                   <input
@@ -242,14 +242,14 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     className="form-input"
-                    style={{ paddingLeft: "2.75rem", paddingRight: "3rem" }}
+                    style={{ paddingLeft: "clamp(2.25rem, 5vw, 2.75rem)", paddingRight: "clamp(2rem, 4vw, 3rem)" }}
                     placeholder="••••••••"
                   />
                    <button 
                      type="button" 
                      onClick={() => setShowPassword(!showPassword)}
                      className="absolute inset-y-0 right-0 flex items-center focus:outline-none"
-                     style={{ paddingRight: "1rem" }}
+                     style={{ paddingRight: "clamp(0.75rem, 2vw, 1rem)" }}
                    >
                      {showPassword ? (
                        <EyeOff style={{ height: "18px", width: "18px", color: "#9CA3AF" }} className="hover:text-gray-600 transition-colors" />
@@ -274,7 +274,7 @@ const Login = () => {
               type="submit"
               disabled={isLoading}
               className="btn-primary"
-              style={{ width: "100%", padding: "0.75rem 1rem", fontSize: "1rem", marginTop: "0.5rem" }}
+              style={{ width: "100%", padding: "clamp(0.625rem, 2vh, 0.75rem) clamp(0.75rem, 3vw, 1rem)", fontSize: "clamp(0.875rem, 2vw, 1rem)", marginTop: "0.5rem" }}
             >
               {isLoading ? (
                 <>
@@ -306,8 +306,8 @@ const Login = () => {
               </p>
             </div>
             
-            <div className="app-card" style={{ marginTop: "2rem", padding: "1rem", background: "var(--surface-secondary)", border: "none", boxShadow: "none" }}>
-               <div className="flex items-start" style={{ gap: "0.75rem" }}>
+            <div className="app-card" style={{ marginTop: "clamp(1rem, 3vh, 2rem)", padding: "clamp(0.75rem, 2vw, 1rem)", background: "var(--surface-secondary)", border: "none", boxShadow: "none" }}>
+               <div className="flex items-start" style={{ gap: "clamp(0.5rem, 2vw, 0.75rem)" }}>
                   <div className="flex-shrink-0" style={{ marginTop: "0.125rem" }}>
                      <svg className="h-5 w-5" style={{ color: "var(--color-primary)" }} viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />

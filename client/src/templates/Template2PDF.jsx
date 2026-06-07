@@ -145,6 +145,68 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
+// Helper: Check if unit is time-based
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = ["hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins"];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// Helper: Format time quantity with 2-digit minutes to human-readable format
+// Converts "4.30" to "4hrs 30mins" or "30mins" if hours is 0
+const formatTimeQuantity = (quantityDisplay, quantity, unitType) => {
+  // Priority: use quantityDisplay if available (string with format like "4.30")
+  let timeString = quantityDisplay;
+  
+  // If quantityDisplay is not available, try to create from quantity
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+  
+  if (!timeString) return "0";
+  
+  // Parse the time notation (e.g., "4.30" or "4.3")
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+  
+  // Build the formatted string
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? 's' : ''}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? 's' : ''}`);
+  }
+  
+  // If both hours and minutes are 0, show "0"
+  if (parts.length === 0) return "0";
+  
+  return parts.join(" ");
+};
+
+// Helper: Get display quantity for an item
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+  
+  // Check if it's a time-based unit
+  if (isTimeBasedUnit(unitType)) {
+    // Try to use quantityDisplay first, then fallback to quantity
+    const formatted = formatTimeQuantity(item.quantityDisplay, item.quantity, unitType);
+    return formatted;
+  }
+  
+  // For non-time units, use quantityDisplay if available, otherwise quantity
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
 // Helper: render tiered pricing lines
 const renderTieredLines = (tiers, unitType) => {
   if (!tiers || tiers.length === 0) return null;
@@ -169,7 +231,8 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
   const hasHSN = invoiceData.items.some(
     (item) => item.hsnCode && item.hsnCode.trim() !== ""
   );
-
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
   // Column Distribution - increased rate column width for better tier display
@@ -195,7 +258,7 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
             </View>
           </View>
           <View style={s.headerRight}>
-            <Text style={s.invoiceTitle}>TAX INVOICE</Text>
+            <Text style={s.invoiceTitle}>{invoiceTypeLabel}</Text>
             <Text style={s.invoiceSub}>{copyLabel}</Text>
           </View>
         </View>
@@ -334,35 +397,40 @@ const Template2PDF = ({ invoiceData, currentUser, numberToWords, copyType, signa
             <Text style={[s.th, { width: col.amt, textAlign: "center" }]}>AMOUNT</Text>
           </View>
           
-          {invoiceData.items.map((item, index) => (
-            <View key={index} style={s.tableRow} wrap={false}>
-              <Text style={[s.td, { width: col.sr, textAlign: "center" }]}>{index + 1}</Text>
-              <View style={[s.td, { width: col.items }]}>
-                <Text>{item.description}</Text>
-                {item.notes && <Text style={{ fontSize: 7, marginTop: 2, color: "#555" }}>{item.notes}</Text>}
-              </View>
-              {hasHSN && (
-                <Text style={[s.td, { width: col.hsn, textAlign: "center" }]}>
-                  {item.hsnCode || "-"}
-                </Text>
-              )}
-              <Text style={[s.td, { width: col.qty, textAlign: "center" }]}>
-                {item.quantity} {item.unitType || ""}
-              </Text>
-              <View style={[s.td, { width: col.rate, textAlign: "right", paddingHorizontal: 4, justifyContent: "center" }]}>
-                {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
-                  <View style={s.tierContainer}>
-                    {renderTieredLines(item.pricingTiers, item.unitType)}
-                  </View>
-                ) : (
-                  <Text style={{ fontSize: 9, textAlign: "center" }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+          {invoiceData.items.map((item, index) => {
+            const displayQuantity = getDisplayQuantity(item);
+            const unitType = item.unitType || "";
+            
+            return (
+              <View key={index} style={s.tableRow} wrap={false}>
+                <Text style={[s.td, { width: col.sr, textAlign: "center" }]}>{index + 1}</Text>
+                <View style={[s.td, { width: col.items }]}>
+                  <Text>{item.description}</Text>
+                  {item.notes && <Text style={{ fontSize: 7, marginTop: 2, color: "#555" }}>{item.notes}</Text>}
+                </View>
+                {hasHSN && (
+                  <Text style={[s.td, { width: col.hsn, textAlign: "center" }]}>
+                    {item.hsnCode || "-"}
+                  </Text>
                 )}
+                <Text style={[s.td, { width: col.qty, textAlign: "center" }]}>
+                  {displayQuantity} {!isTimeBasedUnit(unitType) && `${unitType}`}
+                </Text>
+                <View style={[s.td, { width: col.rate, textAlign: "right", paddingHorizontal: 4, justifyContent: "center" }]}>
+                  {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
+                    <View style={s.tierContainer}>
+                      {renderTieredLines(item.pricingTiers, item.unitType)}
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 9, textAlign: "center" }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                  )}
+                </View>
+                <Text style={[s.td, { width: col.amt, textAlign: "center" }]}>
+                  Rs. {item.subtotal.toFixed(2)}
+                </Text>
               </View>
-              <Text style={[s.td, { width: col.amt, textAlign: "center" }]}>
-                Rs. {item.subtotal.toFixed(2)}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* 6. Calculation Section */}

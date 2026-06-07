@@ -88,6 +88,28 @@ const s = StyleSheet.create({
     borderColor: "#000",
   },
 
+  // Custom Fields Container
+  customFieldsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    backgroundColor: "#f9fafb",
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    padding: 6,
+  },
+  customFieldItem: {
+    width: "20%", // 5 items per row
+    fontSize: 8,
+    marginBottom: 4,
+    paddingRight: 8,
+  },
+  customFieldLabel: {
+    fontFamily: "Helvetica-Bold",
+  },
+  customFieldValue: {
+    fontFamily: "Helvetica",
+  },
+
   // Table Styles
   tableHeader: {
     flexDirection: "row",
@@ -109,7 +131,7 @@ const s = StyleSheet.create({
     fontSize: 8.5,
   },
 
-  // Column Widths
+  // Column Widths - UNCHANGED
   wSno: { width: "4%" },
   wQty: { width: "7%" },
   wDesc: { width: "27%" },
@@ -207,19 +229,67 @@ const s = StyleSheet.create({
 
 const safeText = (value, fallback = "") => (value ? String(value) : fallback);
 
+// Helper: Check if unit is time-based
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = ["hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins"];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// Helper: Format time quantity to human-readable format
+const formatTimeQuantity = (quantityDisplay, quantity) => {
+  let timeString = quantityDisplay;
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+  if (!timeString) return "0";
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? 's' : ''}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? 's' : ''}`);
+  }
+  if (parts.length === 0) return "0";
+  return parts.join(" ");
+};
+
+// Helper: Get display quantity for an item
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+  if (isTimeBasedUnit(unitType)) {
+    return formatTimeQuantity(item.quantityDisplay, item.quantity);
+  }
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
 const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
   const items = Array.isArray(invoiceData?.items) ? invoiceData.items : [];
+
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
   
   const subtotal = Number(invoiceData?.subtotal) || 0;
   const totalTax = Number(invoiceData?.totalTax) || 0;
   const discount = Number(invoiceData?.discount) || 0;
   const grandTotal = Number(invoiceData?.totalAmount) || (subtotal + totalTax - discount);
 
+  const customFields = invoiceData.customFields || [];
+
   // Clean up number to words to remove any duplicate "only"
   const getAmountInWords = () => {
     if (typeof numberToWords !== "function") return "";
     let words = numberToWords(grandTotal);
-    // Remove duplicate "only" if present
     words = words.replace(/\s+only\s+only/gi, " only");
     words = words.replace(/\s+only$/i, " only");
     if (!words.toLowerCase().endsWith("only")) {
@@ -238,7 +308,7 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
 
           {/* Title */}
           <View style={s.titleBar}>
-            <Text style={s.titleText}>TAX INVOICE</Text>
+            <Text style={s.titleText}>{invoiceTypeLabel}</Text>
           </View>
 
           {/* Header: Company & Party Details */}
@@ -310,6 +380,20 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
             </View>
           </View>
 
+          {/* Custom Fields Section - Below Info Bar, 5 per row with wrap */}
+          {customFields.length > 0 && (
+            <View style={s.customFieldsRow}>
+              {customFields.map((cf, cfIdx) => (
+                <View key={cfIdx} style={s.customFieldItem}>
+                  <Text>
+                    <Text style={s.customFieldLabel}>{cf.label || ""}:</Text>{' '}
+                    <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Table Header */}
           <View style={s.tableHeader}>
             <Text style={[s.tableCell, s.wSno, s.textCenter]}>S.No.</Text>
@@ -323,27 +407,31 @@ const Template6PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           </View>
 
           {/* Table Body */}
-          {items.map((item, index) => (
-            <View key={index} style={s.tableRow}>
-              <Text style={[s.tableCell, s.wSno, s.textCenter]}>{index + 1}</Text>
-              <Text style={[s.tableCell, s.wQty, s.textCenter]}>{Number(item.quantity).toFixed(2)}</Text>
-              <Text style={[s.tableCell, s.wDesc]}>{safeText(item.description)}</Text>
-              <Text style={[s.tableCell, s.wBatch]}>{safeText(item.batch)}</Text>
-              <Text style={[s.tableCell, s.wExp]}>{safeText(item.exp)}</Text>
-              <Text style={[s.tableCell, s.wHsn, s.textCenter]}>{safeText(item.hsnCode)}</Text>
-              <Text style={[s.tableCell, s.wRate, s.textRight, { fontSize: item.pricingType === "tiered" ? 7.5 : 8.5 }]}>
-                {item.pricingType === "tiered"
-                  ? item.pricingTiers
-                      ?.map(
-                        (t) =>
-                          `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
-                      )
-                      .join("\n")
-                  : Number(item.baseRate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </Text>
-              <Text style={[s.tableCell, s.wAmt, s.textRight]}>{Number(item.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-            </View>
-          ))}
+          {items.map((item, index) => {
+            const displayQuantity = getDisplayQuantity(item);
+            
+            return (
+              <View key={index} style={s.tableRow}>
+                <Text style={[s.tableCell, s.wSno, s.textCenter]}>{index + 1}</Text>
+                <Text style={[s.tableCell, s.wQty, s.textCenter]}>{displayQuantity}</Text>
+                <Text style={[s.tableCell, s.wDesc]}>{safeText(item.description)}</Text>
+                <Text style={[s.tableCell, s.wBatch]}>{safeText(item.batch)}</Text>
+                <Text style={[s.tableCell, s.wExp]}>{safeText(item.exp)}</Text>
+                <Text style={[s.tableCell, s.wHsn, s.textCenter]}>{safeText(item.hsnCode)}</Text>
+                <Text style={[s.tableCell, s.wRate, s.textRight, { fontSize: item.pricingType === "tiered" ? 7.5 : 8.5 }]}>
+                  {item.pricingType === "tiered"
+                    ? item.pricingTiers
+                        ?.map(
+                          (t) =>
+                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
+                        )
+                        .join("\n")
+                    : Number(item.baseRate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </Text>
+                <Text style={[s.tableCell, s.wAmt, s.textRight]}>{Number(item.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+              </View>
+            );
+          })}
 
           {/* Spacing to push content to bottom */}
           <View style={{ flexGrow: 1, borderBottomWidth: 1, borderColor: "#000" }} />

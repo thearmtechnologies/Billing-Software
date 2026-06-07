@@ -7,7 +7,7 @@ import { tokens } from "./tokens";
 const UnifiedChart = ({ data }) => {
   const [dataView, setDataView] = useState("status");
   const [dateRange, setDateRange] = useState(12); // 3, 6, 12
-  const [viewType, setViewType] = useState("all"); // 'all', 'bar', 'line'
+  const [viewType, setViewType] = useState("bar"); // 'all', 'bar', 'line'
   const [showExportOptions, setShowExportOptions] = useState(false);
   const chartWrapperRef = useRef(null);
 

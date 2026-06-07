@@ -114,15 +114,24 @@ const ServiceManagement = () => {
     return units[unit] || unit;
   };
 
-  // ── Column config ──
+  // ── Responsive column config ──
   const serviceColumns = [
     {
       key: 'name',
       label: 'Service Name',
       sortable: true,
-      width: '20%',
+      width: 'minmax(160px, 25%)',
       render: (row) => (
-        <span style={{ fontWeight: 500, color: 'var(--adt-text-primary)' }}>
+        <span
+          style={{
+            fontWeight: 500,
+            color: 'var(--adt-text-primary)',
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={row.name}
+        >
           {row.name}
         </span>
       ),
@@ -130,14 +139,16 @@ const ServiceManagement = () => {
     {
       key: 'description',
       label: 'Description',
-      width: '28%',
+      width: 'minmax(180px, 28%)',
       render: (row) => (
         <span
-          className="block sm:truncate"
           style={{
             color: 'var(--adt-text-secondary)',
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
-          title={row.description}
+          title={row.description || '—'}
         >
           {row.description || '—'}
         </span>
@@ -146,9 +157,18 @@ const ServiceManagement = () => {
     {
       key: 'pricing',
       label: 'Pricing',
-      width: '18%',
+      width: 'minmax(140px, 18%)',
       render: (row) => (
-        <span style={{ color: 'var(--adt-text-primary)', fontWeight: 500 }}>
+        <span
+          style={{
+            color: 'var(--adt-text-primary)',
+            fontWeight: 500,
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={getPricingDisplay(row)}
+        >
           {getPricingDisplay(row)}
         </span>
       ),
@@ -157,9 +177,17 @@ const ServiceManagement = () => {
       key: 'unitType',
       label: 'Unit',
       sortable: true,
-      width: '12%',
+      width: 'minmax(100px, 12%)',
       render: (row) => (
-        <span style={{ color: 'var(--adt-text-secondary)' }}>
+        <span
+          style={{
+            color: 'var(--adt-text-secondary)',
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={getUnitDisplay(row.unitType)}
+        >
           {getUnitDisplay(row.unitType)}
         </span>
       ),
@@ -167,9 +195,17 @@ const ServiceManagement = () => {
     {
       key: 'hsnCode',
       label: 'HSN Code',
-      width: '12%',
+      width: 'minmax(100px, 12%)',
       render: (row) => (
-        <span style={{ color: 'var(--adt-text-secondary)' }}>
+        <span
+          style={{
+            color: 'var(--adt-text-secondary)',
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={row.hsnCode || '—'}
+        >
           {row.hsnCode || '—'}
         </span>
       ),
@@ -177,9 +213,17 @@ const ServiceManagement = () => {
     {
       key: 'actions',
       label: 'Actions',
-      width: '10%',
+      width: 'minmax(100px, 10%)',
+      align: 'left',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            flexWrap: 'wrap',
+          }}
+        >
           <button
             className="adt-action-btn adt-action-btn--primary"
             onClick={() => setEditingService(row)}
@@ -203,7 +247,7 @@ const ServiceManagement = () => {
 
   return (
     <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}>
-      {/* Header — Matching Clients style */}
+      {/* Header - Responsive */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Services</h1>
@@ -222,26 +266,46 @@ const ServiceManagement = () => {
         </div>
       </div>
 
-      {/* Search — Matching Clients style */}
-      <div className="relative" style={{ marginTop: "1.5rem" }}>
+      {/* Search - Responsive like Clients page */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          position: "relative",
+        }}
+      >
         <div
-          className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
-          style={{ paddingLeft: "12px" }}
+          style={{
+            position: "absolute",
+            left: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            pointerEvents: "none",
+          }}
         >
-          <Search className="h-5 w-5 text-gray-400" />
+          <Search size={18} color="#9ca3af" />
         </div>
         <input
           type="text"
           placeholder="Search services..."
-          className="block w-full border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           style={{
-            paddingLeft: "2.5rem",
-            paddingRight: "0.75rem",
-            paddingTop: "0.5rem",
-            paddingBottom: "0.5rem",
+            width: "100%",
+            padding: "0.5rem 0.75rem 0.5rem 2.5rem",
+            border: "1px solid #e5e7eb",
+            borderRadius: "0.375rem",
+            fontSize: "0.875rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
           }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "#3b82f6";
+            e.currentTarget.style.boxShadow =
+              "0 0 0 3px rgba(59, 130, 246, 0.1)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "#e5e7eb";
+            e.currentTarget.style.boxShadow = "none";
+          }}
         />
       </div>
 
@@ -265,9 +329,21 @@ const ServiceManagement = () => {
             !searchTerm && (
               <button
                 onClick={() => setShowForm(true)}
-                className="btn-primary"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.875rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
               >
-                <Plus className="h-4 w-4" style={{ marginRight: "0.5rem" }} />
+                <Plus size={16} />
                 Add Service
               </button>
             )

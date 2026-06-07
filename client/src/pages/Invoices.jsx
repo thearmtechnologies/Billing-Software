@@ -80,13 +80,40 @@ const spinAnimationStyle = `
   }
 `;
 
+// Add truncation styles for tables
+const truncationStyles = `
+  .truncate-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    display: block;
+  }
+  
+  @media (max-width: 768px) {
+    .adt-td {
+      word-break: break-word;
+      white-space: normal !important;
+    }
+    
+    .truncate-text {
+      white-space: normal;
+      word-break: break-word;
+    }
+    
+    .adt-table {
+      min-width: 100%;
+    }
+  }
+`;
+
 // Inject styles if not already present
 if (typeof document !== 'undefined') {
   const styleId = 'spin-animation-styles';
   if (!document.getElementById(styleId)) {
     const styleElement = document.createElement('style');
     styleElement.id = styleId;
-    styleElement.textContent = spinAnimationStyle;
+    styleElement.textContent = spinAnimationStyle + truncationStyles;
     document.head.appendChild(styleElement);
   }
 }
@@ -557,7 +584,7 @@ const Invoices = () => {
     </>
   );
 
-  // ── Column config ──
+  // ── Column config with proper truncation ──
   const invoiceColumns = [
     {
       key: 'invoiceNumber',
@@ -565,7 +592,7 @@ const Invoices = () => {
       sortable: true,
       width: '14%',
       render: (row) => (
-        <span style={{ fontWeight: 600, color: 'var(--text-primary, #1D1D1F)', fontSize: '13px' }}>
+        <span className="truncate-text" style={{ fontWeight: 600, color: 'var(--text-primary, #1D1D1F)', fontSize: '13px' }}>
           #{row.invoiceNumber}
         </span>
       ),
@@ -576,7 +603,19 @@ const Invoices = () => {
       sortable: true,
       width: '22%',
       render: (row) => (
-        <span style={{ color: 'var(--text-primary, #1D1D1F)', fontSize: '13px' }}>
+        <span 
+          className="truncate-text" 
+          style={{ 
+            color: 'var(--text-primary, #1D1D1F)', 
+            fontSize: '13px',
+            display: 'block',
+            maxWidth: '100%',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+          title={row.client?.companyName || "No Client"}
+        >
           {row.client?.companyName || "No Client"}
         </span>
       ),
@@ -593,6 +632,7 @@ const Invoices = () => {
           fontVariantNumeric: 'tabular-nums',
           color: 'var(--text-primary, #1D1D1F)',
           fontSize: '13px',
+          whiteSpace: 'nowrap'
         }}>
           Rs. {row.totalAmount.toFixed(2)}
         </span>
@@ -728,7 +768,7 @@ const Invoices = () => {
       sortable: true,
       width: '14%',
       render: (row) => (
-        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px' }}>
+        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px', whiteSpace: 'nowrap' }}>
           {format(new Date(row.invoiceDate), "MMM dd, yyyy")}
         </span>
       ),
@@ -739,7 +779,7 @@ const Invoices = () => {
       sortable: true,
       width: '14%',
       render: (row) => (
-        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px' }}>
+        <span style={{ color: 'var(--text-secondary, #6E6E73)', fontSize: '13px', whiteSpace: 'nowrap' }}>
           {row.dueDate ? format(new Date(row.dueDate), "MMM dd, yyyy") : "-"}
         </span>
       ),

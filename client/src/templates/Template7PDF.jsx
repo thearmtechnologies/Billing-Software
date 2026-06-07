@@ -107,6 +107,11 @@ const s = StyleSheet.create({
   },
 });
 
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
 const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64, logoBase64 }) => {
   const items = invoiceData.items || [];
   
@@ -119,6 +124,9 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
 
   const formatAmt = (num) => (num != null ? Number(num).toFixed(2) : "0.00");
   const subtotal = invoiceData.subtotal || 0;
@@ -201,7 +209,7 @@ const Template7PDF = ({ invoiceData, numberToWords, currentUser, signatureBase64
         {/* TITLE ROW - Larger */}
         <View style={[s.headerGridRow, { backgroundColor: "#F9F9F9" }]} wrap={false}>
           <View style={{ flex: 1, paddingVertical: 4, alignItems: "center", justifyContent: "center" }}>
-            <Text style={[s.bold, { fontSize: 12, letterSpacing: 1.5 }]}>TAX INVOICE</Text>
+            <Text style={[s.bold, { fontSize: 12, letterSpacing: 1.5 }]}>{invoiceTypeLabel}</Text>
           </View>
           <View style={{ width: 80, borderLeftWidth: 1, borderColor: "#000", justifyContent: "center", backgroundColor: "#FFF" }}>
             <Text style={{ textAlign: "center", fontSize: 8 }}>Original</Text>

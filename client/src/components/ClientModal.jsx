@@ -140,6 +140,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
     transition: "all 200ms ease",
     outline: "none",
     marginTop: "6px",
+    boxSizing: "border-box",
   };
 
   const labelStyle = {
@@ -157,7 +158,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
     justifyContent: "center",
     padding: "10px 20px",
     borderRadius: "12px",
-    background: "var(--gradient-primary)",
+    background: "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)",
     color: "#fff",
     fontSize: "14px",
     fontWeight: 600,
@@ -166,18 +167,44 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
     transition: "all 200ms ease",
     boxShadow: "0 1px 3px rgba(0, 113, 227, 0.3)",
     letterSpacing: "-0.006em",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
   };
 
   const btnSecondary = {
-    ...btnPrimary,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 20px",
+    borderRadius: "12px",
     background: "var(--surface-secondary, #FBFBFD)",
     color: "var(--text-primary, #1D1D1F)",
+    fontSize: "14px",
+    fontWeight: 600,
     border: "1px solid var(--border, #E5E5E7)",
+    cursor: "pointer",
+    transition: "all 200ms ease",
     boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+    letterSpacing: "-0.006em",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+  };
+
+  // Responsive modal styles
+  const modalStyles = {
+    width: "min(550px, 95vw)",
+    maxHeight: "min(650px, 90vh)",
+    height: "auto",
+    borderRadius: "20px",
+    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    background: "white",
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{padding: "16px"}}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 transition-opacity"
@@ -192,15 +219,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
       {/* Modal */}
       <div
         className="relative bg-white transform transition-all"
-        style={{
-          width: "500px",
-          height: "600px",
-          borderRadius: "20px",
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
+        style={modalStyles}
       >
         <form
           onSubmit={(e) => {
@@ -210,7 +229,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
               e.preventDefault();
             }
           }}
-          style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}
         >
           {/* Header */}
           <div
@@ -220,6 +239,8 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
               justifyContent: "space-between",
               padding: "20px 24px",
               borderBottom: "1px solid var(--border-light, #F0F0F2)",
+              flexShrink: 0,
+              background: "white",
             }}
           >
             <h3
@@ -244,6 +265,8 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                 borderRadius: "50%",
                 transition: "all 150ms ease",
                 display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
@@ -259,14 +282,14 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
           </div>
 
           {/* Progress Bar */}
-          <div style={{ padding: "20px 24px 0 24px" }}>
+          <div style={{ padding: "20px 24px 0 24px", flexShrink: 0, background: "white" }}>
             <div style={{ display: "flex", gap: "8px" }}>
               <div
                 style={{
                   flex: 1,
                   height: "4px",
                   borderRadius: "2px",
-                  background: step >= 1 ? "var(--accent, #0071E3)" : "var(--border-light, #F0F0F2)",
+                  background: step >= 1 ? "#0071E3" : "#F0F0F2",
                   transition: "background 300ms ease",
                 }}
               />
@@ -275,14 +298,14 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                   flex: 1,
                   height: "4px",
                   borderRadius: "2px",
-                  background: step >= 2 ? "var(--accent, #0071E3)" : "var(--border-light, #F0F0F2)",
+                  background: step >= 2 ? "#0071E3" : "#F0F0F2",
                   transition: "background 300ms ease",
                 }}
               />
             </div>
           </div>
 
-          {/* Steps Area */}
+          {/* Steps Area - Scrollable */}
           <div
             style={{
               flex: 1,
@@ -291,6 +314,7 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
               display: "flex",
               flexDirection: "column",
               gap: "20px",
+              minHeight: 0,
             }}
           >
             {step === 1 && (
@@ -306,18 +330,18 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                     onChange={handleInputChange}
                     style={{
                       ...inputStyle,
-                      borderColor: errors.companyName ? "#DC2626" : "var(--border, #E5E5E7)",
+                      borderColor: errors.companyName ? "#DC2626" : "#E5E5E7",
                     }}
                     onFocus={(e) => {
                       if (!errors.companyName) {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       } else {
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
                       }
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = errors.companyName ? "#DC2626" : "var(--border, #E5E5E7)";
+                      e.currentTarget.style.borderColor = errors.companyName ? "#DC2626" : "#E5E5E7";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   />
@@ -336,11 +360,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                     onChange={handleInputChange}
                     style={inputStyle}
                     onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                      e.currentTarget.style.borderColor = "#0071E3";
                       e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                      e.currentTarget.style.borderColor = "#E5E5E7";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   />
@@ -354,18 +378,18 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                     onChange={handleInputChange}
                     style={{
                       ...inputStyle,
-                      borderColor: errors.phone ? "#DC2626" : "var(--border, #E5E5E7)",
+                      borderColor: errors.phone ? "#DC2626" : "#E5E5E7",
                     }}
                     onFocus={(e) => {
                       if (!errors.phone) {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       } else {
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
                       }
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = errors.phone ? "#DC2626" : "var(--border, #E5E5E7)";
+                      e.currentTarget.style.borderColor = errors.phone ? "#DC2626" : "#E5E5E7";
                       e.currentTarget.style.boxShadow = "none";
                       
                       if (formData.phone && !/^[6-9]\d{9}$/.test(formData.phone)) {
@@ -400,11 +424,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -418,11 +442,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -436,11 +460,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -454,11 +478,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -472,11 +496,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -490,11 +514,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={inputStyle}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -508,18 +532,18 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={{
                         ...inputStyle,
-                        borderColor: errors.panNumber ? "#DC2626" : "var(--border, #E5E5E7)",
+                        borderColor: errors.panNumber ? "#DC2626" : "#E5E5E7",
                       }}
                       onFocus={(e) => {
                         if (!errors.panNumber) {
-                          e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                          e.currentTarget.style.borderColor = "#0071E3";
                           e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                         } else {
                           e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
                         }
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = errors.panNumber ? "#DC2626" : "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = errors.panNumber ? "#DC2626" : "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                       maxLength={10}
@@ -539,11 +563,11 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                       onChange={handleInputChange}
                       style={{ ...inputStyle, resize: "vertical", minHeight: "80px" }}
                       onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+                        e.currentTarget.style.borderColor = "#0071E3";
                         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border, #E5E5E7)";
+                        e.currentTarget.style.borderColor = "#E5E5E7";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     />
@@ -553,35 +577,51 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
             )}
           </div>
 
-          {/* Footer Area */}
+          {/* Footer - All buttons in one row */}
           <div
             style={{
-              padding: "16px 24px",
-              background: "var(--bg-page, #F7F7F8)",
-              borderTop: "1px solid var(--border-light, #F0F0F2)",
+              padding: "16px 2px",
+              background: "#F7F7F8",
+              borderTop: "1px solid #F0F0F2",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              flexShrink: 0,
+              gap: "12px",
             }}
           >
+            {/* Cancel button - Left side */}
             <button
               type="button"
               onClick={onClose}
               style={btnSecondary}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.background = "#F0F0F2"; 
+              }}
+              onMouseLeave={(e) => { 
+                e.currentTarget.style.background = "#FBFBFD"; 
+              }}
             >
               Cancel
             </button>
 
-            <div style={{ display: "flex", gap: "12px" }}>
+            {/* Right side buttons - In one row */}
+            <div style={{ 
+              display: "flex", 
+              gap: "12px",
+              alignItems: "center",
+            }}>
               {step === 2 && (
                 <button
                   type="button"
                   onClick={handlePrevious}
                   style={btnSecondary}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
+                  onMouseEnter={(e) => { 
+                    e.currentTarget.style.background = "#F0F0F2"; 
+                  }}
+                  onMouseLeave={(e) => { 
+                    e.currentTarget.style.background = "#FBFBFD"; 
+                  }}
                 >
                   Previous
                 </button>
@@ -591,17 +631,21 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }}
+                  style={{
+                    ...btnPrimary,
+                    opacity: loading ? 0.7 : 1,
+                    cursor: loading ? "not-allowed" : "pointer",
+                  }}
                   onMouseEnter={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.background = "var(--gradient-hover)";
+                      e.currentTarget.style.background = "linear-gradient(135deg, #005BB5 0%, #004499 100%)";
                       e.currentTarget.style.transform = "translateY(-1px)";
                       e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.background = "var(--gradient-primary)";
+                      e.currentTarget.style.background = "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)";
                       e.currentTarget.style.transform = "translateY(0)";
                       e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
                     }
@@ -617,18 +661,18 @@ const ClientModal = ({ isOpen, onClose, client, handleSaveClient }) => {
                   style={{
                     ...btnPrimary,
                     opacity: Object.keys(errors).length > 0 ? 0.6 : 1,
-                    cursor: Object.keys(errors).length > 0 ? "not-allowed" : "pointer"
+                    cursor: Object.keys(errors).length > 0 ? "not-allowed" : "pointer",
                   }}
                   onMouseEnter={(e) => {
-                    if (Object.keys(errors).length === 0) {
-                      e.currentTarget.style.background = "var(--gradient-hover)";
+                    if (Object.keys(errors).length === 0 && !loading) {
+                      e.currentTarget.style.background = "linear-gradient(135deg, #005BB5 0%, #004499 100%)";
                       e.currentTarget.style.transform = "translateY(-1px)";
                       e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (Object.keys(errors).length === 0) {
-                      e.currentTarget.style.background = "var(--gradient-primary)";
+                      e.currentTarget.style.background = "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)";
                       e.currentTarget.style.transform = "translateY(0)";
                       e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
                     }

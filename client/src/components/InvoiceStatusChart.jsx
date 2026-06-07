@@ -73,7 +73,7 @@ const InvoiceStatusChart = ({ data, dateRange = 12 }) => {
     const items = [
       { key: 'paid', label: 'Paid', color: tokens.colors.success },
       { key: 'overdue', label: 'Overdue', color: tokens.colors.danger },
-      { key: 'sent', label: 'Sent', color: tokens.colors.sent },
+      { key: 'sent', label: 'Unpaid', color: tokens.colors.sent },
       { key: 'partial', label: 'Partial', color: tokens.colors.warning, dash: true },
       { key: 'draft', label: 'Draft', color: tokens.colors.draft, dash: true },
     ];
@@ -137,7 +137,7 @@ const InvoiceStatusChart = ({ data, dateRange = 12 }) => {
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {visibleSeries.paid && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.success}}></span>Paid</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.paid}</span></div>}
             {visibleSeries.overdue && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.danger}}></span>Overdue</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.overdue}</span></div>}
-            {visibleSeries.sent && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.sent}}></span>Sent</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.sent}</span></div>}
+            {visibleSeries.sent && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.sent}}></span>UnPaid</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.sent}</span></div>}
             {visibleSeries.partial && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.warning}}></span>Partial</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.partial}</span></div>}
             {visibleSeries.draft && <div className="flex justify-between text-sm"><span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tokens.colors.textSecondary }}><span style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: tokens.colors.draft}}></span>Draft</span><span style={{ fontWeight: 600, color: tokens.colors.textPrimary }}>{d.draft}</span></div>}
             

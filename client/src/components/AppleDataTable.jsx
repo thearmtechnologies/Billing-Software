@@ -4,7 +4,7 @@ import './AppleDataTable.css';
 
 // ── Constants ──
 const PER_PAGE_OPTIONS = ['Auto', 10, 25, 50];
-const HEADER_CHROME_HEIGHT = 200; // Approximate height consumed by page header + toolbar + pagination bar
+const HEADER_CHROME_HEIGHT = 200;
 const ROW_HEIGHT = 44;
 const HEADER_ROW_HEIGHT = 40;
 
@@ -24,7 +24,7 @@ function defaultCompare(a, b, key, dir) {
   let valA = a[key];
   let valB = b[key];
 
-  // Handle nested keys like 'client.companyName'
+  // Handle nested keys like 'address.city'
   if (key.includes('.')) {
     const parts = key.split('.');
     valA = parts.reduce((obj, k) => obj?.[k], a);
@@ -56,20 +56,6 @@ function defaultCompare(a, b, key, dir) {
 
 /**
  * AppleDataTable — A reusable, Apple-inspired, paginated & sortable data table.
- *
- * @param {Object} props
- * @param {Array<{key: string, label: string, sortable?: boolean, render?: Function, width?: string, align?: string}>} props.columns
- * @param {Array} props.data - Full data array (already fetched)
- * @param {boolean} props.loading - Show skeleton rows
- * @param {string} [props.searchTerm] - External search filter (applied before paginating — filtering must be done by parent)
- * @param {ReactNode} [props.emptyIcon] - Icon for empty state
- * @param {string} [props.emptyTitle] - Empty state title
- * @param {string} [props.emptySubtitle] - Empty state description
- * @param {ReactNode} [props.emptyAction] - CTA in empty state
- * @param {string|Function} [props.rowKey='_id'] - Unique key accessor
- * @param {string} [props.defaultSortKey] - Initial sort column
- * @param {'asc'|'desc'} [props.defaultSortDir='asc'] - Initial sort direction
- * @param {Function} [props.sortComparator] - Custom sort comparator (a, b, key, dir)
  */
 const AppleDataTable = ({
   columns = [],
@@ -133,14 +119,6 @@ const AppleDataTable = ({
     [sortedData, startIndex, endIndex]
   );
 
-  // ── Prefetch next page data into a ref (for instant future render) ──
-  const nextPageDataRef = useRef([]);
-  useEffect(() => {
-    const nextStart = endIndex;
-    const nextEnd = Math.min(nextStart + perPage, totalCount);
-    nextPageDataRef.current = sortedData.slice(nextStart, nextEnd);
-  }, [sortedData, endIndex, perPage, totalCount]);
-
   // ── Handlers ──
   const handleSort = useCallback(
     (key) => {
@@ -167,12 +145,13 @@ const AppleDataTable = ({
     if (e.key === 'Enter') {
       const val = parseInt(pageInputValue, 10);
       if (!isNaN(val)) goToPage(val);
+      else setPageInputValue(String(currentPage));
     }
   };
 
   const handlePageInputBlur = () => {
     const val = parseInt(pageInputValue, 10);
-    if (!isNaN(val)) goToPage(val);
+    if (!isNaN(val) && val >= 1 && val <= totalPages) goToPage(val);
     else setPageInputValue(String(currentPage));
   };
 
@@ -243,7 +222,11 @@ const AppleDataTable = ({
                 <th
                   key={col.key}
                   className={`adt-th ${col.sortable ? 'adt-th-sortable' : ''}`}
-                  style={{ width: col.width || 'auto', textAlign: col.align || 'left' }}
+                  style={{ 
+                    width: col.width, 
+                    textAlign: col.align || 'left',
+                    minWidth: col.width === '15%' ? '100px' : 'auto'
+                  }}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
                   onKeyDown={
                     col.sortable
@@ -265,11 +248,6 @@ const AppleDataTable = ({
                       : col.sortable
                       ? 'none'
                       : undefined
-                  }
-                  aria-label={
-                    col.sortable
-                      ? `${col.label}. Click to sort ${sortKey === col.key && sortDir === 'asc' ? 'descending' : 'ascending'}`
-                      : col.label
                   }
                 >
                   <span className="adt-th-content">
@@ -304,7 +282,11 @@ const AppleDataTable = ({
                         key={col.key}
                         className={`adt-td ${col.align === 'right' ? 'adt-td--right' : ''} ${col.key === 'actions' ? 'adt-td--actions' : ''}`}
                         data-label={col.label || ''}
-                        style={{ width: col.width || 'auto', textAlign: col.align || 'left' }}
+                        style={{ 
+                          width: col.width, 
+                          textAlign: col.align || 'left',
+                          minWidth: col.width === '15%' ? '100px' : 'auto'
+                        }}
                       >
                         {col.render ? col.render(row, rowIndex) : row[col.key]}
                       </td>
@@ -333,7 +315,7 @@ const AppleDataTable = ({
               aria-label="First page"
               title="First page"
             >
-              <ChevronsLeft />
+              <ChevronsLeft size={16} />
             </button>
             <button
               className="adt-page-btn"
@@ -342,7 +324,7 @@ const AppleDataTable = ({
               aria-label="Previous page"
               title="Previous page"
             >
-              <ChevronLeft />
+              <ChevronLeft size={16} />
             </button>
 
             {/* Page input */}
@@ -371,7 +353,7 @@ const AppleDataTable = ({
               aria-label="Next page"
               title="Next page"
             >
-              <ChevronRight />
+              <ChevronRight size={16} />
             </button>
             <button
               className="adt-page-btn"
@@ -380,7 +362,7 @@ const AppleDataTable = ({
               aria-label="Last page"
               title="Last page"
             >
-              <ChevronsRight />
+              <ChevronsRight size={16} />
             </button>
           </div>
 
@@ -389,7 +371,7 @@ const AppleDataTable = ({
             <label htmlFor="adt-perpage" className="adt-sr-only">
               Rows per page
             </label>
-            <span>Rows:</span>
+            <span className="adt-perpage-label">Rows:</span>
             <select
               id="adt-perpage"
               className="adt-perpage-select"

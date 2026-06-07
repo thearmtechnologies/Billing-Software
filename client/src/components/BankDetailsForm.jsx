@@ -189,7 +189,7 @@ const BankDetailsForm = () => {
   }
 
   return (
-    <div style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "24px", paddingBottom: "80px", maxWidth: "896px", margin: "0 auto" }} className="md:px-6 md:py-8">
+    <div style={{ paddingTop: "24px", paddingBottom: "80px", maxWidth: "896px", margin: "0 auto" }} className="md:px-6 md:py-8">
       {/* Header Section - Responsive */}
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }} className="sm:flex-row sm:items-center sm:justify-between md:mb-8">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }} className="md:gap-4 w-full">

@@ -6,7 +6,7 @@ import {
   View,
   Image,
   StyleSheet,
-} from "@react-pdf/renderer"; 
+} from "@react-pdf/renderer";
 
 // ── Styles ──────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -56,6 +56,26 @@ const s = StyleSheet.create({
   metaRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
   metaLabel: { fontSize: 8, fontFamily: "Helvetica-Bold" },
   metaValue: { fontSize: 8, textAlign: "right" },
+
+  // Custom Fields Container
+  customFieldsContainer: {
+    marginTop: 4,
+    paddingTop: 2,
+  },
+  customFieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  customFieldLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+  },
+  customFieldValue: {
+    fontSize: 8,
+    fontFamily: "Helvetica",
+    textAlign: "right",
+  },
 
   // 4. Items Table
   table: { 
@@ -138,11 +158,67 @@ const formatAccountType = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
+// ── Helper: Check if unit is time-based ─────────────────────────
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = ["hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins"];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// ── Helper: Format time quantity with 2-digit minutes to human-readable format
+const formatTimeQuantity = (quantityDisplay, quantity, unitType) => {
+  let timeString = quantityDisplay;
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+  if (!timeString) return "0";
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? 's' : ''}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? 's' : ''}`);
+  }
+  if (parts.length === 0) return "0";
+  return parts.join(" ");
+};
+
+// ── Helper: Get display quantity for an item
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+  if (isTimeBasedUnit(unitType)) {
+    const formatted = formatTimeQuantity(item.quantityDisplay, item.quantity, unitType);
+    return formatted;
+  }
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
+};
+
 // ── Component ───────────────────────────────────────────────────
 const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64 }) => {
   // Aggregate totals for the items table bottom row
-  const totalQty = invoiceData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const totalQty = invoiceData.items.reduce((sum, item) => {
+  const displayQty = String(getDisplayQuantity(item) || "");
+  return (
+    sum +
+    (Number(displayQty.split(" ")[0]) ||
+      Number(item.quantity) ||
+      0)
+  );
+}, 0);
   const aggregateSubtotal = invoiceData.subtotal;
+
+  const hasTaxes = hasAnyTaxes(invoiceData);
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
 
   // Dynamic Tax Components
   const appliedTaxes = Array.isArray(invoiceData.taxes) && invoiceData.taxes.length > 0
@@ -213,13 +289,14 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
   
   const hasShipping = Boolean(shipStr && shipStr.trim() !== "");
   const displayBankDetails = invoiceData?.bankDetails;
+  const customFields = invoiceData.customFields || [];
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
         
         {/* 1. Top Title */}
-        <Text style={s.mainTitle}>Tax Invoice</Text>
+        <Text style={s.mainTitle}>{invoiceTypeLabel}</Text>
 
         {/* 2. Company Header Box */}
         <View style={[s.box, s.boxRow]}>
@@ -305,6 +382,18 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                 <Text style={s.metaValue}>{invoiceData.poNumber}</Text>
               </View>
             )}
+            
+            {/* CUSTOM FIELDS - Below Due Date */}
+            {customFields.length > 0 && (
+              <View style={s.customFieldsContainer}>
+                {customFields.map((cf, cfIdx) => (
+                  <View key={cfIdx} style={s.customFieldRow}>
+                    <Text style={s.customFieldLabel}>{cf.label || ""}:</Text>
+                    <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -321,6 +410,9 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
           
           {invoiceData.items.map((item, index) => {
             const isLast = index === invoiceData.items.length - 1;
+            const displayQuantity = getDisplayQuantity(item);
+            const unitType = item.unitType || "";
+            
             return (
               <View key={index} style={isLast ? s.tableRowLast : s.tableRow}>
                 <Text style={[s.colCell, s.wNo, s.textCenter]}>{index + 1}</Text>
@@ -329,13 +421,13 @@ const Template5PDF = ({ invoiceData, currentUser, numberToWords, signatureBase64
                   {item.notes && <Text style={{ fontSize: 6.5, color: "#555", marginTop: 1 }}>{item.notes}</Text>}
                 </View>
                 <Text style={[s.colCell, s.wHsn, s.textCenter]}>{item.hsnCode || "-"}</Text>
-                <Text style={[s.colCell, s.wQty, s.textRight]}>{item.quantity}</Text>
+                <Text style={[s.colCell, s.wQty, s.textRight]}>{displayQuantity} {!isTimeBasedUnit(unitType) && `${unitType}`}</Text>
                 <Text style={[s.colCell, s.wPrice, s.textRight, { fontSize: item.pricingType === "tiered" ? 7 : 7.5 }]}>
                   {item.pricingType === "tiered"
                     ? item.pricingTiers
                         ?.map(
                           (t) =>
-                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${item.unitType || ""}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + (item.unitType || "") : "(slab)"}`
+                            `${t.minValue}–${t.maxValue !== null ? t.maxValue : "Above"} ${unitType}: Rs.\u00A0${Number(t.rate).toFixed(2)}\u00A0${t.rateType === "unitRate" ? "/\u00A0" + unitType : "(slab)"}`
                         )
                         .join("\n")
                     : `${Number(item.baseRate || 0).toFixed(2)}`}

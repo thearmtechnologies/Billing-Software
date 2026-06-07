@@ -424,10 +424,6 @@
     overflow: visible;
   }
 
-  .adt-table {
-    table-layout: auto;
-  }
-
   /* ── Hide table header on mobile ── */
   .adt-thead {
     display: none;

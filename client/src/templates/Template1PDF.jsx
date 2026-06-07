@@ -50,7 +50,11 @@ const s = StyleSheet.create({
   logo: { maxWidth: 72, maxHeight: 72 },
   headerCenter: { textAlign: "center", flex: 1 },
   headerCenterWithLogo: { textAlign: "left", flex: 1 },
-  businessName: { fontSize: 28, fontFamily: "Helvetica-Bold", letterSpacing: 2 },
+  businessName: {
+    fontSize: 28,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 2,
+  },
   headerDetails: { fontSize: 9, lineHeight: 1.4 },
 
   /* ── Tax Invoice Title ─────────────────────────── */
@@ -74,7 +78,11 @@ const s = StyleSheet.create({
 
   /* ── Invoice meta table ────────────────────────── */
   metaTable: { borderWidth: 1, borderColor: "#000" },
-  metaRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#000" },
+  metaRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#000",
+  },
   metaRowLast: { flexDirection: "row" },
   metaCellLabel: {
     padding: 5,
@@ -172,7 +180,12 @@ const s = StyleSheet.create({
   bankTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, marginBottom: 6 },
   bankLine: { fontSize: 10, marginBottom: 2 },
   sigBox: { flex: 1, alignItems: "flex-end", justifyContent: "flex-end" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 10, marginBottom: 60, textAlign: "center" },
+  sigLabel: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    marginBottom: 60,
+    textAlign: "center",
+  },
   sigLine: {
     borderTopWidth: 1,
     borderTopColor: "#000",
@@ -183,8 +196,17 @@ const s = StyleSheet.create({
   },
 
   /* ── Footer ────────────────────────────────────── */
-  footerLine: { borderTopWidth: 2, borderTopColor: "#000", marginTop: 20, paddingTop: 8 },
-  footerText: { textAlign: "center", fontFamily: "Helvetica-Bold", fontSize: 9 },
+  footerLine: {
+    borderTopWidth: 2,
+    borderTopColor: "#000",
+    marginTop: 20,
+    paddingTop: 8,
+  },
+  footerText: {
+    textAlign: "center",
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+  },
 
   /* ── Notes ──────────────────────────────────────── */
   notesBlock: { marginBottom: 8 },
@@ -202,15 +224,39 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica",
     textAlign: "right",
   },
+
+  /* ── Custom Fields Container ───────────────────── */
+  customFieldsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  customFieldColumn: {
+    width: "48%",
+  },
+  customFieldItem: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 2,
+  },
+  customFieldValue: {
+    fontFamily: "Helvetica",
+  },
 });
 
 // ── Helper: Check if any item has tiered pricing ────────────────
 const hasAnyTieredPricing = (items) => {
-  return items.some(item => 
-    item.pricingType === "tiered" && 
-    item.pricingTiers && 
-    item.pricingTiers.length > 0
+  return items.some(
+    (item) =>
+      item.pricingType === "tiered" &&
+      item.pricingTiers &&
+      item.pricingTiers.length > 0,
   );
+};
+
+// ── Helper: Check if invoice has any taxes ──────────────────────
+const hasAnyTaxes = (invoiceData) => {
+  return invoiceData.taxes && invoiceData.taxes.length > 0;
 };
 
 // ── Helper: Get column widths based on tiered pricing presence ──
@@ -218,16 +264,30 @@ const getColumnWidths = (hasHSN, hasTiered) => {
   if (hasTiered) {
     // With tiered pricing - increased rate column width for better tier display
     if (hasHSN) {
-      return { sr: "5%", desc: "35%", hsn: "10%", qty: "8%", rate: "28%", amt: "14%" };
+      return {
+        sr: "5%",
+        desc: "32%",
+        hsn: "10%",
+        qty: "12%",
+        rate: "26%",
+        amt: "15%",
+      };
     } else {
-      return { sr: "6%", desc: "44%", qty: "10%", rate: "26%", amt: "14%" };
+      return { sr: "6%", desc: "40%", qty: "14%", rate: "24%", amt: "16%" };
     }
   } else {
     // Without tiered pricing - balanced columns with more space for amount
     if (hasHSN) {
-      return { sr: "5%", desc: "35%", hsn: "10%", qty: "10%", rate: "15%", amt: "25%" };
+      return {
+        sr: "5%",
+        desc: "33%",
+        hsn: "10%",
+        qty: "12%",
+        rate: "15%",
+        amt: "25%",
+      };
     } else {
-      return { sr: "5%", desc: "45%", qty: "10%", rate: "15%", amt: "25%" };
+      return { sr: "5%", desc: "40%", qty: "15%", rate: "15%", amt: "25%" };
     }
   }
 };
@@ -236,18 +296,93 @@ const getColumnWidths = (hasHSN, hasTiered) => {
 const fmtAcct = (t) =>
   t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "";
 
+// ── Helper: Check if unit is time-based ─────────────────────────
+const isTimeBasedUnit = (unitType) => {
+  const timeUnits = [
+    "hour",
+    "hours",
+    "hr",
+    "hrs",
+    "minute",
+    "minutes",
+    "min",
+    "mins",
+  ];
+  return timeUnits.includes(unitType?.toLowerCase().trim());
+};
+
+// ── Helper: Format quantity display for time units ──────────────
+// Converts "4.30" to "4hrs 30mins" or "30mins" if hours is 0
+const formatTimeQuantity = (quantityDisplay, quantity, unitType) => {
+  // Priority: use quantityDisplay if available (string with format like "4.30")
+  let timeString = quantityDisplay;
+
+  // If quantityDisplay is not available, try to create from quantity
+  if (!timeString && quantity) {
+    timeString = quantity.toString();
+  }
+
+  if (!timeString) return "0";
+
+  // Parse the time notation (e.g., "4.30" or "4.3")
+  const [hours, minutes = "0"] = timeString.split(".");
+  const hrs = parseInt(hours, 10) || 0;
+  const mins = parseInt(minutes, 10) || 0;
+
+  // Build the formatted string
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} hr${hrs > 1 ? "s" : ""}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins > 1 ? "s" : ""}`);
+  }
+
+  // If both hours and minutes are 0, show "0"
+  if (parts.length === 0) return "0";
+
+  return parts.join(" ");
+};
+
+// ── Helper: Get display quantity for an item ────────────────────
+const getDisplayQuantity = (item) => {
+  const unitType = item.unitType || "";
+
+  // Check if it's a time-based unit
+  if (isTimeBasedUnit(unitType)) {
+    // Try to use quantityDisplay first, then fallback to quantity
+    const formatted = formatTimeQuantity(
+      item.quantityDisplay,
+      item.quantity,
+      unitType,
+    );
+    return formatted;
+  }
+
+  // For non-time units, use quantityDisplay if available, otherwise quantity
+  if (item.quantityDisplay) {
+    return item.quantityDisplay;
+  }
+  return item.quantity || 0;
+};
+
 // ── Helper: render tiered pricing lines ─────────────────────────
 const renderTieredLines = (tiers, unitType) => {
   if (!tiers || tiers.length === 0) return null;
-  
+
   return tiers.map((tier, idx) => {
     let rangeText = "";
-    if (tier.maxValue !== null && tier.maxValue !== undefined && tier.maxValue !== "") {
+    if (
+      tier.maxValue !== null &&
+      tier.maxValue !== undefined &&
+      tier.maxValue !== ""
+    ) {
       rangeText = `${tier.minValue} – ${tier.maxValue} ${unitType || ""}`;
     } else {
       rangeText = `Above ${tier.minValue} ${unitType || ""}`;
     }
-    const slabText = tier.rateType === "unitRate" ? `/ ${unitType || ""}` : "(slab)";
+    const slabText =
+      tier.rateType === "unitRate" ? `/ ${unitType || ""}` : "(slab)";
     return (
       <Text key={idx} style={s.tierText}>
         {rangeText}: Rs. {Number(tier.rate).toFixed(2)} {slabText}
@@ -257,23 +392,37 @@ const renderTieredLines = (tiers, unitType) => {
 };
 
 // ── Component ───────────────────────────────────────────────────
-const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signatureBase64, logoBase64 }) => {
+const Template1PDF = ({
+  invoiceData,
+  numberToWords,
+  currentUser,
+  copyType,
+  signatureBase64,
+  logoBase64,
+}) => {
   let displayBankDetails = invoiceData?.bankDetails;
 
   const hasHSN = invoiceData.items.some(
-    (item) => item.hsnCode && item.hsnCode.trim() !== ""
+    (item) => item.hsnCode && item.hsnCode.trim() !== "",
   );
   const hasTiered = hasAnyTieredPricing(invoiceData.items);
+  const hasTaxes = hasAnyTaxes(invoiceData);
   const col = getColumnWidths(hasHSN, hasTiered);
   const taxableAmount = invoiceData.subtotal - (invoiceData.discount || 0);
 
   const copyLabel = copyType || "ORIGINAL FOR RECIPIENT";
+  const invoiceTypeLabel = hasTaxes ? "TAX INVOICE" : "INVOICE";
+
+  const customFields = invoiceData.customFields || [];
+  const halfLength = Math.ceil(customFields.length / 2);
+  const leftCustomFields = customFields.slice(0, halfLength);
+  const rightCustomFields = customFields.slice(halfLength);
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
         {/* ═══ HEADER ═══ */}
-        {(logoBase64 && invoiceData.includeLogo !== false) ? (
+        {logoBase64 && invoiceData.includeLogo !== false ? (
           <View style={s.headerRowWithLogo}>
             <View style={s.logoContainer}>
               <Image src={logoBase64} style={s.logo} />
@@ -284,28 +433,48 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
               <View style={{ width: "100%" }}>
                 <Text style={s.headerDetails}>
-                  Office: {currentUser?.address?.street ? currentUser.address.street + ", " : ""}
-                  {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                  Office:{" "}
+                  {currentUser?.address?.street
+                    ? currentUser.address.street + ", "
+                    : ""}
+                  {currentUser?.address?.city || ""},{" "}
+                  {currentUser?.address?.state || ""} -{" "}
+                  {currentUser?.address?.zipCode || ""}
                 </Text>
               </View>
               <Text style={s.headerDetails}>
-                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""} | {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
+                Phone: {currentUser?.phone || ""} | Email:{" "}
+                {currentUser?.email || ""} |{" "}
+                {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
               </Text>
-              {(currentUser?.taxId || currentUser?.udyamNo || currentUser?.panNumber) && (
+              {(currentUser?.taxId ||
+                currentUser?.udyamNo ||
+                currentUser?.panNumber) && (
                 <Text style={s.headerDetails}>
-                  {currentUser?.taxId && (currentUser?.udyamNo || currentUser?.panNumber) ? " | " : ""}
-                  {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                  {currentUser?.taxId &&
+                  (currentUser?.udyamNo || currentUser?.panNumber)
+                    ? " | "
+                    : ""}
+                  {currentUser?.udyamNo
+                    ? `Udyam No.: ${currentUser.udyamNo}`
+                    : ""}
                   {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
-                  {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
+                  {currentUser?.panNumber
+                    ? `PAN: ${currentUser.panNumber}`
+                    : ""}
                 </Text>
               )}
-              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
-                <Text style={s.headerDetails}>
-                  {currentUser.customProfileFields.map((field, idx) => 
-                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
-                  ).join('')}
-                </Text>
-              )}
+              {currentUser?.customProfileFields &&
+                currentUser.customProfileFields.length > 0 && (
+                  <Text style={s.headerDetails}>
+                    {currentUser.customProfileFields
+                      .map(
+                        (field, idx) =>
+                          `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? " | " : ""}`,
+                      )
+                      .join("")}
+                  </Text>
+                )}
             </View>
           </View>
         ) : (
@@ -316,70 +485,158 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
               <View style={{ width: "100%" }}>
                 <Text style={s.headerDetails}>
-                  Office: {currentUser?.address?.street ? currentUser.address.street + ", " : ""}
-                  {currentUser?.address?.city || ""}, {currentUser?.address?.state || ""} - {currentUser?.address?.zipCode || ""}
+                  Office:{" "}
+                  {currentUser?.address?.street
+                    ? currentUser.address.street + ", "
+                    : ""}
+                  {currentUser?.address?.city || ""},{" "}
+                  {currentUser?.address?.state || ""} -{" "}
+                  {currentUser?.address?.zipCode || ""}
                 </Text>
               </View>
               <Text style={s.headerDetails}>
-                Phone: {currentUser?.phone || ""} | Email: {currentUser?.email || ""}
+                Phone: {currentUser?.phone || ""} | Email:{" "}
+                {currentUser?.email || ""}
               </Text>
-              {(currentUser?.taxId || currentUser?.udyamNo || currentUser?.panNumber) && (
+              {(currentUser?.taxId ||
+                currentUser?.udyamNo ||
+                currentUser?.panNumber) && (
                 <Text style={s.headerDetails}>
                   {currentUser?.taxId ? `GSTIN/UIN: ${currentUser.taxId}` : ""}
-                  {currentUser?.taxId && (currentUser?.udyamNo || currentUser?.panNumber) ? " | " : ""}
-                  {currentUser?.udyamNo ? `Udyam No.: ${currentUser.udyamNo}` : ""}
+                  {currentUser?.taxId &&
+                  (currentUser?.udyamNo || currentUser?.panNumber)
+                    ? " | "
+                    : ""}
+                  {currentUser?.udyamNo
+                    ? `Udyam No.: ${currentUser.udyamNo}`
+                    : ""}
                   {currentUser?.udyamNo && currentUser?.panNumber ? " | " : ""}
-                  {currentUser?.panNumber ? `PAN: ${currentUser.panNumber}` : ""}
+                  {currentUser?.panNumber
+                    ? `PAN: ${currentUser.panNumber}`
+                    : ""}
                 </Text>
               )}
-              {currentUser?.customProfileFields && currentUser.customProfileFields.length > 0 && (
-                <Text style={s.headerDetails}>
-                  {currentUser.customProfileFields.map((field, idx) => 
-                    `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? ' | ' : ''}`
-                  ).join('')}
-                </Text>
-              )}
+              {currentUser?.customProfileFields &&
+                currentUser.customProfileFields.length > 0 && (
+                  <Text style={s.headerDetails}>
+                    {currentUser.customProfileFields
+                      .map(
+                        (field, idx) =>
+                          `${field.label}: ${field.value}${idx < currentUser.customProfileFields.length - 1 ? " | " : ""}`,
+                      )
+                      .join("")}
+                  </Text>
+                )}
             </View>
           </View>
         )}
 
         {/* ═══ TITLE ═══ */}
-        <View style={[s.titleBlock, { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }]}>
+        <View
+          style={[
+            s.titleBlock,
+            {
+              flexDirection: "row",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+            },
+          ]}
+        >
           <View style={{ flex: 1, alignItems: "flex-start", paddingTop: 4 }}>
             {invoiceData.shippingAddress && (
               <>
-                <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 2 }}>
-                  Invoice No: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceNumber || "-"}</Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "Helvetica-Bold",
+                    marginBottom: 2,
+                  }}
+                >
+                  Invoice No:{" "}
+                  <Text style={{ fontFamily: "Helvetica" }}>
+                    {invoiceData.invoiceNumber || "-"}
+                  </Text>
                 </Text>
                 <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
-                  Invoice Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}</Text>
+                  Invoice Date:{" "}
+                  <Text style={{ fontFamily: "Helvetica" }}>
+                    {invoiceData.invoiceDate
+                      ? new Date(invoiceData.invoiceDate).toLocaleDateString(
+                          "en-GB",
+                        )
+                      : "-"}
+                  </Text>
                 </Text>
               </>
             )}
           </View>
 
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={s.title}>TAX INVOICE</Text>
+            <Text style={s.title}>{invoiceTypeLabel}</Text>
             <Text style={s.subtitle}>({copyLabel})</Text>
           </View>
 
           <View style={{ flex: 1, alignItems: "flex-end", paddingTop: 4 }}>
             {invoiceData.shippingAddress && (
-              <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
-                Due Date: <Text style={{ fontFamily: "Helvetica" }}>{invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}</Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: "Helvetica-Bold",
+                  marginBottom: 2,
+                }}
+              >
+                Due Date:{" "}
+                <Text style={{ fontFamily: "Helvetica" }}>
+                  {invoiceData.dueDate
+                    ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB")
+                    : "-"}
+                </Text>
               </Text>
             )}
           </View>
         </View>
 
+        {/* ═══ CUSTOM FIELDS SECTION - Two Column Layout (Only when shipping address exists) ═══ */}
+        {invoiceData.shippingAddress && customFields.length > 0 && (
+          <View style={s.customFieldsRow}>
+            {/* Left Column - below Invoice No/Date */}
+            <View style={s.customFieldColumn}>
+              {leftCustomFields.map((cf, cfIdx) => (
+                <Text key={cfIdx} style={s.customFieldItem}>
+                  {cf.label || ""}:{" "}
+                  <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                </Text>
+              ))}
+            </View>
+            {/* Right Column - below Due Date */}
+            <View style={s.customFieldColumn}>
+              {rightCustomFields.map((cf, cfIdx) => (
+                <Text key={cfIdx} style={s.customFieldItem}>
+                  {cf.label || ""}:{" "}
+                  <Text style={s.customFieldValue}>{cf.value || ""}</Text>
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* ═══ BILL TO + SHIP TO ═══ */}
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 12, justifyContent: "space-between" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 12,
+            marginBottom: 12,
+            justifyContent: "space-between",
+          }}
+        >
           {/* Left: Bill To */}
           <View style={[s.billToBox, { flex: 1 }]}>
             <Text style={s.billToLabel}>Bill To:</Text>
-            <Text style={s.clientName}>{invoiceData.client?.companyName || ""}</Text>
+            <Text style={s.clientName}>
+              {invoiceData.client?.companyName || ""}
+            </Text>
             <View style={{ width: "100%" }}>
-              {((invoiceData.client?.address?.street || ""))
+              {(invoiceData.client?.address?.street || "")
                 .replace(/(.{50})/g, "$1\n")
                 .split("\n")
                 .filter((l) => l.trim().length > 0)
@@ -397,15 +654,17 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
             </View>
             {invoiceData.client?.gstNumber && (
-              <Text style={s.bodyText}>GSTIN/UIN: {invoiceData.client.gstNumber}</Text>
+              <Text style={s.bodyText}>
+                GSTIN/UIN: {invoiceData.client.gstNumber}
+              </Text>
             )}
             {invoiceData.client?.panNumber && (
-              <Text style={s.bodyText}>PAN: {invoiceData.client.panNumber}</Text>
+              <Text style={s.bodyText}>
+                PAN: {invoiceData.client.panNumber}
+              </Text>
             )}
             <Text style={s.bodyText}>
               State Name: {invoiceData.client?.address?.state || ""}
-              {/* Code:{" "} */}
-              {/* {invoiceData.client?.address?.zipCode?.substring(0, 2) || ""} */}
             </Text>
           </View>
 
@@ -414,24 +673,26 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             <View style={[s.billToBox, { flex: 1 }]}>
               <Text style={s.billToLabel}>Ship To:</Text>
               {typeof invoiceData.shippingAddress === "string" ? (
-                invoiceData.shippingAddress.split("\n").map((chunk, chunkIdx) => (
-                  <View key={chunkIdx} style={{ width: "100%" }}>
-                    {((chunk || ""))
-                      .replace(/(.{50})/g, "$1\n")
-                      .split("\n")
-                      .filter((l) => l.trim().length > 0)
-                      .map((line, i) => (
-                        <Text key={`str-${chunkIdx}-${i}`} style={s.bodyText}>
-                          {line}
-                        </Text>
-                      ))}
-                  </View>
-                ))
+                invoiceData.shippingAddress
+                  .split("\n")
+                  .map((chunk, chunkIdx) => (
+                    <View key={chunkIdx} style={{ width: "100%" }}>
+                      {(chunk || "")
+                        .replace(/(.{50})/g, "$1\n")
+                        .split("\n")
+                        .filter((l) => l.trim().length > 0)
+                        .map((line, i) => (
+                          <Text key={`str-${chunkIdx}-${i}`} style={s.bodyText}>
+                            {line}
+                          </Text>
+                        ))}
+                    </View>
+                  ))
               ) : (
                 <>
                   {invoiceData.shippingAddress.street && (
                     <View style={{ width: "100%" }}>
-                      {((invoiceData.shippingAddress.street || ""))
+                      {(invoiceData.shippingAddress.street || "")
                         .replace(/(.{50})/g, "$1\n")
                         .split("\n")
                         .filter((l) => l.trim().length > 0)
@@ -442,7 +703,9 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                         ))}
                     </View>
                   )}
-                  {(invoiceData.shippingAddress.city || invoiceData.shippingAddress.state || invoiceData.shippingAddress.zipCode) && (
+                  {(invoiceData.shippingAddress.city ||
+                    invoiceData.shippingAddress.state ||
+                    invoiceData.shippingAddress.zipCode) && (
                     <View style={{ width: "100%" }}>
                       <Text style={s.bodyText}>
                         {[
@@ -467,12 +730,27 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </Text>
               <Text style={s.bodyText}>
                 <Text style={s.bold}>Invoice Date: </Text>
-                {invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString("en-GB") : "-"}
+                {invoiceData.invoiceDate
+                  ? new Date(invoiceData.invoiceDate).toLocaleDateString(
+                      "en-GB",
+                    )
+                  : "-"}
               </Text>
               <Text style={s.bodyText}>
                 <Text style={s.bold}>Due Date: </Text>
-                {invoiceData.dueDate ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB") : "-"}
+                {invoiceData.dueDate
+                  ? new Date(invoiceData.dueDate).toLocaleDateString("en-GB")
+                  : "-"}
               </Text>
+              {/* CUSTOM FIELDS - When no shipping address, show in Invoice Details box */}
+              {!invoiceData.shippingAddress &&
+                customFields.length > 0 &&
+                customFields.map((cf, cfIdx) => (
+                  <Text key={cfIdx} style={s.bodyText}>
+                    <Text style={s.bold}>{cf.label || ""}: </Text>
+                    <Text>{cf.value || ""}</Text>
+                  </Text>
+                ))}
             </View>
           )}
         </View>
@@ -482,7 +760,9 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           {/* Header */}
           <View style={s.tableHeaderRow} fixed>
             <Text style={[s.th, { width: col.sr }]}>Sr.</Text>
-            <Text style={[s.th, { width: col.desc }]}>Description of Goods</Text>
+            <Text style={[s.th, { width: col.desc }]}>
+              Description of Goods
+            </Text>
             {hasHSN && <Text style={[s.th, { width: col.hsn }]}>HSN/SAC</Text>}
             <Text style={[s.th, { width: col.qty }]}>Qty</Text>
             <Text style={[s.th, { width: col.rate }]}>Rate</Text>
@@ -490,57 +770,85 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           </View>
 
           {/* Data rows */}
-          {invoiceData.items.map((item, index) => (
-            <View
-              key={item._id || `item-${index}`}
-              style={s.tableRow}
-              wrap={false}
-            >
-              <Text style={[s.td, s.tdCenter, { width: col.sr }]}>
-                {index + 1}
-              </Text>
-              <View style={[s.td, { width: col.desc }]}>
-                <Text style={s.bold}>{item.description}</Text>
-                {item.notes && (
-                  <Text style={{ fontSize: 8, marginTop: 1 }}>{item.notes}</Text>
-                )}
-              </View>
-              {hasHSN && (
-                <Text style={[s.td, s.tdCenter, { width: col.hsn }]}>
-                  {item.hsnCode || ""}
+          {invoiceData.items.map((item, index) => {
+            const displayQuantity = getDisplayQuantity(item);
+            const unitType = item.unitType || "";
+
+            return (
+              <View
+                key={item._id || `item-${index}`}
+                style={s.tableRow}
+                wrap={false}
+              >
+                <Text style={[s.td, s.tdCenter, { width: col.sr }]}>
+                  {index + 1}
                 </Text>
-              )}
-              <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
-                {item.quantity} {item.unitType || ""}
-              </Text>
-              <View style={[s.td, s.tdRight, { width: col.rate, paddingHorizontal: 4, justifyContent: "center" }]}>
-                {item.pricingType === "tiered" && item.pricingTiers && item.pricingTiers.length > 0 ? (
-                  <View style={s.tierContainer}>
-                    {renderTieredLines(item.pricingTiers, item.unitType)}
-                  </View>
-                ) : (
-                  <Text style={{ fontSize: 10 }}>Rs. {(item.baseRate || 0).toFixed(2)}</Text>
+                <View style={[s.td, { width: col.desc }]}>
+                  <Text style={s.bold}>{item.description}</Text>
+                  {item.notes && (
+                    <Text style={{ fontSize: 8, marginTop: 1 }}>
+                      {item.notes}
+                    </Text>
+                  )}
+                </View>
+                {hasHSN && (
+                  <Text style={[s.td, s.tdCenter, { width: col.hsn }]}>
+                    {item.hsnCode || ""}
+                  </Text>
                 )}
+                <Text style={[s.td, s.tdCenter, { width: col.qty }]}>
+                  {displayQuantity}{" "}
+                  {!isTimeBasedUnit(unitType) && `${unitType}`}
+                </Text>
+                <View
+                  style={[
+                    s.td,
+                    s.tdRight,
+                    {
+                      width: col.rate,
+                      paddingHorizontal: 4,
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
+                  {item.pricingType === "tiered" &&
+                  item.pricingTiers &&
+                  item.pricingTiers.length > 0 ? (
+                    <View style={s.tierContainer}>
+                      {renderTieredLines(item.pricingTiers, item.unitType)}
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 10 }}>
+                      Rs. {(item.baseRate || 0).toFixed(2)}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    s.tdLast,
+                    s.tdRight,
+                    { width: col.amt, fontWeight: "bold" },
+                  ]}
+                >
+                  Rs. {item.subtotal.toFixed(2)}
+                </Text>
               </View>
-              <Text style={[s.tdLast, s.tdRight, { width: col.amt, fontWeight: 'bold' }]}>
-                Rs. {item.subtotal.toFixed(2)}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
 
           {/* Tax rows - Fixed alignment */}
-          {invoiceData.taxes && invoiceData.taxes.length > 0 && (
+          {hasTaxes && (
             <View style={s.tableRow} wrap={false}>
               <View
                 style={[
                   s.td,
-                  { 
-                    width: hasHSN 
-                      ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%` 
+                  {
+                    width: hasHSN
+                      ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%`
                       : `${parseFloat(col.sr) + parseFloat(col.desc)}%`,
                     flexDirection: "column",
-                    textAlign: "right"
-                  }
+                    textAlign: "right",
+                  },
                 ]}
               >
                 {invoiceData.taxes.map((tax, idx) => (
@@ -551,7 +859,13 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               </View>
               <Text style={[s.td, s.tdCenter, { width: col.qty }]}> </Text>
               <Text style={[s.td, s.tdCenter, { width: col.rate }]}> </Text>
-              <View style={[s.tdLast, s.tdRight, { width: col.amt, flexDirection: "column" }]}>
+              <View
+                style={[
+                  s.tdLast,
+                  s.tdRight,
+                  { width: col.amt, flexDirection: "column" },
+                ]}
+              >
                 {invoiceData.taxes.map((tax, idx) => (
                   <Text key={idx} style={[s.bold, { textAlign: "right" }]}>
                     Rs. {tax.amount.toFixed(2)}
@@ -567,18 +881,20 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               style={[
                 s.td,
                 s.tdRight,
-                { 
-                  width: hasHSN 
-                    ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%` 
+                {
+                  width: hasHSN
+                    ? `${parseFloat(col.sr) + parseFloat(col.desc) + parseFloat(col.hsn)}%`
                     : `${parseFloat(col.sr) + parseFloat(col.desc)}%`,
-                }
+                },
               ]}
             >
               <Text style={[s.totalLabel, { textAlign: "right" }]}>Total</Text>
             </View>
             <Text style={[s.td, s.tdCenter, { width: col.qty }]}> </Text>
             <Text style={[s.td, s.tdCenter, { width: col.rate }]}> </Text>
-            <Text style={[s.tdLast, s.tdRight, s.totalLabel, { width: col.amt }]}>
+            <Text
+              style={[s.tdLast, s.tdRight, s.totalLabel, { width: col.amt }]}
+            >
               Rs. {invoiceData.totalAmount.toFixed(2)}
             </Text>
           </View>
@@ -595,8 +911,8 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           </Text>
         </View>
 
-        {/* ═══ TAX BREAKDOWN TABLE ═══ */}
-        {invoiceData.taxes && invoiceData.taxes.length > 0 && (
+        {/* ═══ TAX BREAKDOWN TABLE (only shown if taxes exist) ═══ */}
+        {hasTaxes && (
           <View style={s.taxTable} wrap={false}>
             {/* Header */}
             <View style={{ flexDirection: "row" }}>
@@ -604,8 +920,12 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text style={[s.taxTh, { width: "20%" }]}>Taxable Value</Text>
               {invoiceData.taxes.map((tax, i) => (
                 <React.Fragment key={i}>
-                  <Text style={[s.taxTh, { width: "10%" }]}>{tax.name} Rate</Text>
-                  <Text style={[s.taxTh, { width: "15%" }]}>{tax.name} Amt</Text>
+                  <Text style={[s.taxTh, { width: "10%" }]}>
+                    {tax.name} Rate
+                  </Text>
+                  <Text style={[s.taxTh, { width: "15%" }]}>
+                    {tax.name} Amt
+                  </Text>
                 </React.Fragment>
               ))}
               <Text style={[s.taxTh, { width: "15%" }]}>Total Tax</Text>
@@ -616,11 +936,16 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               const itemTaxable = item.subtotal - (item.discount || 0);
               const itemTotalTax = invoiceData.taxes.reduce(
                 (acc, tax) => acc + (itemTaxable * tax.rate) / 100,
-                0
+                0,
               );
               return (
-                <View key={item._id || `tax-${index}`} style={{ flexDirection: "row" }}>
-                  <Text style={[s.taxTd, { width: "15%", textAlign: "center" }]}>
+                <View
+                  key={item._id || `tax-${index}`}
+                  style={{ flexDirection: "row" }}
+                >
+                  <Text
+                    style={[s.taxTd, { width: "15%", textAlign: "center" }]}
+                  >
                     {item.hsnCode || "-"}
                   </Text>
                   <Text style={[s.taxTd, { width: "20%", textAlign: "right" }]}>
@@ -630,10 +955,20 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                     const amt = (itemTaxable * tax.rate) / 100;
                     return (
                       <React.Fragment key={ti}>
-                        <Text style={[s.taxTd, { width: "10%", textAlign: "center" }]}>
+                        <Text
+                          style={[
+                            s.taxTd,
+                            { width: "10%", textAlign: "center" },
+                          ]}
+                        >
                           {tax.rate}%
                         </Text>
-                        <Text style={[s.taxTd, { width: "15%", textAlign: "right" }]}>
+                        <Text
+                          style={[
+                            s.taxTd,
+                            { width: "15%", textAlign: "right" },
+                          ]}
+                        >
                           {amt.toFixed(2)}
                         </Text>
                       </React.Fragment>
@@ -649,12 +984,26 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
             {/* Total row */}
             <View style={{ flexDirection: "row", backgroundColor: "#f0f0f0" }}>
               <Text
-                style={[s.taxTd, { width: "15%", textAlign: "center", fontFamily: "Helvetica-Bold" }]}
+                style={[
+                  s.taxTd,
+                  {
+                    width: "15%",
+                    textAlign: "center",
+                    fontFamily: "Helvetica-Bold",
+                  },
+                ]}
               >
                 Total
               </Text>
               <Text
-                style={[s.taxTd, { width: "20%", textAlign: "right", fontFamily: "Helvetica-Bold" }]}
+                style={[
+                  s.taxTd,
+                  {
+                    width: "20%",
+                    textAlign: "right",
+                    fontFamily: "Helvetica-Bold",
+                  },
+                ]}
               >
                 {taxableAmount.toFixed(2)}
               </Text>
@@ -664,7 +1013,11 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
                   <Text
                     style={[
                       s.taxTd,
-                      { width: "15%", textAlign: "right", fontFamily: "Helvetica-Bold" },
+                      {
+                        width: "15%",
+                        textAlign: "right",
+                        fontFamily: "Helvetica-Bold",
+                      },
                     ]}
                   >
                     {tax.amount.toFixed(2)}
@@ -674,7 +1027,11 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               <Text
                 style={[
                   s.taxTd,
-                  { width: "15%", textAlign: "right", fontFamily: "Helvetica-Bold" },
+                  {
+                    width: "15%",
+                    textAlign: "right",
+                    fontFamily: "Helvetica-Bold",
+                  },
                 ]}
               >
                 {invoiceData.totalTax.toFixed(2)}
@@ -683,8 +1040,8 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
           </View>
         )}
 
-        {/* Tax in words */}
-        {invoiceData.totalTax > 0 && (
+        {/* Tax in words (only if taxes exist) */}
+        {hasTaxes && invoiceData.totalTax > 0 && (
           <View style={{ marginBottom: 10 }}>
             <Text style={{ fontSize: 10 }}>
               Tax Amount (in words):{" "}
@@ -741,8 +1098,7 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
               )}
               {displayBankDetails.upiId && (
                 <Text style={s.bankLine}>
-                  <Text style={s.bold}>UPI ID:</Text>{" "}
-                  {displayBankDetails.upiId}
+                  <Text style={s.bold}>UPI ID:</Text> {displayBankDetails.upiId}
                 </Text>
               )}
             </View>
@@ -750,13 +1106,25 @@ const Template1PDF = ({ invoiceData, numberToWords, currentUser, copyType, signa
 
           <View style={s.sigBox}>
             <View style={{ width: 220, alignItems: "center" }}>
-              <Text style={[s.sigLabel, (signatureBase64 && invoiceData.includeSignature !== false) ? { marginBottom: 10 } : {}]}>
+              <Text
+                style={[
+                  s.sigLabel,
+                  signatureBase64 && invoiceData.includeSignature !== false
+                    ? { marginBottom: 10 }
+                    : {},
+                ]}
+              >
                 for {currentUser?.businessName || ""}
               </Text>
               {signatureBase64 && invoiceData.includeSignature !== false && (
-                <Image 
-                  src={signatureBase64} 
-                  style={{ width: 160, height: 60, objectFit: "contain", marginBottom: 10 }} 
+                <Image
+                  src={signatureBase64}
+                  style={{
+                    width: 160,
+                    height: 60,
+                    objectFit: "contain",
+                    marginBottom: 10,
+                  }}
                 />
               )}
               <View style={s.sigLine}>

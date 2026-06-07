@@ -12,7 +12,7 @@ const DEFAULT_UNITS = [
 const ServiceModal = ({ service, onSave, onCancel }) => {
   const pricingTypes = ["fixed", "flat", "tiered"];
 
-  // ── Custom Unit State (mirrors CreateInvoice) ──
+  // ── Custom Unit State ──
   const [customUnits, setCustomUnits] = useState([]);
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
@@ -55,7 +55,6 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
         shortCode: newUnitShortCode.trim(),
       });
       setCustomUnits(res.data.customUnits);
-      // Auto-select newly created unit
       setFormData((prev) => ({ ...prev, unitType: trimmed }));
       setShowAddUnitModal(false);
       toast.success("Custom unit added!");
@@ -149,7 +148,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
           })),
         });
       } catch (err) {
-        // Error is handled by parent, just stop loading
+        // Error is handled by parent
       } finally {
         setLoading(false);
       }
@@ -201,28 +200,30 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     }));
   };
 
-  /* ── Apple-Style Tokens ── */
+  // Responsive styles
   const inputStyle = {
     width: "100%",
     padding: "12px 16px",
     borderRadius: "12px",
     border: "1px solid var(--border, #E5E5E7)",
     background: "var(--surface, #FFFFFF)",
-    fontSize: "14px",
+    fontSize: "clamp(14px, 4vw, 16px)",
     fontFamily: "inherit",
     color: "var(--text-primary, #1D1D1F)",
     transition: "all 200ms ease",
     outline: "none",
     marginTop: "6px",
+    boxSizing: "border-box"
   };
 
   const labelStyle = {
     display: "block",
-    fontSize: "13px",
+    fontSize: "clamp(12px, 3.5vw, 13px)",
     fontWeight: 600,
     color: "var(--text-secondary, #6E6E73)",
     letterSpacing: "0.02em",
     textTransform: "uppercase",
+    marginBottom: "4px"
   };
 
   const btnPrimary = {
@@ -231,15 +232,16 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     justifyContent: "center",
     padding: "10px 20px",
     borderRadius: "12px",
-    background: "var(--gradient-primary)",
+    background: "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)",
     color: "#fff",
-    fontSize: "14px",
+    fontSize: "clamp(13px, 3.5vw, 14px)",
     fontWeight: 600,
     border: "none",
     cursor: "pointer",
     transition: "all 200ms ease",
     boxShadow: "0 1px 3px rgba(0, 113, 227, 0.3)",
     letterSpacing: "-0.006em",
+    whiteSpace: "nowrap"
   };
 
   const btnSecondary = {
@@ -276,11 +278,46 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
     }
   });
 
+  // Add CSS animation to document
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .modal-scroll {
+          padding: 16px !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .modal-scroll {
+          padding: 12px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
 
   return (
     <>
       {/* ── Service Form Modal ── */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center pt-8 pb-8">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{
+          padding: "clamp(12px, 5vw, 24px)",
+        }}
+      >
         {/* Backdrop */}
         <div
           className="absolute inset-0 transition-opacity"
@@ -294,23 +331,30 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
         
         {/* Modal Container */}
         <div
-          className="relative bg-white transform transition-all w-full max-w-2xl"
+          className="relative bg-white transform transition-all w-full"
           style={{
-            borderRadius: "20px",
+            borderRadius: "clamp(16px, 5vw, 20px)",
             boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)",
             display: "flex",
             flexDirection: "column",
             maxHeight: "90vh",
             overflow: "hidden",
+            maxWidth: "min(90vw, 800px)",
+            width: "100%"
           }}
         >
-          <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-light, #F0F0F2)" }}>
-            <div className="flex items-center justify-between">
+          {/* Header */}
+          <div style={{ 
+            padding: "clamp(16px, 4vw, 24px)", 
+            borderBottom: "1px solid var(--border-light, #F0F0F2)" 
+          }}>
+            <div className="flex items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
               <h3 style={{
-                fontSize: "20px",
+                fontSize: "clamp(18px, 5vw, 20px)",
                 fontWeight: 600,
                 color: "var(--text-primary, #1D1D1F)",
                 letterSpacing: "-0.02em",
+                margin: 0
               }}>
                 {service ? "Edit Service" : "Add New Service"}
               </h3>
@@ -321,10 +365,11 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                   border: "none",
                   cursor: "pointer",
                   color: "var(--text-tertiary, #86868B)",
-                  padding: "4px",
+                  padding: "8px",
                   borderRadius: "50%",
                   transition: "all 150ms ease",
                   display: "flex",
+                  flexShrink: 0
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
@@ -340,9 +385,23 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
             </div>
           </div>
 
-          <div style={{ overflow: "auto", flex: 1, padding: "24px" }}>
-            <form id="service-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          {/* Scrollable Content */}
+          <div 
+            className="modal-scroll"
+            style={{ 
+              overflowY: "auto", 
+              flex: 1, 
+              padding: "clamp(16px, 4vw, 24px)",
+              WebkitOverflowScrolling: "touch"
+            }}
+          >
+            <form id="service-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "clamp(20px, 5vw, 24px)" }}>
+              {/* Row 1: Service Name & Unit */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 250px), 1fr))", 
+                gap: "clamp(12px, 3vw, 16px)" 
+              }}>
                 <div>
                   <label style={labelStyle}>
                     Service Name <span style={{ color: "red" }}>*</span>
@@ -359,11 +418,11 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                     {...errorFocusProps(errors.name)}
                   />
                   {errors.name && (
-                    <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.name}</p>
+                    <p style={{ color: "#DC2626", fontSize: "clamp(12px, 3.5vw, 13px)", marginTop: "6px" }}>{errors.name}</p>
                   )}
                 </div>
 
-                {/* ── Unit of Measurement (with Custom Unit support) ── */}
+                {/* Unit of Measurement */}
                 <div>
                   <label style={labelStyle}>
                     Unit of Measurement <span style={{ color: "red" }}>*</span>
@@ -392,7 +451,6 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                     <optgroup label="">
                       <option value="__add_custom__">+ Add Custom Unit</option>
                     </optgroup>
-                    {/* Preserve legacy / unrecognised unit values (e.g. "other") */}
                     {formData.unitType &&
                       !DEFAULT_UNITS.includes(formData.unitType) &&
                       !customUnits.some((u) => u.name === formData.unitType) &&
@@ -405,6 +463,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 </div>
               </div>
 
+              {/* Description */}
               <div>
                 <label style={labelStyle}>
                   Description <span style={{ color: "red" }}>*</span>
@@ -417,17 +476,22 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                   style={{
                     ...inputStyle,
                     resize: "vertical",
-                    minHeight: "80px",
+                    minHeight: "clamp(80px, 20vh, 100px)",
                     borderColor: errors.description ? "#DC2626" : "var(--border, #E5E5E7)",
                   }}
                   {...errorFocusProps(errors.description)}
                 />
                 {errors.description && (
-                  <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.description}</p>
+                  <p style={{ color: "#DC2626", fontSize: "clamp(12px, 3.5vw, 13px)", marginTop: "6px" }}>{errors.description}</p>
                 )}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              {/* Row 2: Pricing Type & HSN Code */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", 
+                gap: "clamp(12px, 3vw, 16px)" 
+              }}>
                 <div>
                   <label style={labelStyle}>
                     Pricing Type <span style={{ color: "red" }}>*</span>
@@ -460,8 +524,12 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 </div>
               </div>
 
+              {/* Base Rate (Fixed/Flat) */}
               {(formData.pricingType === "fixed" || formData.pricingType === "flat") && (
-                <div style={{ width: "50%" }}>
+                <div style={{ 
+                  width: "100%",
+                  maxWidth: "min(100%, 400px)"
+                }}>
                   <label style={labelStyle}>
                     Base Rate <span style={{ color: "red" }}>*</span>
                   </label>
@@ -480,14 +548,22 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                     placeholder="0.00"
                   />
                   {errors.baseRate && (
-                    <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "6px" }}>{errors.baseRate}</p>
+                    <p style={{ color: "#DC2626", fontSize: "clamp(12px, 3.5vw, 13px)", marginTop: "6px" }}>{errors.baseRate}</p>
                   )}
                 </div>
               )}
 
+              {/* Pricing Tiers */}
               {formData.pricingType === "tiered" && (
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "space-between", 
+                    marginBottom: "16px",
+                    flexWrap: "wrap",
+                    gap: "12px"
+                  }}>
                     <label style={labelStyle}>
                       Pricing Tiers <span style={{ color: "red" }}>*</span>
                     </label>
@@ -497,17 +573,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                       style={{
                         ...btnPrimary,
                         padding: "6px 14px",
-                        fontSize: "13px",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--gradient-hover)";
-                        e.currentTarget.style.transform = "translateY(-1px)";
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "var(--gradient-primary)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
+                        fontSize: "clamp(12px, 3.5vw, 13px)",
                       }}
                     >
                       <Plus className="h-4 w-4" style={{ marginRight: "4px" }} />
@@ -524,15 +590,15 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                             background: "var(--bg-page, #F7F7F8)",
                             borderRadius: "16px",
                             border: "1px solid var(--border, #E5E5E7)",
-                            padding: "16px",
+                            padding: "clamp(12px, 3vw, 16px)",
                             display: "flex",
                             gap: "12px",
                             alignItems: "flex-end",
                             flexWrap: "wrap",
                           }}
                         >
-                          <div style={{ flex: 1, minWidth: "100px" }}>
-                            <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Min Value</label>
+                          <div style={{ flex: "1 1 min(100%, 150px)" }}>
+                            <label style={{ ...labelStyle, fontSize: "clamp(11px, 3vw, 12px)", marginBottom: "6px" }}>Min Value</label>
                             <input
                               type="number"
                               placeholder="0"
@@ -544,11 +610,11 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                               {...focusProps}
                             />
                           </div>
-                          <div style={{ flex: 1, minWidth: "120px" }}>
-                            <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Max Value</label>
+                          <div style={{ flex: "1 1 min(100%, 150px)" }}>
+                            <label style={{ ...labelStyle, fontSize: "clamp(11px, 3vw, 12px)", marginBottom: "6px" }}>Max Value</label>
                             <input
                               type="number"
-                              placeholder="∞ (Empty for limits)"
+                              placeholder="∞"
                               value={tier.maxValue ?? ""}
                               onChange={(e) => updateTier(index, "maxValue", e.target.value)}
                               style={{ ...inputStyle, padding: "10px 14px" }}
@@ -557,8 +623,8 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                               {...focusProps}
                             />
                           </div>
-                          <div style={{ flex: 1, minWidth: "100px" }}>
-                            <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate (Rs. )</label>
+                          <div style={{ flex: "1 1 min(100%, 150px)" }}>
+                            <label style={{ ...labelStyle, fontSize: "clamp(11px, 3vw, 12px)", marginBottom: "6px" }}>Rate (₹)</label>
                             <input
                               type="number"
                               placeholder="0.00"
@@ -570,8 +636,8 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                               {...focusProps}
                             />
                           </div>
-                          <div style={{ flex: 1, minWidth: "120px" }}>
-                            <label style={{ ...labelStyle, fontSize: "12px", marginBottom: "6px" }}>Rate Type</label>
+                          <div style={{ flex: "1 1 min(100%, 150px)" }}>
+                            <label style={{ ...labelStyle, fontSize: "clamp(11px, 3vw, 12px)", marginBottom: "6px" }}>Rate Type</label>
                             <select
                               value={tier.rateType || "slabRate"}
                               onChange={(e) => updateTier(index, "rateType", e.target.value)}
@@ -592,7 +658,6 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                               color: "#DC2626",
                               padding: "10px",
                               borderRadius: "12px",
-                              marginBottom: "6px",
                               cursor: "pointer",
                               transition: "all 150ms ease",
                               display: "flex",
@@ -600,6 +665,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                               justifyContent: "center",
                               height: "41px",
                               width: "41px",
+                              flexShrink: 0
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.background = "#FEE2E2";
@@ -615,7 +681,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                           
                           {errors[`tier_${index}`] && (
                             <div style={{ width: "100%" }}>
-                              <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>
+                              <p style={{ color: "#DC2626", fontSize: "clamp(12px, 3.5vw, 13px)", marginTop: "4px" }}>
                                 {errors[`tier_${index}`]}
                               </p>
                             </div>
@@ -626,7 +692,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                   )}
 
                   {errors.pricingTiers && (
-                    <p style={{ color: "#DC2626", fontSize: "13px", marginTop: "12px" }}>{errors.pricingTiers}</p>
+                    <p style={{ color: "#DC2626", fontSize: "clamp(12px, 3.5vw, 13px)", marginTop: "12px" }}>{errors.pricingTiers}</p>
                   )}
 
                   {formData.pricingTiers.length === 0 && (
@@ -635,11 +701,11 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                       background: "var(--bg-page, #F7F7F8)",
                       borderRadius: "16px",
                       border: "1px dashed var(--border, #E5E5E7)",
-                      padding: "40px 20px"
+                      padding: "clamp(30px, 10vw, 40px) clamp(16px, 5vw, 20px)"
                     }}>
                       <Package className="h-10 w-10" style={{ color: "var(--text-tertiary, #86868B)", margin: "0 auto 16px auto" }} />
-                      <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "14px", fontWeight: 500 }}>
-                        No tiers added yet. Click &quot;Add Tier&quot; to create pricing tiers.
+                      <p style={{ color: "var(--text-secondary, #6E6E73)", fontSize: "clamp(13px, 4vw, 14px)", fontWeight: 500 }}>
+                        No tiers added yet. Click "Add Tier" to create pricing tiers.
                       </p>
                     </div>
                   )}
@@ -648,21 +714,26 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
             </form>
           </div>
 
-          {/* Footer Area */}
+          {/* Footer Area - Responsive */}
           <div
             style={{
-              padding: "16px 24px",
+              padding: "clamp(12px, 3vw, 16px) clamp(16px, 4vw, 24px)",
               background: "var(--bg-page, #F7F7F8)",
               borderTop: "1px solid var(--border-light, #F0F0F2)",
               display: "flex",
               justifyContent: "flex-end",
-              gap: "12px",
+              gap: "clamp(8px, 3vw, 12px)",
+              flexWrap: "wrap",
             }}
           >
             <button
               type="button"
               onClick={onCancel}
-              style={btnSecondary}
+              style={{
+                ...btnSecondary,
+                flex: window.innerWidth < 480 ? "1" : "0 0 auto",
+                minWidth: window.innerWidth < 480 ? "100px" : "auto"
+              }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover, #F0F0F2)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-secondary, #FBFBFD)"; }}
             >
@@ -675,19 +746,21 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
               disabled={loading}
               style={{
                 ...btnPrimary,
+                flex: window.innerWidth < 480 ? "1" : "0 0 auto",
+                minWidth: window.innerWidth < 480 ? "100px" : "auto",
                 opacity: loading ? 0.7 : 1,
                 cursor: loading ? "not-allowed" : "pointer"
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = "var(--gradient-hover)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, #0088FF 0%, #0066CC 100%)";
                   e.currentTarget.style.transform = "translateY(-1px)";
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 113, 227, 0.35)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = "var(--gradient-primary)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)";
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 113, 227, 0.3)";
                 }
@@ -699,34 +772,60 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
         </div>
       </div>
 
-      {/* ── Add Custom Unit Modal (identical to CreateInvoice) ── */}
+      {/* ── Add Custom Unit Modal (Responsive) ── */}
       {showAddUnitModal && (
         <div
           style={{
-            position: "fixed", inset: 0, zIndex: 9999,
-            background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "24px",
+            position: "fixed", 
+            inset: 0, 
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.4)", 
+            backdropFilter: "blur(6px)",
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            padding: "clamp(12px, 5vw, 24px)",
           }}
           onClick={() => setShowAddUnitModal(false)}
         >
           <div
             style={{
-              background: "#fff", borderRadius: "20px",
+              background: "#fff", 
+              borderRadius: "clamp(16px, 5vw, 20px)",
               boxShadow: "0 24px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
-              padding: "28px", width: "100%", maxWidth: "400px",
+              padding: "clamp(20px, 5vw, 28px)", 
+              width: "100%", 
+              maxWidth: "min(90vw, 400px)",
               animation: "fadeInScale 200ms ease",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-primary, #1D1D1F)", letterSpacing: "-0.02em" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", gap: "12px" }}>
+              <h3 style={{ 
+                fontSize: "clamp(16px, 5vw, 18px)", 
+                fontWeight: 700, 
+                color: "var(--text-primary, #1D1D1F)", 
+                letterSpacing: "-0.02em",
+                margin: 0
+              }}>
                 Add Custom Unit
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddUnitModal(false)}
-                style={{ background: "var(--surface-secondary, #F5F5F7)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-secondary, #6E6E73)" }}
+                style={{ 
+                  background: "var(--surface-secondary, #F5F5F7)", 
+                  border: "none", 
+                  borderRadius: "50%", 
+                  width: "clamp(28px, 8vw, 32px)", 
+                  height: "clamp(28px, 8vw, 32px)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  cursor: "pointer", 
+                  color: "var(--text-secondary, #6E6E73)",
+                  flexShrink: 0
+                }}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -734,7 +833,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                <label style={{ ...labelStyle, marginBottom: "6px" }}>
                   Unit Name <span style={{ color: "#DC2626" }}>*</span>
                 </label>
                 <input
@@ -748,7 +847,7 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-secondary, #6E6E73)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                <label style={{ ...labelStyle, marginBottom: "6px" }}>
                   Short Code <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span>
                 </label>
                 <input
@@ -762,11 +861,20 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+            <div style={{ 
+              display: "flex", 
+              gap: "12px", 
+              marginTop: "clamp(20px, 5vw, 24px)",
+              flexWrap: "wrap"
+            }}>
               <button
                 type="button"
                 onClick={() => setShowAddUnitModal(false)}
-                style={{ ...btnSecondary, flex: 1, padding: "12px" }}
+                style={{ 
+                  ...btnSecondary, 
+                  flex: window.innerWidth < 400 ? "1" : "0 0 auto",
+                  padding: "clamp(10px, 3vw, 12px)"
+                }}
               >
                 Cancel
               </button>
@@ -774,7 +882,12 @@ const ServiceModal = ({ service, onSave, onCancel }) => {
                 type="button"
                 onClick={handleAddCustomUnit}
                 disabled={addingUnit}
-                style={{ ...btnPrimary, flex: 1, padding: "12px", opacity: addingUnit ? 0.6 : 1 }}
+                style={{ 
+                  ...btnPrimary, 
+                  flex: window.innerWidth < 400 ? "1" : "0 0 auto",
+                  padding: "clamp(10px, 3vw, 12px)", 
+                  opacity: addingUnit ? 0.6 : 1 
+                }}
               >
                 {addingUnit ? "Saving..." : "Save Unit"}
               </button>

@@ -11,7 +11,7 @@ const pricingTierSchema = new mongoose.Schema({
 const invoiceItemSchema = new mongoose.Schema({
   service: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Service", 
+    ref: "Service",
     required: false,
   },
   description: {
@@ -27,6 +27,15 @@ const invoiceItemSchema = new mongoose.Schema({
   },
 
   quantity: { type: Number, required: true, min: 0 },
+
+  quantityDisplay: {
+    type: String,
+  },
+
+  //All quantity converted to base 100 specially for time and min calculations
+  quantityDecimal: {
+    type: Number,
+  },
 
   unitType: {
     type: String,
@@ -62,18 +71,23 @@ const taxSchema = new mongoose.Schema({
 });
 
 // Payment History Schema
-const paymentHistorySchema = new mongoose.Schema({
-  paymentDate: { type: Date, default: Date.now },
-  amountPaid: { type: Number, required: true, min: 0 },
-  paymentMode: {
-    type: String,
-    enum: ["cash", "bank-transfer", "upi", "cheque", "other"],
-    default: "cash",
+const paymentHistorySchema = new mongoose.Schema(
+  {
+    paymentDate: { type: Date, default: Date.now },
+    amountPaid: { type: Number, required: true, min: 0 },
+    paymentMode: {
+      type: String,
+      enum: ["cash", "bank-transfer", "upi", "cheque", "other"],
+      default: "cash",
+    },
+    notes: { type: String },
+    recordedBy: { type: String }, // Optional user info (admin or staff name)
+    balanceDueAfter: { type: Number, required: true }, // Remaining due after this payment
   },
-  notes: { type: String },
-  recordedBy: { type: String }, // Optional user info (admin or staff name)
-  balanceDueAfter: { type: Number, required: true }, // Remaining due after this payment
-});
+  {
+    timestamps: true, // adds createdAt & updatedAt
+  },
+);
 
 const invoiceSchema = new mongoose.Schema(
   {
@@ -170,24 +184,60 @@ const invoiceSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-invoiceSchema.pre("save", function(next) {
+export const convertTimeNotationToDecimalHours = (value) => {
+  const str = value.toString();
+
+  const [hours, minutes = "0"] = str.split(".");
+
+  const hrs = parseInt(hours || 0, 10);
+
+  const mins = parseInt(minutes || 0, 10);
+
+  if (mins >= 60) {
+    throw new Error("Minutes cannot exceed 59");
+  }
+
+  // Convert minutes from base-60 to decimal
+  return hrs + mins / 60;
+};
+
+export const isTimeBasedUnit = (unit) => {
+  if (!unit) return false;
+
+  const normalized = unit.toLowerCase().trim();
+
+  const timeUnits = [
+    "hour",
+    "hours",
+    "hr",
+    "hrs",
+    "minute",
+    "minutes",
+    "min",
+    "mins",
+  ];
+
+  return timeUnits.includes(normalized);
+};
+
+invoiceSchema.pre("save", function (next) {
   // Always calculate amount due
   this.amountDue = Math.max(0, this.totalAmount - this.amountPaid);
-  
+
   // Define statuses that should NEVER be auto-updated by payment changes
   const manualStatuses = ["cancelled", "overdue"];
-  
+
   // Only auto-update status if:
   // - Payment amount changed AND
-  // - Status is not being explicitly set in this save operation AND  
+  // - Status is not being explicitly set in this save operation AND
   // - Current status is not a manual status
-  const isPaymentChange = this.isModified('amountPaid');
-  const isStatusChange = this.isModified('status');
+  const isPaymentChange = this.isModified("amountPaid");
+  const isStatusChange = this.isModified("status");
   const isManualStatus = manualStatuses.includes(this.status);
-  
+
   if (isPaymentChange && !isStatusChange && !isManualStatus) {
     if (this.amountPaid <= 0) {
       this.status = this.isNew ? "draft" : "sent";
@@ -198,7 +248,7 @@ invoiceSchema.pre("save", function(next) {
       this.paidDate = this.paidDate || new Date();
     }
   }
-  
+
   next();
 });
 

@@ -19,16 +19,15 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import ItemLabel from "../components/ItemLabel";
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 axios.defaults.withCredentials = true;
 
@@ -37,6 +36,9 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const DEFAULT_UNITS = [
   "km",
   "hour",
+  "hours",
+  "hr",
+  "hrs",
   "day",
   "month",
   "item",
@@ -45,6 +47,16 @@ const DEFAULT_UNITS = [
   "service",
   "ton",
   "shift",
+];
+const TIME_UNITS = [
+  "hour",
+  "hours",
+  "hr",
+  "hrs",
+  "minute",
+  "minutes",
+  "min",
+  "mins",
 ];
 const pricingTypes = ["fixed", "flat", "tiered"];
 
@@ -65,7 +77,7 @@ const SortableItemWrapper = ({ id, children }) => {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : 1,
-    position: 'relative',
+    position: "relative",
   };
 
   return (
@@ -100,13 +112,60 @@ const EditInvoice = () => {
   const [addingUnit, setAddingUnit] = useState(false);
   const [isShippingDifferent, setIsShippingDifferent] = useState(false);
   const [allowedTemplates, setAllowedTemplates] = useState([]);
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
+
+  // Helper: Check if unit is time-based
+  const isTimeBasedUnit = (unitType) => {
+    return TIME_UNITS.includes(unitType?.toLowerCase().trim());
+  };
+
+  // Helper: Convert HH.MM notation to decimal hours
+  const convertTimeNotationToDecimal = (timeNotation) => {
+    const str = timeNotation?.toString() || "0";
+    const [hours, minutes = "0"] = str.split(".");
+    const hrs = parseInt(hours, 10) || 0;
+    const mins = parseInt(minutes, 10) || 0;
+    const validMins = Math.min(59, mins);
+    return hrs + validMins / 60;
+  };
+
+  // Helper: Format time notation with 2-digit minutes for display as string
+  const formatTimeNotation = (decimal) => {
+    const hours = Math.floor(decimal);
+    const minutes = Math.round((decimal - hours) * 60);
+    const validMinutes = Math.min(59, Math.max(0, minutes));
+    const paddedMinutes = validMinutes.toString().padStart(2, "0");
+    return `${hours}.${paddedMinutes}`;
+  };
+
+  // Helper: Convert decimal hours to numeric HH.MM format (legacy number)
+  const convertDecimalToTimeNotation = (decimal) => {
+    const hours = Math.floor(decimal);
+    const minutes = Math.round((decimal - hours) * 60);
+    const validMinutes = Math.min(59, minutes);
+    return parseFloat(`${hours}.${validMinutes}`);
+  };
+
+  // Helper: Convert hours and minutes to decimal
+  const convertHoursMinutesToDecimal = (hours, minutes) => {
+    return (hours || 0) + (minutes || 0) / 60;
+  };
+
+  // Convert decimal to hours and minutes for display
+  const convertDecimalToHoursMinutes = (decimal) => {
+    const hours = Math.floor(decimal);
+    const minutes = Math.round((decimal - hours) * 60);
+    return {
+      hours: hours,
+      minutes: Math.min(59, minutes),
+    };
+  };
 
   const toggleCollapse = (id) => {
     setCollapsedItems((prev) =>
@@ -226,7 +285,31 @@ const EditInvoice = () => {
       setNewUnitShortCode("");
       setShowAddUnitModal(true);
     } else {
-      handleItemChange(index, "unitType", value);
+      const isTimeUnit = isTimeBasedUnit(value);
+      const currentItem = formData.items[index];
+
+      if (isTimeUnit && !isTimeBasedUnit(currentItem.unitType)) {
+        // Switching to time unit - convert quantityDecimal to HH.MM format
+        const decimalQty = currentItem.quantityDecimal || 1;
+        const displayQuantityNumber = convertDecimalToTimeNotation(decimalQty);
+        const { hours, minutes } = convertDecimalToHoursMinutes(decimalQty);
+
+        handleItemChange(index, "unitType", value);
+        handleItemChange(index, "displayQuantity", displayQuantityNumber);
+        handleItemChange(index, "quantityDecimal", decimalQty);
+        handleItemChange(index, "timeHours", hours);
+        handleItemChange(index, "timeMinutes", minutes);
+      } else if (!isTimeUnit && isTimeBasedUnit(currentItem.unitType)) {
+        // Switching from time to non-time - convert to simple number
+        const decimalQty = currentItem.quantityDecimal || 1;
+        handleItemChange(index, "unitType", value);
+        handleItemChange(index, "displayQuantity", decimalQty);
+        handleItemChange(index, "quantityDecimal", decimalQty);
+        handleItemChange(index, "timeHours", decimalQty);
+        handleItemChange(index, "timeMinutes", 0);
+      } else {
+        handleItemChange(index, "unitType", value);
+      }
     }
   };
 
@@ -244,7 +327,7 @@ const EditInvoice = () => {
       });
       setCustomUnits(res.data.customUnits);
       if (addUnitForIndex !== null) {
-        handleItemChange(addUnitForIndex, "unitType", trimmed);
+        handleUnitChange(addUnitForIndex, trimmed);
       }
       setShowAddUnitModal(false);
       toast.success("Custom unit added!");
@@ -259,23 +342,36 @@ const EditInvoice = () => {
     try {
       const res = await axios.get(`${BASE_URL}/invoices/${id}`);
       const invoice = res.data;
+      console.log(invoice);
 
       let editableInvoiceNumber = invoice.invoiceNumber || "";
       const currentPrefix = prefs?.prefix || invoicePreferences.prefix;
       const currentSuffix = prefs?.suffix || invoicePreferences.suffix;
-      const currentAddressBehavior = prefs?.addressBehavior || invoicePreferences.addressBehavior;
+      const currentAddressBehavior =
+        prefs?.addressBehavior || invoicePreferences.addressBehavior;
 
       if (currentPrefix && editableInvoiceNumber.startsWith(currentPrefix)) {
-        editableInvoiceNumber = editableInvoiceNumber.slice(currentPrefix.length);
+        editableInvoiceNumber = editableInvoiceNumber.slice(
+          currentPrefix.length,
+        );
       }
       if (currentSuffix && editableInvoiceNumber.endsWith(currentSuffix)) {
-        editableInvoiceNumber = editableInvoiceNumber.slice(0, -currentSuffix.length);
+        editableInvoiceNumber = editableInvoiceNumber.slice(
+          0,
+          -currentSuffix.length,
+        );
       }
 
       let shippingAddress = invoice.shippingAddress || "";
-      if (!shippingAddress && currentAddressBehavior === "always_both" && invoice.client) {
+      if (
+        !shippingAddress &&
+        currentAddressBehavior === "always_both" &&
+        invoice.client
+      ) {
         const clientList = clientsData || clients;
-        const selectedClient = clientList.find((c) => c._id === (invoice.client._id || invoice.client));
+        const selectedClient = clientList.find(
+          (c) => c._id === (invoice.client._id || invoice.client),
+        );
         if (selectedClient) {
           const addr = selectedClient.address;
           shippingAddress = [
@@ -304,32 +400,88 @@ const EditInvoice = () => {
       let matchedBankDetails = invoice.bankDetails || null;
       if (matchedBankDetails && bankAccountsList.length > 0) {
         if (matchedBankDetails._id) {
-          const found = bankAccountsList.find(b => b._id === matchedBankDetails._id);
-          if (found) matchedBankDetails = found;
-        }
-        else if (matchedBankDetails.accountNumber) {
-          const found = bankAccountsList.find(b =>
-            b.accountNumber === matchedBankDetails.accountNumber ||
-            b.accountNumber?.slice(-4) === matchedBankDetails.accountNumber?.slice(-4)
+          const found = bankAccountsList.find(
+            (b) => b._id === matchedBankDetails._id,
           );
           if (found) matchedBankDetails = found;
-        }
-        else if (!matchedBankDetails._id) {
+        } else if (matchedBankDetails.accountNumber) {
+          const found = bankAccountsList.find(
+            (b) =>
+              b.accountNumber === matchedBankDetails.accountNumber ||
+              b.accountNumber?.slice(-4) ===
+                matchedBankDetails.accountNumber?.slice(-4),
+          );
+          if (found) matchedBankDetails = found;
+        } else if (!matchedBankDetails._id) {
           matchedBankDetails = { ...matchedBankDetails, _id: null };
         }
       }
 
+      // Process items to handle time-based units with all three fields
+      const processedItems = (invoice.items || []).map((item) => {
+        const isTimeUnit = isTimeBasedUnit(item.unitType);
+        let quantityDecimal = item.quantityDecimal || item.quantity || 1;
+        let displayQuantityNumber = item.quantity || 1;
+        let quantityDisplayString = item.quantityDisplay || null;
+        let timeHours = 1;
+        let timeMinutes = 0;
+
+        if (isTimeUnit) {
+          if (item.quantityDecimal) {
+            quantityDecimal = item.quantityDecimal;
+            displayQuantityNumber = item.quantity;
+            quantityDisplayString =
+              item.quantityDisplay || formatTimeNotation(quantityDecimal);
+            const { hours, minutes } =
+              convertDecimalToHoursMinutes(quantityDecimal);
+            timeHours = hours;
+            timeMinutes = minutes;
+          } else {
+            // Fallback: convert from quantity (HH.MM) to decimal
+            quantityDecimal = convertTimeNotationToDecimal(item.quantity);
+            displayQuantityNumber = item.quantity;
+            quantityDisplayString =
+              item.quantityDisplay || formatTimeNotation(quantityDecimal);
+            const { hours, minutes } =
+              convertDecimalToHoursMinutes(quantityDecimal);
+            timeHours = hours;
+            timeMinutes = minutes;
+          }
+        } else {
+          quantityDecimal = item.quantityDecimal || item.quantity || 1;
+          displayQuantityNumber = quantityDecimal;
+          quantityDisplayString =
+            item.quantityDisplay || quantityDecimal.toString();
+          timeHours = quantityDecimal;
+          timeMinutes = 0;
+        }
+
+        return {
+          ...item,
+          id: item._id || generateId(),
+          quantity: displayQuantityNumber, // Legacy number format
+          quantityDisplay: quantityDisplayString, // String format for display
+          quantityDecimal: quantityDecimal, // Decimal for calculations
+          timeHours: timeHours,
+          timeMinutes: timeMinutes,
+        };
+      });
+
       setFormData({
         invoiceNumber: editableInvoiceNumber,
-        invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split("T")[0] : "",
+        invoiceDate: invoice.invoiceDate
+          ? new Date(invoice.invoiceDate).toISOString().split("T")[0]
+          : "",
         client: invoice.client?._id || invoice.client || "",
         shippingAddress: shippingAddress,
-        items: (invoice.items || []).map((item) => ({ ...item, id: item.id || generateId() })),
+        items: processedItems,
         discount: invoice.discount || "",
         discountType: invoice.discountType || "fixed",
         taxes: invoice.taxes || [],
         notes: invoice.notes || "",
-        dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split("T")[0] : "",
+        dueDate: invoice.dueDate
+          ? new Date(invoice.dueDate).toISOString().split("T")[0]
+          : "",
         status: invoice.status || "draft",
         bankDetails: matchedBankDetails,
         includeLogo: invoice.includeLogo !== false,
@@ -385,6 +537,63 @@ const EditInvoice = () => {
     }));
   };
 
+  // Handle time quantity change for hours and minutes
+  const handleTimeChange = (index, type, value) => {
+    const hours = type === "hours" ? value : formData.items[index].timeHours;
+    const minutes =
+      type === "minutes" ? value : formData.items[index].timeMinutes;
+
+    // Validate minutes (0-59)
+    const validMinutes = Math.min(59, Math.max(0, minutes || 0));
+    const validHours = Math.max(0, hours || 0);
+
+    // Convert to decimal for calculations
+    const decimalQuantity = convertHoursMinutesToDecimal(
+      validHours,
+      validMinutes,
+    );
+
+    // Format as HH.MM for display
+    const displayQuantityNumber = convertDecimalToTimeNotation(decimalQuantity);
+    const displayQuantityString = formatTimeNotation(decimalQuantity);
+
+    setFormData((prev) => ({
+      ...prev,
+      items: prev.items.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              timeHours: validHours,
+              timeMinutes: validMinutes,
+              quantityDecimal: decimalQuantity,
+              quantity: displayQuantityNumber,
+              quantityDisplay: displayQuantityString,
+            }
+          : item,
+      ),
+    }));
+  };
+
+  // Handle non-time quantity change
+  const handleNonTimeQuantityChange = (index, value) => {
+    const numValue = Number(value) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      items: prev.items.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              quantityDecimal: numValue,
+              quantity: numValue,
+              quantityDisplay: numValue.toString(),
+              timeHours: numValue,
+              timeMinutes: 0,
+            }
+          : item,
+      ),
+    }));
+  };
+
   const handleServiceChange = (index, serviceId) => {
     if (!serviceId) {
       setFormData((prev) => ({
@@ -396,6 +605,8 @@ const EditInvoice = () => {
                 service: "",
                 description: "",
                 quantity: 1,
+                quantityDisplay: "1",
+                quantityDecimal: 1,
                 unitType: "item",
                 pricingType: "fixed",
                 baseRate: 0,
@@ -403,14 +614,35 @@ const EditInvoice = () => {
                 pricingTiers: [],
                 notes: "",
                 customItem: true,
+                timeHours: 1,
+                timeMinutes: 0,
               }
-            : item
+            : item,
         ),
       }));
       return;
     }
     const selectedService = services.find((s) => s._id === serviceId);
     if (selectedService) {
+      const isTimeUnit = isTimeBasedUnit(selectedService.unitType);
+      const initialQuantity = selectedService.quantity || 1;
+
+      let quantityDecimal = initialQuantity;
+      let displayQuantityNumber = initialQuantity;
+      let displayQuantityString = initialQuantity.toString();
+      let timeHours = 1;
+      let timeMinutes = 0;
+
+      if (isTimeUnit) {
+        quantityDecimal = convertTimeNotationToDecimal(initialQuantity);
+        displayQuantityNumber = initialQuantity;
+        displayQuantityString = formatTimeNotation(quantityDecimal);
+        const { hours, minutes } =
+          convertDecimalToHoursMinutes(quantityDecimal);
+        timeHours = hours;
+        timeMinutes = minutes;
+      }
+
       setFormData((prev) => ({
         ...prev,
         items: prev.items.map((item, i) =>
@@ -425,6 +657,11 @@ const EditInvoice = () => {
                 pricingType: selectedService.pricingType,
                 baseRate: selectedService.baseRate || 0,
                 pricingTiers: selectedService.pricingTiers || [],
+                quantityDecimal: quantityDecimal,
+                quantity: displayQuantityNumber,
+                quantityDisplay: displayQuantityString,
+                timeHours: timeHours,
+                timeMinutes: timeMinutes,
               }
             : item,
         ),
@@ -441,12 +678,17 @@ const EditInvoice = () => {
           id: generateId(),
           service: "",
           description: "",
+          hsnCode: "",
           quantity: 1,
+          quantityDisplay: "1",
+          quantityDecimal: 1,
           unitType: "item",
           pricingType: "fixed",
           baseRate: 0,
           pricingTiers: [],
           notes: "",
+          timeHours: 1,
+          timeMinutes: 0,
         },
       ],
     }));
@@ -478,7 +720,7 @@ const EditInvoice = () => {
       setFormData((prev) => {
         const oldIndex = prev.items.findIndex((item) => item.id === active.id);
         const newIndex = prev.items.findIndex((item) => item.id === over.id);
-        
+
         return {
           ...prev,
           items: arrayMove(prev.items, oldIndex, newIndex),
@@ -590,7 +832,8 @@ const EditInvoice = () => {
   };
 
   const calcTieredAmount = (item) => {
-    const qty = Number(item.quantity) || 0;
+    // Use quantityDecimal for calculations
+    const qty = Number(item.quantityDecimal) || 0;
     if (!item.pricingTiers?.length || qty <= 0) return 0;
 
     const tiers = [...item.pricingTiers]
@@ -650,7 +893,9 @@ const EditInvoice = () => {
       ) {
         baseAmount = calcTieredAmount(item);
       } else {
-        baseAmount = (item.quantity || 0) * (item.baseRate || 0);
+        // Use quantityDecimal for calculation
+        const quantityDecimal = item.quantityDecimal || 0;
+        baseAmount = quantityDecimal * (item.baseRate || 0);
       }
       subtotal += baseAmount;
       return { ...item, subtotal: baseAmount };
@@ -733,7 +978,7 @@ const EditInvoice = () => {
           errors[`item_${index}_description`] = "Description is required";
           isValid = false;
         }
-        if (!item.quantity || item.quantity < 0) {
+        if (!item.quantityDecimal || item.quantityDecimal < 0) {
           errors[`item_${index}_quantity`] = "Quantity is required";
           isValid = false;
         }
@@ -766,12 +1011,48 @@ const EditInvoice = () => {
       shippingAddress: finalShippingAddress,
       invoiceNumber: `${invoicePreferences.prefix}${payload.invoiceNumber}${invoicePreferences.suffix}`,
       items: payload.items.map((item) => {
-        const cleanedItem = { ...item };
-        delete cleanedItem.id;
-        if (!cleanedItem.service) delete cleanedItem.service;
+        const isTimeUnit = isTimeBasedUnit(item.unitType);
+
+        // Prepare the item for backend with all three quantity fields
+        const cleanedItem = {
+          description: item.description,
+          hsnCode: item.hsnCode || undefined,
+          unitType: item.unitType,
+          pricingType: item.pricingType,
+          baseRate: item.baseRate,
+          pricingTiers: item.pricingTiers,
+          notes: item.notes || undefined,
+        };
+
+        if (isTimeUnit) {
+          // For time units: send all three fields
+          cleanedItem.quantity = item.quantity; // Legacy number format (e.g., 4.3)
+          cleanedItem.quantityDisplay = item.quantityDisplay; // Display string (e.g., "4.30")
+          cleanedItem.quantityDecimal = item.quantityDecimal; // Decimal value (e.g., 4.5)
+        } else {
+          // For non-time units: all three fields are the same
+          cleanedItem.quantity = item.quantityDecimal;
+          cleanedItem.quantityDisplay = item.quantityDecimal.toString();
+          cleanedItem.quantityDecimal = item.quantityDecimal;
+        }
+
+        // Only include service if it exists
+        if (item.service) {
+          cleanedItem.service = item.service;
+        }
+
+        // Remove undefined values
+        Object.keys(cleanedItem).forEach((key) => {
+          if (cleanedItem[key] === undefined) {
+            delete cleanedItem[key];
+          }
+        });
+
         return cleanedItem;
       }),
-      customFields: (payload.customFields || []).filter(f => f.label?.trim() && f.value?.trim()),
+      customFields: (payload.customFields || []).filter(
+        (f) => f.label?.trim() && f.value?.trim(),
+      ),
     };
   };
 
@@ -787,16 +1068,22 @@ const EditInvoice = () => {
 
     try {
       const payload = cleanPayload(formData);
+      console.log(
+        "Updating invoice with payload:",
+        JSON.stringify(payload, null, 2),
+      );
       await axios.patch(`${BASE_URL}/invoices/update-invoice/${id}`, payload);
       toast.success("Invoice updated successfully!");
       navigate("/invoices");
     } catch (error) {
-      toast.error("Failed to update invoice");
+      console.error("Error updating invoice:", error);
+      toast.error(error.response?.data?.message || "Failed to update invoice");
     } finally {
       setLoading(false);
     }
   };
 
+  // Styles remain the same
   const cardStyle = {
     background: "var(--surface, #FFFFFF)",
     borderRadius: "20px",
@@ -834,7 +1121,7 @@ const EditInvoice = () => {
     justifyContent: "center",
     padding: "12px 24px",
     borderRadius: "12px",
-    background: "var(--gradient-primary)",
+    background: "linear-gradient(135deg, #0071E3 0%, #005BB5 100%)",
     color: "#fff",
     fontSize: "14px",
     fontWeight: 600,
@@ -855,7 +1142,7 @@ const EditInvoice = () => {
 
   const focusProps = {
     onFocus: (e) => {
-      e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+      e.currentTarget.style.borderColor = "#0071E3";
       e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
     },
     onBlur: (e) => {
@@ -867,7 +1154,7 @@ const EditInvoice = () => {
   const errorFocusProps = (hasError) => ({
     onFocus: (e) => {
       if (!hasError) {
-        e.currentTarget.style.borderColor = "var(--accent, #0071E3)";
+        e.currentTarget.style.borderColor = "#0071E3";
         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0, 113, 227, 0.12)";
       } else {
         e.currentTarget.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.12)";
@@ -897,7 +1184,7 @@ const EditInvoice = () => {
             width: "48px",
             height: "48px",
             border: "4px solid rgba(0, 113, 227, 0.15)",
-            borderTopColor: "var(--accent, #0071E3)",
+            borderTopColor: "#0071E3",
             borderRadius: "50%",
             animation: "spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite",
           }}
@@ -916,7 +1203,7 @@ const EditInvoice = () => {
       style={{
         maxWidth: "1000px",
         margin: "0 auto",
-        padding: "20px 16px 60px 16px",
+        padding: "20px 0px 60px 0px",
       }}
     >
       {/* Header */}
@@ -985,7 +1272,7 @@ const EditInvoice = () => {
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
-        {/* Invoice Details Card */}
+        {/* Invoice Details Card - Same as original */}
         <div style={cardStyle}>
           <div
             style={{
@@ -1294,17 +1581,25 @@ const EditInvoice = () => {
             Invoice Items
           </h2>
 
-          <DndContext 
+          <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext 
-              items={formData.items.map(i => i.id)}
+            <SortableContext
+              items={formData.items.map((i) => i.id)}
               strategy={verticalListSortingStrategy}
             >
               {formData.items.map((item, index) => {
                 const isCollapsed = collapsedItems.includes(item.id);
+                const isTimeUnit = isTimeBasedUnit(item.unitType);
+
+                // Get display quantity for collapsed view
+                const displayQtyForCollapsed = isTimeUnit
+                  ? item.quantityDisplay ||
+                    formatTimeNotation(item.quantityDecimal)
+                  : item.quantity;
+
                 return (
                   <SortableItemWrapper key={item.id} id={item.id}>
                     {(attributes, listeners) => (
@@ -1327,7 +1622,9 @@ const EditInvoice = () => {
                             borderBottom: isCollapsed
                               ? "none"
                               : "1px solid var(--border-light, #F0F0F2)",
-                            borderRadius: isCollapsed ? "20px" : "20px 20px 0 0",
+                            borderRadius: isCollapsed
+                              ? "20px"
+                              : "20px 20px 0 0",
                             transition: "all 200ms ease",
                             display: "flex",
                             alignItems: "center",
@@ -1335,11 +1632,40 @@ const EditInvoice = () => {
                             gap: "12px",
                           }}
                         >
-                          <div style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div {...attributes} {...listeners} style={{ cursor: "grab", display: "flex", alignItems: "center", color: "var(--text-tertiary)", padding: "4px" }}>
+                          <div
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              overflow: "hidden",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              {...attributes}
+                              {...listeners}
+                              style={{
+                                cursor: "grab",
+                                display: "flex",
+                                alignItems: "center",
+                                color: "var(--text-tertiary)",
+                                padding: "4px",
+                              }}
+                            >
                               <GripVertical size={18} />
                             </div>
-                            <div onClick={() => toggleCollapse(item.id)} style={{ cursor: "pointer", flex: 1, display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                            <div
+                              onClick={() => toggleCollapse(item.id)}
+                              style={{
+                                cursor: "pointer",
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                minWidth: 0,
+                              }}
+                            >
                               <span
                                 style={{
                                   fontSize: "14px",
@@ -1362,755 +1688,889 @@ const EditInvoice = () => {
                                   minWidth: 0,
                                 }}
                                 title={item.description || "New Item"}
-                      >
-                        {item.description || (
-                          <span
-                            style={{
-                              color: "var(--text-tertiary, #86868B)",
-                              fontStyle: "italic",
-                            }}
-                          >
-                            New Item
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    {isCollapsed && item.quantity > 0 && (
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--text-secondary, #6E6E73)",
-                          marginTop: "4px",
-                        }}
-                      >
-                        Qty: {item.quantity}{" "}
-                        {item.unitType !== "item" ? item.unitType : ""}
-                      </div>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      onClick={() => toggleCollapse(item.id)}
-                      style={{
-                        cursor: "pointer",
-                        fontSize: "15px",
-                        fontWeight: 600,
-                        color: "var(--text-primary)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
-                    </span>
-                    {isCollapsed && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          duplicateItem(index);
-                        }}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "var(--text-tertiary, #86868B)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          padding: "6px",
-                          borderRadius: "6px",
-                          transition: "all 150ms ease"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = "var(--text-primary, #1D1D1F)";
-                          e.currentTarget.style.background = "var(--border-light, #F0F0F2)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color = "var(--text-tertiary, #86868B)";
-                          e.currentTarget.style.background = "transparent";
-                        }}
-                        title="Duplicate Item"
-                      >
-                        <Copy size={16} />
-                      </button>
-                    )}
-                    <div
-                      onClick={() => toggleCollapse(item.id)}
-                      style={{
-                        cursor: "pointer",
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "50%",
-                        background: "var(--surface, #FFFFFF)",
-                        border: "1px solid var(--border, #E5E5E7)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "transform 200ms ease",
-                      }}
-                    >
-                      {isCollapsed ? (
-                        <ChevronDown size={14} />
-                      ) : (
-                        <ChevronUp size={14} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Content */}
-                {!isCollapsed && (
-                  <div
-                    style={{
-                      padding: "16px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "16px",
-                      background: "var(--surface, #FFFFFF)",
-                      borderRadius: "0 0 20px 20px",
-                    }}
-                  >
-                    {/* Service Type */}
-                    <div>
-                      <label
-                        style={{
-                          ...labelStyle,
-                          fontSize: "11px",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        Service
-                      </label>
-                      <select
-                        value={item.service || ""}
-                        onChange={(e) =>
-                          handleServiceChange(index, e.target.value)
-                        }
-                        style={{
-                          ...inputStyle,
-                          marginTop: 0,
-                          padding: "10px 12px",
-                        }}
-                        {...focusProps}
-                      >
-                        <option value="">Custom (Manual)</option>
-                        {services.map((s) => (
-                          <option key={s._id} value={s._id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Description Field */}
-                    <div>
-                      <label
-                        style={{
-                          ...labelStyle,
-                          fontSize: "11px",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        Item Description{" "}
-                        <span style={{ color: "#DC2626" }}>*</span>
-                      </label>
-                      <input
-                        placeholder="e.g. Website Design, Server Hosting..."
-                        value={item.description}
-                        onChange={(e) =>
-                          handleItemChange(index, "description", e.target.value)
-                        }
-                        style={{
-                          ...inputStyle,
-                          marginTop: 0,
-                          padding: "10px 12px",
-                          borderColor: validationErrors[
-                            `item_${index}_description`
-                          ]
-                            ? "#DC2626"
-                            : "var(--border, #E5E5E7)",
-                        }}
-                        {...errorFocusProps(
-                          validationErrors[`item_${index}_description`],
-                        )}
-                      />
-                    </div>
-
-                    {/* Qty & Unit Row */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "12px",
-                      }}
-                    >
-                      <div>
-                        <label
-                          style={{
-                            ...labelStyle,
-                            fontSize: "11px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          Qty <span style={{ color: "#DC2626" }}>*</span>
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="0"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleItemChange(index, "quantity", +e.target.value)
-                          }
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 12px",
-                            borderColor: validationErrors[
-                              `item_${index}_quantity`
-                            ]
-                              ? "#DC2626"
-                              : "var(--border, #E5E5E7)",
-                          }}
-                          {...errorFocusProps(
-                            validationErrors[`item_${index}_quantity`],
-                          )}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            ...labelStyle,
-                            fontSize: "11px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          Unit
-                        </label>
-                        <select
-                          value={
-                            DEFAULT_UNITS.includes(item.unitType) ||
-                            customUnits.some((u) => u.name === item.unitType)
-                              ? item.unitType
-                              : item.unitType
-                          }
-                          onChange={(e) =>
-                            handleUnitChange(index, e.target.value)
-                          }
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 12px",
-                          }}
-                          {...focusProps}
-                        >
-                          <optgroup label="Default Units">
-                            {DEFAULT_UNITS.map((u) => (
-                              <option key={u} value={u}>
-                                {u}
-                              </option>
-                            ))}
-                          </optgroup>
-                          {customUnits.length > 0 && (
-                            <optgroup label="Custom Units">
-                              {customUnits.map((u) => (
-                                <option key={u._id} value={u.name}>
-                                  {u.name}
-                                  {u.shortCode ? ` (${u.shortCode})` : ""}
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                          <optgroup label="">
-                            <option value="__add_custom__">
-                              + Add Custom Unit
-                            </option>
-                          </optgroup>
-                          {item.unitType &&
-                            !DEFAULT_UNITS.includes(item.unitType) &&
-                            !customUnits.some(
-                              (u) => u.name === item.unitType,
-                            ) &&
-                            item.unitType !== "__add_custom__" && (
-                              <option value={item.unitType} hidden>
-                                {item.unitType}
-                              </option>
+                              >
+                                {item.description || (
+                                  <span
+                                    style={{
+                                      color: "var(--text-tertiary, #86868B)",
+                                      fontStyle: "italic",
+                                    }}
+                                  >
+                                    New Item
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            {isCollapsed && (
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "var(--text-secondary, #6E6E73)",
+                                }}
+                              >
+                                Qty: {displayQtyForCollapsed} {item.unitType}
+                              </div>
                             )}
-                        </select>
-                      </div>
-                    </div>
+                          </div>
 
-                    {/* Pricing Type & HSN Row */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "12px",
-                      }}
-                    >
-                      <div>
-                        <label
-                          style={{
-                            ...labelStyle,
-                            fontSize: "11px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          Pricing Type
-                        </label>
-                        <select
-                          value={item.pricingType}
-                          onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              "pricingType",
-                              e.target.value,
-                            )
-                          }
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 12px",
-                          }}
-                          {...focusProps}
-                        >
-                          {pricingTypes.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            ...labelStyle,
-                            fontSize: "11px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          HSN/SAC <span style={{ fontWeight: 400 }}>(opt)</span>
-                        </label>
-                        <input
-                          placeholder="-"
-                          value={item.hsnCode || ""}
-                          onChange={(e) =>
-                            handleItemChange(index, "hsnCode", e.target.value)
-                          }
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 12px",
-                          }}
-                          {...focusProps}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Rate & Item Total */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "12px",
-                      }}
-                    >
-                      {item.pricingType !== "tiered" ? (
-                        <div>
-                          <label
-                            style={{
-                              ...labelStyle,
-                              fontSize: "11px",
-                              marginBottom: "6px",
-                            }}
-                          >
-                            Rate (Rs.){" "}
-                            <span style={{ color: "#DC2626" }}>*</span>
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="0.00"
-                            value={item.baseRate}
-                            onChange={(e) =>
-                              handleItemChange(
-                                index,
-                                "baseRate",
-                                +e.target.value,
-                              )
-                            }
-                            style={{
-                              ...inputStyle,
-                              marginTop: 0,
-                              padding: "10px 12px",
-                              borderColor: validationErrors[
-                                `item_${index}_baseRate`
-                              ]
-                                ? "#DC2626"
-                                : "var(--border, #E5E5E7)",
-                            }}
-                            {...errorFocusProps(
-                              validationErrors[`item_${index}_baseRate`],
-                            )}
-                          />
-                        </div>
-                      ) : (
-                        <div>
-                          <label
-                            style={{
-                              ...labelStyle,
-                              fontSize: "11px",
-                              marginBottom: "6px",
-                            }}
-                          >
-                            Rate
-                          </label>
                           <div
                             style={{
-                              ...inputStyle,
-                              marginTop: 0,
-                              padding: "10px 12px",
-                              background: "var(--bg-page, #F7F7F8)",
-                              color: "var(--text-secondary)",
-                              textAlign: "center",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              flexShrink: 0,
                             }}
                           >
-                            Tiered Pricing
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <label
-                          style={{
-                            ...labelStyle,
-                            fontSize: "11px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          Item Total
-                        </label>
-                        <div
-                          style={{
-                            ...inputStyle,
-                            marginTop: 0,
-                            padding: "10px 12px",
-                            background: "var(--bg-page, #F7F7F8)",
-                            fontWeight: 600,
-                            textAlign: "right",
-                          }}
-                        >
-                          Rs. {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions Row */}
-                    <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
-                      <button
-                        type="button"
-                        onClick={() => duplicateItem(index)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                          color: "var(--text-primary, #1D1D1F)",
-                          background: "var(--surface-secondary, #F5F5F7)",
-                          border: "1px solid var(--border, #E5E5E7)",
-                          cursor: "pointer",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          padding: "10px",
-                          borderRadius: "12px",
-                          transition: "all 150ms ease",
-                          flex: 1,
-                        }}
-                      >
-                        <Copy size={16} /> Duplicate
-                      </button>
-
-                      {formData.items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "6px",
-                            color: "#DC2626",
-                            background: "#FEF2F2",
-                            border: "1px solid #FEE2E2",
-                            cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: 500,
-                            padding: "10px",
-                            borderRadius: "12px",
-                            transition: "all 150ms ease",
-                            flex: 1,
-                          }}
-                        >
-                          <Trash2 size={16} /> Remove Item
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Validation errors summary */}
-                    {(validationErrors[`item_${index}_description`] ||
-                      validationErrors[`item_${index}_quantity`] ||
-                      validationErrors[`item_${index}_baseRate`]) && (
-                      <div
-                        style={{
-                          color: "#DC2626",
-                          fontSize: "11px",
-                          paddingLeft: "4px",
-                        }}
-                      >
-                        Please ensure description, valid quantity, and rate are
-                        provided.
-                      </div>
-                    )}
-
-                    {/* Tiered Pricing Config */}
-                    {item.pricingType === "tiered" && (
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          padding: "12px",
-                          background: "var(--bg-page, #F7F7F8)",
-                          borderRadius: "12px",
-                          border: "1px solid var(--border-light, #F0F0F2)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "12px",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                          }}
-                        >
-                          <h4
-                            style={{
-                              fontSize: "13px",
-                              fontWeight: 600,
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            Tiered Rates
-                          </h4>
-                          <button
-                            type="button"
-                            onClick={() => addTier(index)}
-                            style={{
-                              ...btnSecondary,
-                              padding: "6px 12px",
-                              fontSize: "12px",
-                              borderRadius: "8px",
-                            }}
-                          >
-                            <Plus size={12} style={{ marginRight: "4px" }} />{" "}
-                            Add Tier
-                          </button>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "8px",
-                          }}
-                        >
-                          {item.pricingTiers.map((tier, tIndex) => (
-                            <div
-                              key={tIndex}
+                            <span
+                              onClick={() => toggleCollapse(item.id)}
                               style={{
-                                background: "#fff",
-                                padding: "10px",
-                                borderRadius: "10px",
-                                border: "1px solid var(--border, #E5E5E7)",
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "10px",
-                                alignItems: "center",
+                                cursor: "pointer",
+                                fontSize: "15px",
+                                fontWeight: 600,
+                                color: "var(--text-primary)",
+                                fontVariantNumeric: "tabular-nums",
                               }}
                             >
-                              <div
+                              Rs.{" "}
+                              {(Itemtotals[index]?.subtotal || 0).toFixed(2)}
+                            </span>
+                            {isCollapsed && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  duplicateItem(index);
+                                }}
                                 style={{
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "var(--text-tertiary, #86868B)",
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "8px",
-                                  flex: "2 1 min(200px, 100%)",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  padding: "6px",
+                                  borderRadius: "6px",
+                                  transition: "all 150ms ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color =
+                                    "var(--text-primary, #1D1D1F)";
+                                  e.currentTarget.style.background =
+                                    "var(--border-light, #F0F0F2)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color =
+                                    "var(--text-tertiary, #86868B)";
+                                  e.currentTarget.style.background =
+                                    "transparent";
+                                }}
+                                title="Duplicate Item"
+                              >
+                                <Copy size={16} />
+                              </button>
+                            )}
+                            <div
+                              onClick={() => toggleCollapse(item.id)}
+                              style={{
+                                cursor: "pointer",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                background: "var(--surface, #FFFFFF)",
+                                border: "1px solid var(--border, #E5E5E7)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "transform 200ms ease",
+                              }}
+                            >
+                              {isCollapsed ? (
+                                <ChevronDown size={14} />
+                              ) : (
+                                <ChevronUp size={14} />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Form Content - Same as before but using quantity fields */}
+                        {!isCollapsed && (
+                          <div
+                            style={{
+                              padding: "16px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "16px",
+                              background: "var(--surface, #FFFFFF)",
+                              borderRadius: "0 0 20px 20px",
+                            }}
+                          >
+                            {/* Service Type */}
+                            <div>
+                              <label
+                                style={{
+                                  ...labelStyle,
+                                  fontSize: "11px",
+                                  marginBottom: "6px",
                                 }}
                               >
-                                <input
-                                  type="number"
-                                  placeholder="Min"
-                                  value={tier.minValue}
-                                  onChange={(e) =>
-                                    handleTierChange(
-                                      index,
-                                      tIndex,
-                                      "minValue",
-                                      +e.target.value,
-                                    )
-                                  }
+                                Service
+                              </label>
+                              <select
+                                value={item.service || ""}
+                                onChange={(e) =>
+                                  handleServiceChange(index, e.target.value)
+                                }
+                                style={{
+                                  ...inputStyle,
+                                  marginTop: 0,
+                                  padding: "10px 12px",
+                                }}
+                                {...focusProps}
+                              >
+                                <option value="">Custom (Manual)</option>
+                                {services.map((s) => (
+                                  <option key={s._id} value={s._id}>
+                                    {s.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Description Field */}
+                            <div>
+                              <label
+                                style={{
+                                  ...labelStyle,
+                                  fontSize: "11px",
+                                  marginBottom: "6px",
+                                }}
+                              >
+                                Item Description{" "}
+                                <span style={{ color: "#DC2626" }}>*</span>
+                              </label>
+                              <input
+                                placeholder="e.g. Website Design, Server Hosting..."
+                                value={item.description}
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "description",
+                                    e.target.value,
+                                  )
+                                }
+                                style={{
+                                  ...inputStyle,
+                                  marginTop: 0,
+                                  padding: "10px 12px",
+                                  borderColor: validationErrors[
+                                    `item_${index}_description`
+                                  ]
+                                    ? "#DC2626"
+                                    : "var(--border, #E5E5E7)",
+                                }}
+                                {...errorFocusProps(
+                                  validationErrors[`item_${index}_description`],
+                                )}
+                              />
+                            </div>
+
+                            {/* Qty & Unit Row */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: isTimeUnit
+                                  ? "1fr 1fr 1fr"
+                                  : "1fr 1fr",
+                                gap: "12px",
+                              }}
+                            >
+                              {isTimeUnit ? (
+                                <>
+                                  <div>
+                                    <label
+                                      style={{
+                                        ...labelStyle,
+                                        fontSize: "11px",
+                                        marginBottom: "6px",
+                                      }}
+                                    >
+                                      Hours
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="1"
+                                      placeholder="0"
+                                      value={item.timeHours || 0}
+                                      onChange={(e) =>
+                                        handleTimeChange(
+                                          index,
+                                          "hours",
+                                          parseInt(e.target.value) || 0,
+                                        )
+                                      }
+                                      style={{
+                                        ...inputStyle,
+                                        marginTop: 0,
+                                        padding: "10px 12px",
+                                        borderColor: validationErrors[
+                                          `item_${index}_quantity`
+                                        ]
+                                          ? "#DC2626"
+                                          : "var(--border, #E5E5E7)",
+                                      }}
+                                      {...errorFocusProps(
+                                        validationErrors[
+                                          `item_${index}_quantity`
+                                        ],
+                                      )}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      style={{
+                                        ...labelStyle,
+                                        fontSize: "11px",
+                                        marginBottom: "6px",
+                                      }}
+                                    >
+                                      Minutes
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="59"
+                                      step="1"
+                                      placeholder="0"
+                                      value={item.timeMinutes || 0}
+                                      onChange={(e) => {
+                                        let mins =
+                                          parseInt(e.target.value) || 0;
+                                        mins = Math.min(59, Math.max(0, mins));
+                                        handleTimeChange(
+                                          index,
+                                          "minutes",
+                                          mins,
+                                        );
+                                      }}
+                                      style={{
+                                        ...inputStyle,
+                                        marginTop: 0,
+                                        padding: "10px 12px",
+                                        borderColor: validationErrors[
+                                          `item_${index}_quantity`
+                                        ]
+                                          ? "#DC2626"
+                                          : "var(--border, #E5E5E7)",
+                                      }}
+                                      {...errorFocusProps(
+                                        validationErrors[
+                                          `item_${index}_quantity`
+                                        ],
+                                      )}
+                                    />
+                                    <span
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "var(--text-tertiary)",
+                                        marginTop: "4px",
+                                        display: "block",
+                                      }}
+                                    >
+                                      (0-59 minutes)
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div>
+                                  <label
+                                    style={{
+                                      ...labelStyle,
+                                      fontSize: "11px",
+                                      marginBottom: "6px",
+                                    }}
+                                  >
+                                    Qty{" "}
+                                    <span style={{ color: "#DC2626" }}>*</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    placeholder="0"
+                                    value={item.quantityDecimal}
+                                    onChange={(e) =>
+                                      handleNonTimeQuantityChange(
+                                        index,
+                                        e.target.value,
+                                      )
+                                    }
+                                    style={{
+                                      ...inputStyle,
+                                      marginTop: 0,
+                                      padding: "10px 12px",
+                                      borderColor: validationErrors[
+                                        `item_${index}_quantity`
+                                      ]
+                                        ? "#DC2626"
+                                        : "var(--border, #E5E5E7)",
+                                    }}
+                                    {...errorFocusProps(
+                                      validationErrors[
+                                        `item_${index}_quantity`
+                                      ],
+                                    )}
+                                  />
+                                </div>
+                              )}
+
+                              <div>
+                                <label
                                   style={{
-                                    ...inputStyle,
-                                    marginTop: 0,
-                                    padding: "10px",
-                                    fontSize: "13px",
-                                    flex: 1,
-                                    minWidth: "60px",
-                                  }}
-                                  {...focusProps}
-                                />
-                                <span
-                                  style={{
-                                    fontWeight: 500,
-                                    color: "var(--text-secondary)",
+                                    ...labelStyle,
+                                    fontSize: "11px",
+                                    marginBottom: "6px",
                                   }}
                                 >
-                                  -
-                                </span>
-                                <input
-                                  type="number"
-                                  value={tier.maxValue ?? ""}
-                                  onChange={(e) =>
-                                    handleTierChange(
-                                      index,
-                                      tIndex,
-                                      "maxValue",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Max"
-                                  style={{
-                                    ...inputStyle,
-                                    marginTop: 0,
-                                    padding: "10px",
-                                    fontSize: "13px",
-                                    flex: 1,
-                                    minWidth: "60px",
-                                  }}
-                                  {...focusProps}
-                                />
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  flex: "2 1 min(200px, 100%)",
-                                }}
-                              >
-                                <input
-                                  type="number"
-                                  placeholder="Rate"
-                                  value={tier.rate}
-                                  onChange={(e) =>
-                                    handleTierChange(
-                                      index,
-                                      tIndex,
-                                      "rate",
-                                      +e.target.value,
-                                    )
-                                  }
-                                  style={{
-                                    ...inputStyle,
-                                    marginTop: 0,
-                                    padding: "10px",
-                                    fontSize: "13px",
-                                    flex: 1,
-                                    minWidth: "60px",
-                                  }}
-                                  {...focusProps}
-                                />
+                                  Unit
+                                </label>
                                 <select
-                                  value={tier.rateType || "slabRate"}
-                                  onChange={(e) =>
-                                    handleTierChange(
-                                      index,
-                                      tIndex,
-                                      "rateType",
-                                      e.target.value,
+                                  value={
+                                    DEFAULT_UNITS.includes(item.unitType) ||
+                                    customUnits.some(
+                                      (u) => u.name === item.unitType,
                                     )
+                                      ? item.unitType
+                                      : item.unitType
+                                  }
+                                  onChange={(e) =>
+                                    handleUnitChange(index, e.target.value)
                                   }
                                   style={{
                                     ...inputStyle,
                                     marginTop: 0,
-                                    padding: "10px",
-                                    fontSize: "13px",
-                                    flex: 1,
-                                    minWidth: "80px",
+                                    padding: "10px 12px",
                                   }}
                                   {...focusProps}
                                 >
-                                  <option value="slabRate">Slab</option>
-                                  <option value="unitRate">Unit</option>
+                                  <optgroup label="Default Units">
+                                    {DEFAULT_UNITS.map((u) => (
+                                      <option key={u} value={u}>
+                                        {u}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                  {customUnits.length > 0 && (
+                                    <optgroup label="Custom Units">
+                                      {customUnits.map((u) => (
+                                        <option key={u._id} value={u.name}>
+                                          {u.name}
+                                          {u.shortCode
+                                            ? ` (${u.shortCode})`
+                                            : ""}
+                                        </option>
+                                      ))}
+                                    </optgroup>
+                                  )}
+                                  <optgroup label="">
+                                    <option value="__add_custom__">
+                                      + Add Custom Unit
+                                    </option>
+                                  </optgroup>
                                 </select>
                               </div>
-                              <div
+                            </div>
+
+                            {/* Pricing Type & HSN Row */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: "12px",
+                              }}
+                            >
+                              <div>
+                                <label
+                                  style={{
+                                    ...labelStyle,
+                                    fontSize: "11px",
+                                    marginBottom: "6px",
+                                  }}
+                                >
+                                  Pricing Type
+                                </label>
+                                <select
+                                  value={item.pricingType}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "pricingType",
+                                      e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px 12px",
+                                  }}
+                                  {...focusProps}
+                                >
+                                  {pricingTypes.map((p) => (
+                                    <option key={p} value={p}>
+                                      {p}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label
+                                  style={{
+                                    ...labelStyle,
+                                    fontSize: "11px",
+                                    marginBottom: "6px",
+                                  }}
+                                >
+                                  HSN/SAC{" "}
+                                  <span style={{ fontWeight: 400 }}>(opt)</span>
+                                </label>
+                                <input
+                                  placeholder="-"
+                                  value={item.hsnCode || ""}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "hsnCode",
+                                      e.target.value,
+                                    )
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px 12px",
+                                  }}
+                                  {...focusProps}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Rate & Item Total */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: "12px",
+                              }}
+                            >
+                              {item.pricingType !== "tiered" ? (
+                                <div>
+                                  <label
+                                    style={{
+                                      ...labelStyle,
+                                      fontSize: "11px",
+                                      marginBottom: "6px",
+                                    }}
+                                  >
+                                    Rate (Rs.){" "}
+                                    <span style={{ color: "#DC2626" }}>*</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    placeholder="0.00"
+                                    value={item.baseRate}
+                                    onChange={(e) =>
+                                      handleItemChange(
+                                        index,
+                                        "baseRate",
+                                        +e.target.value,
+                                      )
+                                    }
+                                    style={{
+                                      ...inputStyle,
+                                      marginTop: 0,
+                                      padding: "10px 12px",
+                                      borderColor: validationErrors[
+                                        `item_${index}_baseRate`
+                                      ]
+                                        ? "#DC2626"
+                                        : "var(--border, #E5E5E7)",
+                                    }}
+                                    {...errorFocusProps(
+                                      validationErrors[
+                                        `item_${index}_baseRate`
+                                      ],
+                                    )}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <label
+                                    style={{
+                                      ...labelStyle,
+                                      fontSize: "11px",
+                                      marginBottom: "6px",
+                                    }}
+                                  >
+                                    Rate
+                                  </label>
+                                  <div
+                                    style={{
+                                      ...inputStyle,
+                                      marginTop: 0,
+                                      padding: "10px 12px",
+                                      background: "var(--bg-page, #F7F7F8)",
+                                      color: "var(--text-secondary)",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    Tiered Pricing
+                                  </div>
+                                </div>
+                              )}
+
+                              <div>
+                                <label
+                                  style={{
+                                    ...labelStyle,
+                                    fontSize: "11px",
+                                    marginBottom: "6px",
+                                  }}
+                                >
+                                  Item Total
+                                </label>
+                                <div
+                                  style={{
+                                    ...inputStyle,
+                                    marginTop: 0,
+                                    padding: "10px 12px",
+                                    background: "var(--bg-page, #F7F7F8)",
+                                    fontWeight: 600,
+                                    textAlign: "right",
+                                  }}
+                                >
+                                  Rs.{" "}
+                                  {(Itemtotals[index]?.subtotal || 0).toFixed(
+                                    2,
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions Row */}
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "12px",
+                                marginTop: "4px",
+                              }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => duplicateItem(index)}
                                 style={{
                                   display: "flex",
-                                  flex: "1 1 min(120px, 100%)",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px",
+                                  color: "var(--text-primary, #1D1D1F)",
+                                  background:
+                                    "var(--surface-secondary, #F5F5F7)",
+                                  border: "1px solid var(--border, #E5E5E7)",
+                                  cursor: "pointer",
+                                  fontSize: "13px",
+                                  fontWeight: 500,
+                                  padding: "10px",
+                                  borderRadius: "12px",
+                                  transition: "all 150ms ease",
+                                  flex: 1,
                                 }}
                               >
+                                <Copy size={16} /> Duplicate
+                              </button>
+
+                              {formData.items.length > 1 && (
                                 <button
                                   type="button"
-                                  onClick={() => deleteTier(index, tIndex)}
+                                  onClick={() => removeItem(index)}
                                   style={{
-                                    width: "100%",
-                                    background: "#FEF2F2",
-                                    border: "1px solid #FEE2E2",
-                                    color: "#DC2626",
-                                    borderRadius: "8px",
-                                    cursor: "pointer",
-                                    padding: "10px",
-                                    fontSize: "13px",
-                                    fontWeight: 500,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    height: "40px",
-                                    transition: "all 200ms ease",
+                                    gap: "6px",
+                                    color: "#DC2626",
+                                    background: "#FEF2F2",
+                                    border: "1px solid #FEE2E2",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                    fontWeight: 500,
+                                    padding: "10px",
+                                    borderRadius: "12px",
+                                    transition: "all 150ms ease",
+                                    flex: 1,
                                   }}
-                                  onMouseEnter={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#FEE2E2")
-                                  }
-                                  onMouseLeave={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#FEF2F2")
-                                  }
                                 >
-                                  <Trash2
-                                    size={14}
-                                    style={{ marginRight: "6px" }}
-                                  />{" "}
-                                  Remove Tier
+                                  <Trash2 size={16} /> Remove Item
                                 </button>
-                              </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
+
+                            {/* Validation errors summary */}
+                            {(validationErrors[`item_${index}_description`] ||
+                              validationErrors[`item_${index}_quantity`] ||
+                              validationErrors[`item_${index}_baseRate`]) && (
+                              <div
+                                style={{
+                                  color: "#DC2626",
+                                  fontSize: "11px",
+                                  paddingLeft: "4px",
+                                }}
+                              >
+                                Please ensure description, valid quantity, and
+                                rate are provided.
+                              </div>
+                            )}
+
+                            {/* Tiered Pricing Config */}
+                            {item.pricingType === "tiered" && (
+                              <div
+                                style={{
+                                  marginTop: "8px",
+                                  padding: "12px",
+                                  background: "var(--bg-page, #F7F7F8)",
+                                  borderRadius: "12px",
+                                  border:
+                                    "1px solid var(--border-light, #F0F0F2)",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "12px",
+                                    flexWrap: "wrap",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  <h4
+                                    style={{
+                                      fontSize: "13px",
+                                      fontWeight: 600,
+                                      color: "var(--text-primary)",
+                                    }}
+                                  >
+                                    Tiered Rates
+                                  </h4>
+                                  <button
+                                    type="button"
+                                    onClick={() => addTier(index)}
+                                    style={{
+                                      ...btnSecondary,
+                                      padding: "6px 12px",
+                                      fontSize: "12px",
+                                      borderRadius: "8px",
+                                    }}
+                                  >
+                                    <Plus
+                                      size={12}
+                                      style={{ marginRight: "4px" }}
+                                    />{" "}
+                                    Add Tier
+                                  </button>
+                                </div>
+
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  {item.pricingTiers.map((tier, tIndex) => (
+                                    <div
+                                      key={tIndex}
+                                      style={{
+                                        background: "#fff",
+                                        padding: "10px",
+                                        borderRadius: "10px",
+                                        border:
+                                          "1px solid var(--border, #E5E5E7)",
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: "10px",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          flex: "2 1 min(200px, 100%)",
+                                        }}
+                                      >
+                                        <input
+                                          type="number"
+                                          placeholder="Min"
+                                          value={tier.minValue}
+                                          onChange={(e) =>
+                                            handleTierChange(
+                                              index,
+                                              tIndex,
+                                              "minValue",
+                                              +e.target.value,
+                                            )
+                                          }
+                                          style={{
+                                            ...inputStyle,
+                                            marginTop: 0,
+                                            padding: "10px",
+                                            fontSize: "13px",
+                                            flex: 1,
+                                            minWidth: "60px",
+                                          }}
+                                          {...focusProps}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 500,
+                                            color: "var(--text-secondary)",
+                                          }}
+                                        >
+                                          -
+                                        </span>
+                                        <input
+                                          type="number"
+                                          value={tier.maxValue ?? ""}
+                                          onChange={(e) =>
+                                            handleTierChange(
+                                              index,
+                                              tIndex,
+                                              "maxValue",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Max"
+                                          style={{
+                                            ...inputStyle,
+                                            marginTop: 0,
+                                            padding: "10px",
+                                            fontSize: "13px",
+                                            flex: 1,
+                                            minWidth: "60px",
+                                          }}
+                                          {...focusProps}
+                                        />
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          flex: "2 1 min(200px, 100%)",
+                                        }}
+                                      >
+                                        <input
+                                          type="number"
+                                          placeholder="Rate"
+                                          value={tier.rate}
+                                          onChange={(e) =>
+                                            handleTierChange(
+                                              index,
+                                              tIndex,
+                                              "rate",
+                                              +e.target.value,
+                                            )
+                                          }
+                                          style={{
+                                            ...inputStyle,
+                                            marginTop: 0,
+                                            padding: "10px",
+                                            fontSize: "13px",
+                                            flex: 1,
+                                            minWidth: "60px",
+                                          }}
+                                          {...focusProps}
+                                        />
+                                        <select
+                                          value={tier.rateType || "slabRate"}
+                                          onChange={(e) =>
+                                            handleTierChange(
+                                              index,
+                                              tIndex,
+                                              "rateType",
+                                              e.target.value,
+                                            )
+                                          }
+                                          style={{
+                                            ...inputStyle,
+                                            marginTop: 0,
+                                            padding: "10px",
+                                            fontSize: "13px",
+                                            flex: 1,
+                                            minWidth: "80px",
+                                          }}
+                                          {...focusProps}
+                                        >
+                                          <option value="slabRate">Slab</option>
+                                          <option value="unitRate">Unit</option>
+                                        </select>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flex: "1 1 min(120px, 100%)",
+                                        }}
+                                      >
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            deleteTier(index, tIndex)
+                                          }
+                                          style={{
+                                            width: "100%",
+                                            background: "#FEF2F2",
+                                            border: "1px solid #FEE2E2",
+                                            color: "#DC2626",
+                                            borderRadius: "8px",
+                                            cursor: "pointer",
+                                            padding: "10px",
+                                            fontSize: "13px",
+                                            fontWeight: 500,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            height: "40px",
+                                            transition: "all 200ms ease",
+                                          }}
+                                          onMouseEnter={(e) =>
+                                            (e.currentTarget.style.background =
+                                              "#FEE2E2")
+                                          }
+                                          onMouseLeave={(e) =>
+                                            (e.currentTarget.style.background =
+                                              "#FEF2F2")
+                                          }
+                                        >
+                                          <Trash2
+                                            size={14}
+                                            style={{ marginRight: "6px" }}
+                                          />{" "}
+                                          Remove Tier
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
-              </div>
-            )}
-            </SortableItemWrapper>
+                  </SortableItemWrapper>
                 );
               })}
             </SortableContext>
@@ -2131,6 +2591,7 @@ const EditInvoice = () => {
           </button>
         </div>
 
+        {/* Rest of the component remains the same - Global Configuration, Summary, Modal */}
         {/* Global Configuration & Totals */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <div style={cardStyle}>
@@ -2204,7 +2665,7 @@ const EditInvoice = () => {
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "var(--accent, #0071E3)",
+                    color: "#0071E3",
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
@@ -2311,36 +2772,108 @@ const EditInvoice = () => {
           </div>
 
           {/* Custom Fields for Template7PDF */}
-          {(allowedTemplates.length === 0 || allowedTemplates.includes("Template7PDF")) && (
+          {(allowedTemplates.length === 0 ||
+            allowedTemplates.includes("Template7PDF")) && (
             <div style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                <h3 style={{ fontSize: "clamp(14px, 3.5vw, 16px)", fontWeight: 600, margin: 0, color: "var(--text-primary, #1D1D1F)" }}>
-                  Custom Fields <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--text-secondary, #6E6E73)" }}>(Template 7)</span>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "12px",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "clamp(14px, 3.5vw, 16px)",
+                    fontWeight: 600,
+                    margin: 0,
+                    color: "var(--text-primary, #1D1D1F)",
+                  }}
+                >
+                  Custom Fields{" "}
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 400,
+                      color: "var(--text-secondary, #6E6E73)",
+                    }}
+                  >
+                    (Template 7)
+                  </span>
                 </h3>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, customFields: [...prev.customFields, { label: "", value: "" }] }))}
-                  style={{ background: "transparent", border: "none", color: "var(--accent, #0071E3)", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "4px 0" }}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customFields: [
+                        ...prev.customFields,
+                        { label: "", value: "" },
+                      ],
+                    }))
+                  }
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#0071E3",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: "4px 0",
+                  }}
                 >
                   + Add Field
                 </button>
               </div>
               {formData.customFields.length === 0 && (
-                <p style={{ fontSize: "13px", color: "var(--text-tertiary, #86868B)", margin: 0 }}>No custom fields added. Click "+ Add Field" to add transport, vehicle, PO details etc.</p>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--text-tertiary, #86868B)",
+                    margin: 0,
+                  }}
+                >
+                  No custom fields added. Click "+ Add Field" to add transport,
+                  vehicle, PO details etc.
+                </p>
               )}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
                 {formData.customFields.map((cf, cfIdx) => (
-                  <div key={cfIdx} style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div
+                    key={cfIdx}
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <input
                       type="text"
                       placeholder="Label (e.g. Vehicle No.)"
                       value={cf.label}
                       onChange={(e) => {
                         const updated = [...formData.customFields];
-                        updated[cfIdx] = { ...updated[cfIdx], label: e.target.value };
-                        setFormData(prev => ({ ...prev, customFields: updated }));
+                        updated[cfIdx] = {
+                          ...updated[cfIdx],
+                          label: e.target.value,
+                        };
+                        setFormData((prev) => ({
+                          ...prev,
+                          customFields: updated,
+                        }));
                       }}
-                      style={{ ...inputStyle, marginTop: 0, flex: "1", minWidth: "120px" }}
+                      style={{
+                        ...inputStyle,
+                        marginTop: 0,
+                        flex: "1",
+                        minWidth: "120px",
+                      }}
                       {...focusProps}
                     />
                     <input
@@ -2349,18 +2882,41 @@ const EditInvoice = () => {
                       value={cf.value}
                       onChange={(e) => {
                         const updated = [...formData.customFields];
-                        updated[cfIdx] = { ...updated[cfIdx], value: e.target.value };
-                        setFormData(prev => ({ ...prev, customFields: updated }));
+                        updated[cfIdx] = {
+                          ...updated[cfIdx],
+                          value: e.target.value,
+                        };
+                        setFormData((prev) => ({
+                          ...prev,
+                          customFields: updated,
+                        }));
                       }}
-                      style={{ ...inputStyle, marginTop: 0, flex: "1.5", minWidth: "140px" }}
+                      style={{
+                        ...inputStyle,
+                        marginTop: 0,
+                        flex: "1.5",
+                        minWidth: "140px",
+                      }}
                       {...focusProps}
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        setFormData(prev => ({ ...prev, customFields: prev.customFields.filter((_, i) => i !== cfIdx) }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          customFields: prev.customFields.filter(
+                            (_, i) => i !== cfIdx,
+                          ),
+                        }));
                       }}
-                      style={{ background: "transparent", border: "none", color: "#DC2626", padding: "8px", cursor: "pointer", flexShrink: 0 }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "#DC2626",
+                        padding: "8px",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                      }}
                     >
                       <X size={16} />
                     </button>
@@ -2398,7 +2954,7 @@ const EditInvoice = () => {
                     width: "44px",
                     height: "24px",
                     background: formData.includeLogo
-                      ? "var(--accent, #34C759)"
+                      ? "#34C759"
                       : "var(--border, #E5E5E7)",
                     borderRadius: "12px",
                     transition: "background 0.3s ease",
@@ -2457,7 +3013,7 @@ const EditInvoice = () => {
                     width: "44px",
                     height: "24px",
                     background: formData.includeSignature
-                      ? "var(--accent, #34C759)"
+                      ? "#34C759"
                       : "var(--border, #E5E5E7)",
                     borderRadius: "12px",
                     transition: "background 0.3s ease",
