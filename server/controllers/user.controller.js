@@ -673,7 +673,7 @@ export const getClientLedger = async (req, res) => {
       if (inv.paymentHistory && inv.paymentHistory.length > 0) {
         inv.paymentHistory.forEach((payment) => {
           ledgerEntries.push({
-            date: payment.createdAt || payment.paymentDate,
+            date: payment.paymentDate || payment.createdAt,
             type: "Payment Received",
             description: payment.notes
               ? `${payment.notes} (Invoice ${inv.invoiceNumber})`

@@ -81,8 +81,7 @@ const paymentHistorySchema = new mongoose.Schema(
       default: "cash",
     },
     notes: { type: String },
-    recordedBy: { type: String }, // Optional user info (admin or staff name)
-    balanceDueAfter: { type: Number, required: true }, // Remaining due after this payment
+    recordedBy: { type: String }, // Optional user info (admin or staff name) 
   },
   {
     timestamps: true, // adds createdAt & updatedAt

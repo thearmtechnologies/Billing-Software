@@ -374,7 +374,7 @@ export const getInvoiceById = async (req, res) => {
 };
 
 export const updateInvoice = async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   try {
     const userId = req.user._id;
     const { id } = req.params;
@@ -633,7 +633,7 @@ export const updateInvoice = async (req, res) => {
         paymentMode: "other",
         notes: "Auto-recorded from status change to Paid",
         recordedBy: req.user?.name || req.user?.email || "System",
-        balanceDueAfter: invoice.totalAmount - invoice.amountPaid,
+        // balanceDueAfter: invoice.totalAmount - invoice.amountPaid,
         paymentDate: new Date(),
       });
       invoice.paidDate = new Date();
@@ -782,33 +782,39 @@ export const addPayment = async (req, res) => {
       paymentDate,
     } = req.body;
 
-    // Validate amount
     const paymentAmount = parseFloat(amount);
+
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Payment amount must be greater than 0" });
+      return res.status(400).json({
+        message: "Payment amount must be greater than 0",
+      });
     }
 
-    const invoice = await InvoiceModel.findOne({ _id: id, user: userId });
+    const invoice = await InvoiceModel.findOne({
+      _id: id,
+      user: userId,
+    });
+
     if (!invoice) {
-      return res.status(404).json({ message: "Invoice not found" });
+      return res.status(404).json({
+        message: "Invoice not found",
+      });
     }
 
-    // Calculate remaining balance with precision
     const currentAmountPaid = toPrecision(invoice.amountPaid);
     const totalAmount = toPrecision(invoice.totalAmount);
     const remainingBalance = toPrecision(totalAmount - currentAmountPaid);
 
-    // Check if payment amount is valid with tolerance
     if (!isAmountValidWithTolerance(paymentAmount, remainingBalance)) {
       return res.status(400).json({
-        message: `Payment would exceed total amount. Maximum allowed: ${remainingBalance.toFixed(2)}`,
+        message: `Payment would exceed total amount. Maximum allowed: ${remainingBalance.toFixed(
+          2,
+        )}`,
       });
     }
 
-    // Adjust amount if it's within tolerance but slightly over
     let finalAmount = paymentAmount;
+
     if (
       paymentAmount > remainingBalance &&
       paymentAmount <= remainingBalance + 0.009
@@ -817,24 +823,18 @@ export const addPayment = async (req, res) => {
     }
 
     const newTotalPaid = toPrecision(currentAmountPaid + finalAmount);
-    const balanceDueAfter = toPrecision(
-      Math.max(0, totalAmount - newTotalPaid),
-    );
 
-    // Create payment history record
     const paymentRecord = {
       amountPaid: toPrecision(finalAmount),
       paymentMode,
       notes: notes || "",
       recordedBy: recordedBy || req.user.name || "System",
-      balanceDueAfter,
       paymentDate: paymentDate || new Date(),
     };
 
     invoice.amountPaid = newTotalPaid;
     invoice.paymentHistory.push(paymentRecord);
 
-    // Update invoice status based on payment
     if (newTotalPaid >= totalAmount - 0.009) {
       invoice.status = "paid";
     } else if (newTotalPaid > 0) {
@@ -842,6 +842,7 @@ export const addPayment = async (req, res) => {
     }
 
     const updatedInvoice = await invoice.save();
+
     await updatedInvoice.populate("client");
 
     res.status(200).json({
@@ -850,7 +851,11 @@ export const addPayment = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding payment:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -860,16 +865,28 @@ export const getPaymentHistory = async (req, res) => {
     const { id } = req.params;
 
     const invoice = await InvoiceModel.findOne({ _id: id, user: userId });
+
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    // Format payment history with precise values
-    const formattedPaymentHistory = invoice.paymentHistory.map((payment) => ({
-      ...payment.toObject(),
-      amountPaid: toPrecision(payment.amountPaid),
-      balanceDueAfter: toPrecision(payment.balanceDueAfter),
-    }));
+    const sortedPayments = [...invoice.paymentHistory].sort(
+      (a, b) => new Date(a.paymentDate) - new Date(b.paymentDate),
+    );
+
+    let runningBalance = toPrecision(invoice.totalAmount);
+
+    const formattedPaymentHistory = sortedPayments.map((payment) => {
+      runningBalance = toPrecision(
+        runningBalance - toPrecision(payment.amountPaid),
+      );
+
+      return {
+        ...payment.toObject(),
+        amountPaid: toPrecision(payment.amountPaid),
+        balanceDueAfter: Math.max(0, runningBalance), // frontend stays unchanged
+      };
+    });
 
     res.status(200).json({
       paymentHistory: formattedPaymentHistory,
@@ -879,7 +896,10 @@ export const getPaymentHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching payment history:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -889,69 +909,82 @@ export const updatePayment = async (req, res) => {
     const { id, paymentId } = req.params;
     const { amount, paymentMode, notes, paymentDate } = req.body;
 
-    const invoice = await InvoiceModel.findOne({ _id: id, user: userId });
+    const invoice = await InvoiceModel.findOne({
+      _id: id,
+      user: userId,
+    });
+
     if (!invoice) {
-      return res.status(404).json({ message: "Invoice not found" });
-    }
-
-    const paymentToUpdate = invoice.paymentHistory.id(paymentId);
-    if (!paymentToUpdate) {
-      return res.status(404).json({ message: "Payment record not found" });
-    }
-
-    const oldAmount = toPrecision(paymentToUpdate.amountPaid);
-    let newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
-
-    if (isNaN(newAmount) || newAmount <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Payment amount must be greater than 0" });
-    }
-
-    // Calculate current total without the payment being edited
-    const currentAmountPaidWithoutOld = toPrecision(
-      invoice.amountPaid - oldAmount,
-    );
-    const totalAmount = toPrecision(invoice.totalAmount);
-    const remainingBalance = toPrecision(
-      totalAmount - currentAmountPaidWithoutOld,
-    );
-
-    // Check if new amount is valid with tolerance
-    if (!isAmountValidWithTolerance(newAmount, remainingBalance)) {
-      return res.status(400).json({
-        message: `Updated payment would exceed total amount. Maximum allowed: ${remainingBalance.toFixed(2)}`,
+      return res.status(404).json({
+        message: "Invoice not found",
       });
     }
 
-    // Adjust amount if it's within tolerance but slightly over
-    if (newAmount > remainingBalance && newAmount <= remainingBalance + 0.009) {
-      newAmount = remainingBalance;
+    const paymentToUpdate = invoice.paymentHistory.id(paymentId);
+
+    if (!paymentToUpdate) {
+      return res.status(404).json({
+        message: "Payment record not found",
+      });
     }
 
-    // Calculate new total paid
-    const newTotalPaid = toPrecision(currentAmountPaidWithoutOld + newAmount);
-    const balanceDueAfter = toPrecision(
-      Math.max(0, totalAmount - newTotalPaid),
+    const oldAmount = toPrecision(paymentToUpdate.amountPaid);
+
+    let newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
+
+    if (isNaN(newAmount) || newAmount <= 0) {
+      return res.status(400).json({
+        message: "Payment amount must be greater than 0",
+      });
+    }
+
+    const totalAmount = toPrecision(invoice.totalAmount);
+
+    const currentAmountPaidWithoutOld = toPrecision(
+      invoice.amountPaid - oldAmount,
     );
+
+    const remainingAllowed = toPrecision(
+      totalAmount - currentAmountPaidWithoutOld,
+    );
+
+    if (!isAmountValidWithTolerance(newAmount, remainingAllowed)) {
+      return res.status(400).json({
+        message: `Updated payment would exceed total amount. Maximum allowed: ${remainingAllowed.toFixed(2)}`,
+      });
+    }
+
+    if (newAmount > remainingAllowed && newAmount <= remainingAllowed + 0.009) {
+      newAmount = remainingAllowed;
+    }
 
     // Update payment record
     paymentToUpdate.amountPaid = toPrecision(newAmount);
-    if (paymentMode) paymentToUpdate.paymentMode = paymentMode;
-    if (notes !== undefined) paymentToUpdate.notes = notes;
-    if (paymentDate) paymentToUpdate.paymentDate = paymentDate;
-    paymentToUpdate.balanceDueAfter = balanceDueAfter;
 
-    // Update invoice totals
+    if (paymentMode) {
+      paymentToUpdate.paymentMode = paymentMode;
+    }
+
+    if (notes !== undefined) {
+      paymentToUpdate.notes = notes;
+    }
+
+    if (paymentDate) {
+      paymentToUpdate.paymentDate = paymentDate;
+    }
+
+    // Recalculate invoice totals
+    const newTotalPaid = toPrecision(currentAmountPaidWithoutOld + newAmount);
+
     invoice.amountPaid = newTotalPaid;
+    invoice.amountDue = toPrecision(Math.max(0, totalAmount - newTotalPaid));
 
-    // Update invoice status based on payment
     if (newTotalPaid >= totalAmount - 0.009) {
       invoice.status = "paid";
     } else if (newTotalPaid > 0) {
       invoice.status = "partial";
     } else {
-      invoice.status = "draft";
+      invoice.status = "sent";
     }
 
     await invoice.save();
@@ -959,11 +992,15 @@ export const updatePayment = async (req, res) => {
 
     res.status(200).json({
       message: "Payment updated successfully",
-      invoice: invoice,
+      invoice,
     });
   } catch (error) {
     console.error("Error updating payment:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
